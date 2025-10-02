@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import "package:window_size/window_size.dart";
@@ -33,11 +34,9 @@ final List<BottomNavigationBarItem> ItermsForSmallScreen = [
   BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
 ];
 
+// Navigation Rail Items
 final List<NavigationRailDestination> ItemsForLargerScreen = [
-  NavigationRailDestination(
-    icon: Icon(Icons.search),
-    label: Text('Search'),
-  ),
+  NavigationRailDestination(icon: Icon(Icons.search), label: Text('Search')),
   NavigationRailDestination(
     icon: Padding(
       padding: const EdgeInsets.only(top: 20),
@@ -73,22 +72,54 @@ class MyMusicState extends State<MyMusic> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return Scaffold(
-              backgroundColor: Colors.black38,
+              extendBody: true,
+              backgroundColor: snapshot.data!["mode"] == true
+                  ? Colors.black
+                  : Colors.white,
               bottomNavigationBar: MediaQuery.of(context).size.width < 700
-                  ? BottomNavigationBar(
-                      items: ItermsForSmallScreen,
-                      currentIndex: index,
-                      onTap: (value) => setState(() {
-                        index = value;
-                      }),
-                      showUnselectedLabels: false,
-                      backgroundColor: (snapshot.data!["mode"] == true)
-                          ? Colors.black
-                          : Colors.white,
-                      unselectedItemColor: (snapshot.data!["mode"] == true)
-                          ? Colors.white
-                          : Colors.black,
-                      selectedItemColor: Colors.red,
+                  ? Padding(
+                      padding: const EdgeInsets.only(
+                        bottom: 10,
+                        left: 5,
+                        right: 5,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
+                        child: SizedBox(
+                          height: 60,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              // backgroundBlendMode: BlendMode.lighten,
+                              gradient: snapshot.data!["mode"] == true
+                                  ? LinearGradient(
+                                      colors: [Colors.black54, Colors.black45],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    )
+                                  : LinearGradient(
+                                      colors: [Colors.white70, Colors.white],
+                                    ),
+                            ),
+                            child: BottomNavigationBar(
+                              items: ItermsForSmallScreen,
+                              currentIndex: index,
+                              onTap: (value) => setState(() {
+                                index = value;
+                              }),
+                              showUnselectedLabels: false,
+                              backgroundColor: Colors.transparent,
+                              // (snapshot.data!["mode"] == true)
+                              //     ? Colors.white
+                              //     : Colors.black,
+                              unselectedItemColor:
+                                  (snapshot.data!["mode"] == true)
+                                  ? Colors.white
+                                  : Colors.black,
+                              selectedItemColor: Colors.red,
+                            ),
+                          ),
+                        ),
+                      ),
                     )
                   : null,
               body: MediaQuery.of(context).size.width < 700
@@ -104,27 +135,23 @@ class MyMusicState extends State<MyMusic> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       spacing: 0,
                       children: [
-                        NavigationRail(
-                          minWidth: 1,
-                          groupAlignment: 0,
-                          useIndicator: false,
-                          backgroundColor: Colors.black,
-                          indicatorColor: Colors.red,
-                          labelType: NavigationRailLabelType.selected,
-                          destinations: ItemsForLargerScreen,
-                          selectedIndex: index,
-                          selectedLabelTextStyle: TextStyle(color: Colors.red),
-                          onDestinationSelected: (value) {
-                            setState(() {
-                              index = value;
-                            });
-                          },
-                        ),
-                        VerticalDivider(
-                          width: 0,
-                          thickness: 0,
-                          color: Colors.black,
-                        ),
+                        // NavigationRail(
+                        //   minWidth: 1,
+                        //   groupAlignment: 0,
+                        //   useIndicator: false,
+                        //   backgroundColor: Colors.black,
+                        //   indicatorColor: Colors.red,
+                        //   labelType: NavigationRailLabelType.selected,
+                        //   destinations: ItemsForLargerScreen,
+                        //   selectedIndex: index,
+                        //   selectedLabelTextStyle: TextStyle(color: Colors.red),
+                        //   selectedIconTheme: IconThemeData(color: Colors.red),
+                        //   onDestinationSelected: (value) {
+                        //     setState(() {
+                        //       index = value;
+                        //     });
+                        //   },
+                        // ),
                         index == 0
                             ? Expanded(child: Search_Page())
                             : index == 1
@@ -132,6 +159,137 @@ class MyMusicState extends State<MyMusic> {
                             : index == 2
                             ? Expanded(child: Settings_UI())
                             : Container(),
+                      ],
+                    ),
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.startFloat,
+              floatingActionButton: MediaQuery.of(context).size.width < 700
+                  ? null
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight:
+                                MediaQuery.of(context).size.height * 0.35,
+                            minWidth: 60,
+                          ),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: snapshot.data!["mode"] == true
+                                    ? [Colors.black45, Colors.black54]
+                                    : [Colors.white54, Colors.white60],
+                              ),
+                              // color: snapshot.data!["mode"] == true
+                              //     ? Colors.black
+                              //     : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              spacing: 10,
+                              children: [
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      onPressed: () {
+                                        index = 0;
+                                        setState(() {});
+                                      },
+                                      icon: Icon(
+                                        Icons.search,
+                                        color: index == 0
+                                            ? Colors.red
+                                            : snapshot.data!["mode"] == true
+                                            ? Colors.white
+                                            : Colors.black,
+                                      ),
+                                    ),
+                                    if (index == 0)
+                                      Text(
+                                        "Search",
+                                        style: TextStyle(
+                                          color: index == 0
+                                              ? Colors.red
+                                              : snapshot.data!["mode"] == true
+                                              ? Colors.white
+                                              : Colors.black,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      onPressed: () {
+                                        index = 1;
+                                        setState(() {});
+                                      },
+                                      icon: Icon(
+                                        Icons.library_music,
+                                        color: index == 1
+                                            ? Colors.red
+                                            : snapshot.data!["mode"] == true
+                                            ? Colors.white
+                                            : Colors.black,
+                                      ),
+                                    ),
+                                    if (index == 1)
+                                      Text(
+                                        "Home",
+                                        style: TextStyle(
+                                          color: index == 1
+                                              ? Colors.red
+                                              : snapshot.data!["mode"] == true
+                                              ? Colors.white
+                                              : Colors.black,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      onPressed: () {
+                                        index = 2;
+                                        setState(() {});
+                                      },
+                                      icon: Icon(
+                                        Icons.settings,
+                                        color: index == 2
+                                            ? Colors.red
+                                            : snapshot.data!["mode"] == true
+                                            ? Colors.white
+                                            : Colors.black,
+                                      ),
+                                    ),
+                                    if (index == 2)
+                                      Text(
+                                        "Settings",
+                                        style: TextStyle(
+                                          color: index == 2
+                                              ? Colors.red
+                                              : snapshot.data!["mode"] == true
+                                              ? Colors.white
+                                              : Colors.black,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
             );

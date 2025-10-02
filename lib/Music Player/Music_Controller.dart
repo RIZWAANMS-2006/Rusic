@@ -74,12 +74,7 @@ class Bottom_Music_Controller_State extends State<Bottom_Music_Controller> {
                 color: (snapshot.data!['mode'] == true)
                     ? Color.fromARGB(215, 255, 255, 255)
                     : Colors.black,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(10),
-                  topRight: Radius.circular(10),
-                  bottomLeft: Radius.circular(0),
-                  bottomRight: Radius.circular(0),
-                ),
+                borderRadius: const BorderRadius.all(Radius.circular(20)),
               ),
               child: Center(
                 child: Row(
@@ -593,8 +588,8 @@ class SideBar_Music_Controller_State extends State<SideBar_Music_Controller> {
                       ),
                       Text(
                         audio_path == ''
-                              ? "No Song is Playing..."
-                              : audio_path.split(Platform.pathSeparator).last,
+                            ? "No Song is Playing..."
+                            : audio_path.split(Platform.pathSeparator).last,
                         style: TextStyle(
                           color: snapshot.data!['mode'] == true
                               ? Colors.white

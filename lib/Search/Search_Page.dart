@@ -56,6 +56,36 @@ class Search_Page extends StatefulWidget {
   State<Search_Page> createState() => _Search_PageState();
 }
 
+class MusicSearchBar extends StatefulWidget {
+  const MusicSearchBar({super.key});
+
+  @override
+  State<StatefulWidget> createState() => _MusicSearchBarState();
+}
+
+class _MusicSearchBarState extends State<MusicSearchBar> {
+  @override
+  Widget build(BuildContext context) {
+    return SearchAnchor(
+      builder: (context, controller) {
+        return SearchBar(
+          controller: controller,
+          onTap: () {
+            controller.openView();
+          },
+          onChanged: (value) {
+            controller.openView();
+          },
+          leading: const Icon(Icons.search),
+        );
+      },
+      suggestionsBuilder: (context, controller) {
+        return [ListTile(title: Text("Search is not available yet"))];
+      },
+    );
+  }
+}
+
 class _Search_PageState extends State<Search_Page> {
   late Future<List<File>> mediaFileFuture;
 
@@ -75,84 +105,86 @@ class _Search_PageState extends State<Search_Page> {
           backgroundColor: (msnapshot.data!['mode'] == true)
               ? Colors.black
               : Colors.grey,
-          bottomNavigationBar: MediaQuery.of(context).size.width < 700
-              ? Bottom_Music_Controller()
-              : null,
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
+          floatingActionButton: MediaQuery.of(context).size.width > 700
+              ? null
+              : Padding(
+                  padding: const EdgeInsets.only(bottom: 70, left: 5, right: 5),
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    spacing: 5,
+                    children: [MusicSearchBar(), Stack(children: [
+                      DecoratedBox(decoration: BoxDecoration())
+                      ,Bottom_Music_Controller()])],
+                  ),
+              ),
           body: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    //For better debugging use a container with a color in Column
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    // crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      FutureBuilder(
-                        future: mediaFileFuture,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Center(child: CircularProgressIndicator());
-                          } else if (snapshot.hasError) {
-                            return Center(
-                              child: Text('Error: ${snapshot.error}'),
-                            );
-                          } else if (!snapshot.hasData ||
-                              snapshot.data!.isEmpty) {
-                            return Center(
-                              child: Text(
-                                'No media files found',
-                                style: TextStyle(
-                                  color: (msnapshot.data!['mode'] == true)
-                                      ? Colors.white
-                                      : Colors.black,
-                                ),
+                child: FutureBuilder(
+                  future: mediaFileFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No media files found',
+                          style: TextStyle(
+                            color: (msnapshot.data!['mode'] == true)
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                      );
+                    } else {
+                      if (MediaQuery.of(context).size.width > 700) {
+                        return Stack(
+                          children: [
+                            GridView.extent(
+                              padding: const EdgeInsets.only(
+                                left: 5,
+                                bottom: 5,
                               ),
-                            );
-                          } else {
-                            if (MediaQuery.of(context).size.width > 700) {
-                              return GridView.extent(
-                                padding: const EdgeInsets.only(
-                                  left: 5,
-                                  bottom: 5,
-                                ),
-                                maxCrossAxisExtent: 400,
-                                childAspectRatio: 3,
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                children: List.generate(snapshot.data!.length, (
-                                  index,
-                                ) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(
-                                      right: 5,
-                                      top: 5,
-                                    ),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        audio_path = snapshot.data![index].path;
-                                        audioPlayAndPauseFunction();
-                                        if (player.state ==
-                                            PlayerState.playing) {
-                                          indicatorState = 0;
-                                        } else {
-                                          indicatorState = 1;
-                                        }
-                                        setState(() {});
-                                      },
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.all(
-                                            Radius.circular(10),
-                                          ),
-
-                                          color:
-                                              (msnapshot.data!['mode'] == true)
-                                              ? Colors.white
-                                              : Colors.black,
+                              maxCrossAxisExtent: 400,
+                              childAspectRatio: 3,
+                              shrinkWrap: false,
+                              children: List.generate(snapshot.data!.length, (
+                                index,
+                              ) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                    right: 5,
+                                    top: 5,
+                                  ),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      audio_path = snapshot.data![index].path;
+                                      audioPlayAndPauseFunction();
+                                      if (player.state == PlayerState.playing) {
+                                        indicatorState = 0;
+                                      } else {
+                                        indicatorState = 1;
+                                      }
+                                      setState(() {});
+                                    },
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(10),
                                         ),
-                                        alignment: Alignment.center,
+
+                                        color: (msnapshot.data!['mode'] == true)
+                                            ? Colors.white
+                                            : Colors.black,
+                                      ),
+                                      // alignment: Alignment.center,
+                                      child: Center(
                                         child: Text(
                                           snapshot.data![index].path
                                               .split(Platform.pathSeparator)
@@ -166,106 +198,92 @@ class _Search_PageState extends State<Search_Page> {
                                         ),
                                       ),
                                     ),
-                                  );
-                                }),
-                              );
-                            } else {
-                              return Column(
-                                spacing: 2,
-                                children: List.generate(snapshot.data!.length, (
-                                  index,
-                                ) {
-                                  return ConstrainedBox(
+                                  ),
+                                );
+                              }),
+                            ),
+                            Positioned(
+                              bottom: 20,
+                              left: 20,
+                              right: 20,
+                              child: Center(child: MusicSearchBar()),
+                            ),
+                          ],
+                        );
+                      } else {
+                        return SingleChildScrollView(
+                          child: Column(
+                            spacing: 2,
+                            children: List.generate(snapshot.data!.length, (
+                              index,
+                            ) {
+                              return ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minWidth: double.infinity,
+                                  minHeight: 50,
+                                ),
+                                child: ListTile(
+                                  onTap: () {
+                                    audio_path = snapshot.data![index].path;
+                                    audioPlayAndPauseFunction();
+                                    if (indicatorState == 0) {
+                                      indicatorState = 1;
+                                    } else {
+                                      indicatorState = 0;
+                                    }
+                                    setState(() {});
+                                  },
+                                  leading: ConstrainedBox(
                                     constraints: BoxConstraints(
-                                      minWidth: double.infinity,
-                                      minHeight: 50,
+                                      minWidth: 35,
+                                      minHeight: 35,
                                     ),
-                                    child: ListTile(
-                                      onTap: () {
-                                        audio_path = snapshot.data![index].path;
-                                        audioPlayAndPauseFunction();
-                                        if (indicatorState == 0) {
-                                          indicatorState = 1;
-                                        } else {
-                                          indicatorState = 0;
-                                        }
-                                        setState(() {});
-                                      },
-                                      leading: ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          minWidth: 35,
-                                          minHeight: 35,
-                                        ),
-                                        child: DecoratedBox(
-                                          decoration: BoxDecoration(
-                                            color:
-                                                (msnapshot.data!['mode'] ==
-                                                    true)
-                                                ? Colors.white
-                                                : Colors.black,
-                                            borderRadius: BorderRadius.all(
-                                              Radius.circular(5),
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            Icons.music_note,
-                                            color:
-                                                (msnapshot.data!['mode'] ==
-                                                    true)
-                                                ? Colors.black
-                                                : Colors.white,
-                                          ),
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: (msnapshot.data!['mode'] == true)
+                                            ? Colors.white
+                                            : Colors.black,
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(5),
                                         ),
                                       ),
-                                      tileColor: msnapshot.data!['mode'] == true
-                                          ? Colors.black
-                                          : Colors.white,
-                                      title: Text(
-                                        snapshot.data![index].path
-                                            .split(Platform.pathSeparator)
-                                            .last,
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color:
-                                              (msnapshot.data!['mode'] == true)
-                                              ? Colors.white
-                                              : Colors.black,
-                                        ),
+                                      child: Icon(
+                                        Icons.music_note,
+                                        color: (msnapshot.data!['mode'] == true)
+                                            ? Colors.black
+                                            : Colors.white,
                                       ),
                                     ),
-                                  );
-                                }),
+                                  ),
+                                  tileColor: msnapshot.data!['mode'] == true
+                                      ? Colors.black
+                                      : Colors.white,
+                                  title: Text(
+                                    snapshot.data![index].path
+                                        .split(Platform.pathSeparator)
+                                        .last,
+                                    textAlign: TextAlign.left,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: (msnapshot.data!['mode'] == true)
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                  ),
+                                ),
                               );
-                            }
-                          }
-                        },
-                      ),
-                    ],
-                  ),
+                            }),
+                          ),
+                        );
+                      }
+                    }
+                  },
                 ),
               ),
               MediaQuery.of(context).size.width > 700
                   ? SideBar_Music_Controller()
                   : Container(),
             ],
-          ),
-          floatingActionButton: SearchAnchor(
-            builder: (context, controller) {
-              return SearchBar(
-                controller: controller,
-                onTap: () {
-                  controller.openView();
-                },
-                onChanged: (value) {
-                  controller.openView();
-                },
-                leading: const Icon(Icons.search),
-              );
-            },
-            suggestionsBuilder: (context, controller) {
-              return [ListTile(title: Text("Search is not available yet"))];
-            },
           ),
         );
       },
