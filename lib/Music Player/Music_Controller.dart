@@ -206,12 +206,60 @@ class Full_Size_Music_Controller_State
     extends State<Full_Size_Music_Controller> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      color: Colors.black,
-      child: Webview(url: "https://www.youtube.com"),
-    );
+    return (MediaQuery.of(context).size.width > 700)
+        ? Row(
+            children: [
+              Expanded(
+                child: Container(decoration: BoxDecoration(color: Colors.red)),
+              ),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 350, minWidth: 300),
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.3,
+                  decoration: BoxDecoration(color: Colors.blue),
+                ),
+              ),
+            ],
+          )
+        : SizedBox(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: 200, minWidth: 200),
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.35,
+                    height: MediaQuery.of(context).size.width * 0.35,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.white, Colors.white60],
+                        transform: GradientRotation(-45),
+                      ),
+                      borderRadius: BorderRadius.all(Radius.circular(30)),
+                    ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: 160,
+                        minHeight: 100,
+                      ),
+                      child: Icon(
+                        Icons.music_note,
+                        size: MediaQuery.of(context).size.width * 0.2,
+                        color: Colors.black,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black45,
+                            offset: Offset(2, 2),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
   }
 }
 

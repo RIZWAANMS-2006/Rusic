@@ -88,6 +88,7 @@ class _MusicSearchBarState extends State<MusicSearchBar> {
 
 class _Search_PageState extends State<Search_Page> {
   late Future<List<File>> mediaFileFuture;
+  int hoverIndex = -1;
 
   @override
   void initState() {
@@ -111,15 +112,21 @@ class _Search_PageState extends State<Search_Page> {
               ? null
               : Padding(
                   padding: const EdgeInsets.only(bottom: 70, left: 5, right: 5),
-                child: Column(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     spacing: 5,
-                    children: [MusicSearchBar(), Stack(children: [
-                      DecoratedBox(decoration: BoxDecoration())
-                      ,Bottom_Music_Controller()])],
+                    children: [
+                      MusicSearchBar(),
+                      Stack(
+                        children: [
+                          DecoratedBox(decoration: BoxDecoration()),
+                          Bottom_Music_Controller(),
+                        ],
+                      ),
+                    ],
                   ),
-              ),
+                ),
           body: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -173,27 +180,66 @@ class _Search_PageState extends State<Search_Page> {
                                       }
                                       setState(() {});
                                     },
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(10),
-                                        ),
+                                    child: AnimatedScale(
+                                      scale: (hoverIndex == index) ? 1.015 : 1,
+                                      duration: Duration(milliseconds: 75),
+                                      curve: Curves.linear,
+                                      child: MouseRegion(
+                                        onEnter: (event) {
+                                          setState(() {
+                                            hoverIndex = index;
+                                          });
+                                        },
+                                        onExit: (event) {
+                                          setState(() {
+                                            hoverIndex = -1;
+                                          });
+                                        },
+                                        child: DecoratedBox(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(10),
+                                            ),
 
-                                        color: (msnapshot.data!['mode'] == true)
-                                            ? Colors.white
-                                            : Colors.black,
-                                      ),
-                                      // alignment: Alignment.center,
-                                      child: Center(
-                                        child: Text(
-                                          snapshot.data![index].path
-                                              .split(Platform.pathSeparator)
-                                              .last,
-                                          style: TextStyle(
                                             color:
-                                                msnapshot.data!['mode'] == true
-                                                ? Colors.black
-                                                : Colors.white,
+                                                (msnapshot.data!['mode'] ==
+                                                    true)
+                                                ? Colors.white
+                                                : Colors.black,
+                                          ),
+                                          // alignment: Alignment.center,
+                                          child: Center(
+                                            child: AnimatedDefaultTextStyle(
+                                              duration: Duration(
+                                                milliseconds: 75,
+                                              ),
+                                              curve: Curves.linear,
+                                              style: (index == hoverIndex)
+                                                  ? TextStyle(
+                                                      color:
+                                                          msnapshot
+                                                                  .data!['mode'] ==
+                                                              true
+                                                          ? Colors.black
+                                                          : Colors.white,
+                                                      fontSize: 15,
+                                                    )
+                                                  : TextStyle(
+                                                      color:
+                                                          msnapshot
+                                                                  .data!['mode'] ==
+                                                              true
+                                                          ? Colors.black
+                                                          : Colors.white,
+                                                    ),
+                                              child: Text(
+                                                snapshot.data![index].path
+                                                    .split(
+                                                      Platform.pathSeparator,
+                                                    )
+                                                    .last,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ),
