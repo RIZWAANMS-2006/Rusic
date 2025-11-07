@@ -101,8 +101,12 @@ class MyMusicState extends State<MyMusic> {
                                     ),
                             ),
                             child: BottomNavigationBar(
+                              landscapeLayout: BottomNavigationBarLandscapeLayout.linear,
+                              type:
+                                  BottomNavigationBarType.fixed,
                               items: ItermsForSmallScreen,
                               currentIndex: index,
+                              elevation: 10,
                               onTap: (value) => setState(() {
                                 index = value;
                               }),

@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:webview_all/webview_all.dart';
+import 'package:flutter/rendering.dart';
+import 'package:lottie/lottie.dart';
+import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 import 'package:music_controller/Settings/Settings_UI.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:music_controller/Music Player/HomePage_Components.dart';
@@ -12,18 +14,25 @@ int indicatorState = 0;
 //Audio Playing feature variables and functions
 final AudioPlayer player = AudioPlayer();
 String audio_path = "";
-Future<double?> audioPlayAndPauseFunction() async {
+Future<void> audioPlayAndPauseFunction() async {
   if (audio_path.isNotEmpty) {
     if (player.state == PlayerState.playing) {
       player.pause();
-      return 0;
     } else {
       await player.play(DeviceFileSource(audio_path));
-      var a = await (player.getDuration());
-      return a?.inSeconds.toDouble();
     }
   }
-  return null;
+}
+
+Future<List<double?>> SliderFunction() async {
+  if (await player.getDuration() != null) {
+    return [
+      (await player.getDuration())?.inSeconds.toDouble(),
+      (await player.getCurrentPosition())?.inSeconds.toDouble(),
+    ];
+  } else {
+    return [0.0, 0.0];
+  }
 }
 
 //Bottom Music Controller
@@ -202,64 +211,154 @@ class Full_Size_Music_Controller extends StatefulWidget {
       Full_Size_Music_Controller_State();
 }
 
-class Full_Size_Music_Controller_State
-    extends State<Full_Size_Music_Controller> {
+class Full_Size_Music_Controller_State extends State<Full_Size_Music_Controller>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController animation;
+  @override
+  void initState() {
+    super.initState();
+    animation = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    animation.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    animation.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return (MediaQuery.of(context).size.width > 700)
-        ? Row(
-            children: [
-              Expanded(
-                child: Container(decoration: BoxDecoration(color: Colors.red)),
-              ),
-              ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: 350, minWidth: 300),
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.3,
-                  decoration: BoxDecoration(color: Colors.blue),
-                ),
-              ),
-            ],
-          )
-        : SizedBox(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: 200, minWidth: 200),
-                  child: Container(
-                    width: MediaQuery.of(context).size.width * 0.35,
-                    height: MediaQuery.of(context).size.width * 0.35,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.white, Colors.white60],
-                        transform: GradientRotation(-45),
-                      ),
-                      borderRadius: BorderRadius.all(Radius.circular(30)),
-                    ),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: 160,
-                        minHeight: 100,
-                      ),
-                      child: Icon(
-                        Icons.music_note,
-                        size: MediaQuery.of(context).size.width * 0.2,
-                        color: Colors.black,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black45,
-                            offset: Offset(2, 2),
-                            blurRadius: 4,
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return AnimatedSwitcher(
+            duration: Duration(milliseconds: 500),
+            child: constraints.maxWidth > 700
+                ? Container(
+                    key: ValueKey("large"), // Add unique key
+                    color: Colors.red,
+                  )
+                : Container(
+                    key: ValueKey("small"), // Add unique key
+                    color: Colors.black,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: Lottie.asset(
+                            "assets/lottiefiles/GradientAnimatedBackground.json",
+                            fit: BoxFit.fill,
+                            animate: true,
                           ),
-                        ],
-                      ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 150.0),
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: 500),
+                              width: 200,
+                              height: 200,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [Colors.white60, Colors.white54],
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.white,
+                                    blurRadius: 30,
+                                    blurStyle: BlurStyle.outer,
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.music_note_rounded,
+                                size: 90,
+                                shadows: [
+                                  Shadow(color: Colors.black45, blurRadius: 25),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 80.0),
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Container(
+                              height: constraints.maxHeight * 0.25,
+                              width: constraints.maxWidth - 30,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                spacing: 5,
+                                children: [
+                                  Text(
+                                    "No Song is Playing...",
+                                    style: TextStyle(color: Colors.black),
+                                  ),
+                                  Slider(
+                                    value: i,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        i = value;
+                                      });
+                                    },
+                                    padding: null,
+                                    thumbColor: Colors.white,
+                                    activeColor: Colors.red,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.skip_previous,
+                                          size: 40,
+                                          color: Colors.black,
+                                        ),
+                                        onPressed: () {},
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.play_circle_fill_rounded,
+                                          size: 40,
+                                          color: Colors.black,
+                                        ),
+                                        onPressed: () {},
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.skip_next,
+                                          size: 40,
+                                          color: Colors.black,
+                                        ),
+                                        onPressed: () {},
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
           );
+        },
+      ),
+    );
   }
 }
 
@@ -341,18 +440,39 @@ class Home_Page_Music_Controller_State
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Slider(
-                                    value: i,
-                                    min: 0,
-                                    max: 100,
-                                    thumbColor: Colors.white,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        i = value;
-                                      });
+                                  FutureBuilder(
+                                    future: SliderFunction(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        return Slider(
+                                          value: snapshot.data![1]!.toDouble(),
+                                          min: 0,
+                                          max: snapshot.data![0]!.toDouble(),
+                                          thumbColor: Colors.white,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              i = value;
+                                            });
+                                          },
+                                          activeColor: Colors.redAccent,
+                                          inactiveColor: Colors.white,
+                                        );
+                                      } else {
+                                        return Slider(
+                                          value: i,
+                                          min: 0,
+                                          max: snapshot.data![0]!.toDouble(),
+                                          thumbColor: Colors.white,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              i = value;
+                                            });
+                                          },
+                                          activeColor: Colors.redAccent,
+                                          inactiveColor: Colors.white,
+                                        );
+                                      }
                                     },
-                                    activeColor: Colors.redAccent,
-                                    inactiveColor: Colors.white,
                                   ),
                                   Container(
                                     width: 180,
@@ -648,16 +768,36 @@ class SideBar_Music_Controller_State extends State<SideBar_Music_Controller> {
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Slider(
-                            thumbColor: Colors.white,
-                            activeColor: Colors.redAccent,
-                            min: 0,
-                            max: 100,
-                            value: i,
-                            onChanged: (value) {
-                              setState(() {
-                                i = value;
-                              });
+                          FutureBuilder(
+                            future: SliderFunction(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData != [null, null]) {
+                                return Slider(
+                                  value: snapshot.data![1]!.toDouble(),
+                                  min: 0,
+                                  max: snapshot.data![0]!.toDouble(),
+                                  thumbColor: Colors.white,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      player.seek(
+                                        Duration(seconds: value.toInt()),
+                                      );
+                                    });
+                                  },
+                                  activeColor: Colors.redAccent,
+                                  inactiveColor: Colors.white,
+                                );
+                              } else {
+                                return Slider(
+                                  value: 0,
+                                  min: 0,
+                                  max: 1,
+                                  thumbColor: Colors.white,
+                                  onChanged: null,
+                                  activeColor: Colors.redAccent,
+                                  inactiveColor: Colors.white,
+                                );
+                              }
                             },
                           ),
                           Row(
