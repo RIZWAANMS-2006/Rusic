@@ -281,7 +281,7 @@ class Full_Size_Music_Controller_State
                             borderRadius: BorderRadius.circular(20),
                             child: ConstrainedBox(
                               constraints: BoxConstraints(
-                                minWidth: 230,
+                                minWidth: 240,
                                 maxWidth: 280,
                               ),
                               child: SizedBox(
