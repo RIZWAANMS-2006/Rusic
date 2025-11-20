@@ -8,9 +8,9 @@ import 'Settings/Settings_UI.dart';
 import 'Search/Search_Page.dart';
 
 void main() async {
-  ErrorWidget.builder = (FlutterErrorDetails details) {
-    return Center(child: CircularProgressIndicator(color: Colors.redAccent));
-  };
+  // ErrorWidget.builder = (FlutterErrorDetails details) {
+  //   return Center(child: CircularProgressIndicator(color: Colors.redAccent));
+  // };
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -18,24 +18,24 @@ void main() async {
   ]);
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    setWindowMinSize(Size(450, 1005)); //logical width height
+    setWindowMinSize(Size(500, 1005)); //logical width height
     setWindowMaxSize(Size(10000, 10000)); //logical width height
   }
   runApp(const MyMusic());
 }
 
 //index for bottom navigation bar
-int index = 1;
+int navigationIndex = 1;
 
 // Bottom Navigation Bar Items
-final List<BottomNavigationBarItem> ItermsForSmallScreen = [
+const List<BottomNavigationBarItem> bottomNavigationBarItems = [
   BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
   BottomNavigationBarItem(icon: Icon(Icons.library_music), label: 'Home'),
   BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
 ];
 
 // Navigation Rail Items
-final List<NavigationRailDestination> ItemsForLargerScreen = [
+const List<NavigationRailDestination> navigationRailItems = [
   NavigationRailDestination(icon: Icon(Icons.search), label: Text('Search')),
   NavigationRailDestination(
     icon: Padding(
@@ -72,7 +72,7 @@ class MyMusicState extends State<MyMusic> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return Scaffold(
-              extendBody: true,
+              // extendBody: true,
               backgroundColor: snapshot.data!["mode"] == true
                   ? Colors.black
                   : Colors.white,
@@ -104,11 +104,11 @@ class MyMusicState extends State<MyMusic> {
                               landscapeLayout: BottomNavigationBarLandscapeLayout.linear,
                               type:
                                   BottomNavigationBarType.fixed,
-                              items: ItermsForSmallScreen,
-                              currentIndex: index,
+                              items: bottomNavigationBarItems,
+                              currentIndex: navigationIndex,
                               elevation: 10,
                               onTap: (value) => setState(() {
-                                index = value;
+                                navigationIndex = value;
                               }),
                               showUnselectedLabels: false,
                               backgroundColor: Colors.transparent,
@@ -127,11 +127,11 @@ class MyMusicState extends State<MyMusic> {
                     )
                   : null,
               body: MediaQuery.of(context).size.width < 700
-                  ? (index == 0
+                  ? (navigationIndex == 0
                         ? Search_Page()
-                        : index == 1
+                        : navigationIndex == 1
                         ? Home_Page()
-                        : index == 2
+                        : navigationIndex == 2
                         ? Settings_UI()
                         : Container())
                   : Row(
@@ -156,11 +156,11 @@ class MyMusicState extends State<MyMusic> {
                         //     });
                         //   },
                         // ),
-                        index == 0
+                        navigationIndex == 0
                             ? Expanded(child: Search_Page())
-                            : index == 1
+                            : navigationIndex == 1
                             ? Expanded(child: Home_Page())
-                            : index == 2
+                            : navigationIndex == 2
                             ? Expanded(child: Settings_UI())
                             : Container(),
                       ],
@@ -201,23 +201,23 @@ class MyMusicState extends State<MyMusic> {
                                   children: [
                                     IconButton(
                                       onPressed: () {
-                                        index = 0;
+                                        navigationIndex = 0;
                                         setState(() {});
                                       },
                                       icon: Icon(
                                         Icons.search,
-                                        color: index == 0
+                                        color: navigationIndex == 0
                                             ? Colors.red
                                             : snapshot.data!["mode"] == true
                                             ? Colors.white
                                             : Colors.black,
                                       ),
                                     ),
-                                    if (index == 0)
+                                    if (navigationIndex == 0)
                                       Text(
                                         "Search",
                                         style: TextStyle(
-                                          color: index == 0
+                                          color: navigationIndex == 0
                                               ? Colors.red
                                               : snapshot.data!["mode"] == true
                                               ? Colors.white
@@ -233,23 +233,23 @@ class MyMusicState extends State<MyMusic> {
                                   children: [
                                     IconButton(
                                       onPressed: () {
-                                        index = 1;
+                                        navigationIndex = 1;
                                         setState(() {});
                                       },
                                       icon: Icon(
                                         Icons.library_music,
-                                        color: index == 1
+                                        color: navigationIndex == 1
                                             ? Colors.red
                                             : snapshot.data!["mode"] == true
                                             ? Colors.white
                                             : Colors.black,
                                       ),
                                     ),
-                                    if (index == 1)
+                                    if (navigationIndex == 1)
                                       Text(
                                         "Home",
                                         style: TextStyle(
-                                          color: index == 1
+                                          color: navigationIndex == 1
                                               ? Colors.red
                                               : snapshot.data!["mode"] == true
                                               ? Colors.white
@@ -265,23 +265,23 @@ class MyMusicState extends State<MyMusic> {
                                   children: [
                                     IconButton(
                                       onPressed: () {
-                                        index = 2;
+                                        navigationIndex = 2;
                                         setState(() {});
                                       },
                                       icon: Icon(
                                         Icons.settings,
-                                        color: index == 2
+                                        color: navigationIndex == 2
                                             ? Colors.red
                                             : snapshot.data!["mode"] == true
                                             ? Colors.white
                                             : Colors.black,
                                       ),
                                     ),
-                                    if (index == 2)
+                                    if (navigationIndex == 2)
                                       Text(
                                         "Settings",
                                         style: TextStyle(
-                                          color: index == 2
+                                          color: navigationIndex == 2
                                               ? Colors.red
                                               : snapshot.data!["mode"] == true
                                               ? Colors.white

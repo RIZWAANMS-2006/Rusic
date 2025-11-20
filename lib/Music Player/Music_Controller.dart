@@ -68,8 +68,11 @@ class Bottom_Music_Controller_State extends State<Bottom_Music_Controller> {
             onTap: () => setState(() {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => Full_Size_Music_Controller(),
+                PageRouteBuilder(
+                  transitionDuration: Duration(milliseconds: 700),
+                  pageBuilder: (context, animation, secondaryanimation) {
+                    return Full_Size_Music_Controller();
+                  },
                 ),
               );
             }),
@@ -94,21 +97,24 @@ class Bottom_Music_Controller_State extends State<Bottom_Music_Controller> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(left: 8, right: 10),
-                          child: Container(
-                            width: 45,
-                            height: 45,
-                            decoration: BoxDecoration(
-                              color: (snapshot.data!['mode'] == true)
-                                  ? Colors.black
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.music_note,
-                              size: 25,
-                              color: snapshot.data!['mode'] == true
-                                  ? Colors.white
-                                  : Colors.black,
+                          child: Hero(
+                            tag: 'music_icon',
+                            child: Container(
+                              width: 45,
+                              height: 45,
+                              decoration: BoxDecoration(
+                                color: (snapshot.data!['mode'] == true)
+                                    ? Colors.black
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.music_note,
+                                size: 25,
+                                color: snapshot.data!['mode'] == true
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
                             ),
                           ),
                         ),
@@ -211,149 +217,90 @@ class Full_Size_Music_Controller extends StatefulWidget {
       Full_Size_Music_Controller_State();
 }
 
-class Full_Size_Music_Controller_State extends State<Full_Size_Music_Controller>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController animation;
+class Full_Size_Music_Controller_State
+    extends State<Full_Size_Music_Controller> {
+  late CurvedAnimation curved;
   @override
   void initState() {
     super.initState();
-    animation = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-    animation.repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    animation.dispose();
+    curved.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return AnimatedSwitcher(
-            duration: Duration(milliseconds: 500),
-            child: constraints.maxWidth > 700
-                ? Container(
-                    key: ValueKey("large"), // Add unique key
-                    color: Colors.red,
-                  )
-                : Container(
-                    key: ValueKey("small"), // Add unique key
-                    color: Colors.black,
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: Lottie.asset(
-                            "assets/lottiefiles/GradientAnimatedBackground.json",
-                            fit: BoxFit.fill,
-                            animate: true,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 150.0),
-                          child: Align(
-                            alignment: Alignment.center,
-                            child: AnimatedContainer(
-                              duration: Duration(milliseconds: 500),
-                              width: 200,
-                              height: 200,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [Colors.white60, Colors.white54],
+            duration: Duration(milliseconds: 250),
+            reverseDuration: Duration(milliseconds: 250),
+            transitionBuilder: (child, animation) {
+              curved = CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeInQuad,
+                reverseCurve: Curves.easeOutQuad,
+              );
+
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: Offset(0, 1),
+                    end: Offset.zero,
+                  ).animate(curved),
+                  child: ScaleTransition(
+                    scale: Tween(begin: 0.3, end: 1.0).animate(curved),
+                    child: child,
+                  ),
+                ),
+              );
+            },
+            layoutBuilder: (currentChild, previousChildren) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  ...previousChildren,
+                  if (currentChild != null) currentChild,
+                ],
+              );
+            },
+            child: (constraints.maxWidth < 700)
+                ? LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Scaffold(
+                        key: ValueKey('displaySize<700'),
+                        bottomSheet: Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minWidth: 230,
+                                maxWidth: 280,
+                              ),
+                              child: SizedBox(
+                                height: 60,
+                                width: constraints.maxWidth * 0.5,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(color: Colors.blue),
+                                  child: Text('${constraints.maxWidth * 0.5}'),
                                 ),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.white,
-                                    blurRadius: 30,
-                                    blurStyle: BlurStyle.outer,
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                Icons.music_note_rounded,
-                                size: 90,
-                                shadows: [
-                                  Shadow(color: Colors.black45, blurRadius: 25),
-                                ],
                               ),
                             ),
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 80.0),
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Container(
-                              height: constraints.maxHeight * 0.25,
-                              width: constraints.maxWidth - 30,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.4),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                spacing: 5,
-                                children: [
-                                  Text(
-                                    "No Song is Playing...",
-                                    style: TextStyle(color: Colors.black),
-                                  ),
-                                  Slider(
-                                    value: i,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        i = value;
-                                      });
-                                    },
-                                    padding: null,
-                                    thumbColor: Colors.white,
-                                    activeColor: Colors.red,
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.skip_previous,
-                                          size: 40,
-                                          color: Colors.black,
-                                        ),
-                                        onPressed: () {},
-                                      ),
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.play_circle_fill_rounded,
-                                          size: 40,
-                                          color: Colors.black,
-                                        ),
-                                        onPressed: () {},
-                                      ),
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.skip_next,
-                                          size: 40,
-                                          color: Colors.black,
-                                        ),
-                                        onPressed: () {},
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
+                  )
+                : Scaffold(
+                    key: ValueKey('displaySize>700'),
+                    backgroundColor: Colors.amberAccent,
                   ),
           );
         },
