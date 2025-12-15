@@ -1,9 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:lottie/lottie.dart';
-import 'package:sleek_circular_slider/sleek_circular_slider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:music_controller/Settings/Settings_UI.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:music_controller/Music Player/HomePage_Components.dart';
@@ -206,6 +204,116 @@ class Bottom_Music_Controller_State extends State<Bottom_Music_Controller> {
   }
 }
 
+class CustomToggleSwitch extends StatefulWidget {
+  const CustomToggleSwitch({super.key});
+
+  @override
+  State<CustomToggleSwitch> createState() => _CustomToggleSwitchState();
+}
+
+class _CustomToggleSwitchState extends State<CustomToggleSwitch> {
+  // 1. Tracks which side is selected (true = Audio, false = Video)
+  bool isAudioSelected = false;
+
+  @override
+  Widget build(BuildContext context) {
+    // Define the size of the widget
+    const double width = 300.0;
+    const double height = 60.0;
+
+    return Center(
+      child: Container(
+        width: width,
+        height: height,
+        // 2. The Light Grey Background Pill
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(
+            50.0,
+          ), // High radius for pill shape
+        ),
+        child: Stack(
+          children: [
+            // 3. The Sliding Black Oval (The Indicator)
+            AnimatedAlign(
+              alignment: isAudioSelected
+                  ? Alignment.centerLeft
+                  : Alignment.centerRight,
+              duration: const Duration(milliseconds: 250), // Animation speed
+              curve: Curves.easeInOut, // Smooth sliding curve
+              child: Container(
+                width: width * 0.5, // Takes up 50% of the width
+                height: height,
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(50.0),
+                ),
+              ),
+            ),
+
+            // 4. The Text Buttons (Transparent click detectors)
+            Row(
+              children: [
+                // Audio Button
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isAudioSelected = true;
+                      });
+                    },
+                    child: Container(
+                      alignment: Alignment.center,
+                      color: Colors.transparent, // Important for tap detection
+                      child: AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 250),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w500,
+                          // 5. Change Text Color based on selection
+                          color: isAudioSelected ? Colors.white : Colors.black,
+                          fontFamily:
+                              'Quicksand', // Use a custom font if you have one
+                        ),
+                        child: const Text("Audio"),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Video Button
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isAudioSelected = false;
+                      });
+                    },
+                    child: Container(
+                      alignment: Alignment.center,
+                      color: Colors.transparent,
+                      child: AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 250),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w500,
+                          // Change Text Color based on selection
+                          color: isAudioSelected ? Colors.black : Colors.white,
+                        ),
+                        child: const Text("Video"),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 double i = 0;
 
 // Full Sized Music Controller
@@ -274,25 +382,170 @@ class Full_Size_Music_Controller_State
                 ? LayoutBuilder(
                     builder: (context, constraints) {
                       return Scaffold(
+                        backgroundColor: Color.fromRGBO(26, 26, 26, 1),
                         key: ValueKey('displaySize<700'),
-                        bottomSheet: Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                minWidth: 240,
-                                maxWidth: 280,
+                        body: Padding(
+                          padding: EdgeInsets.only(
+                            top: constraints.maxHeight * 0.15,
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 5),
+                                    child: IconButton(
+                                      icon: SvgPicture.asset(
+                                        "assets/MusicIcons/Like.svg",
+                                      ),
+                                      onPressed: () {},
+                                    ),
+                                  ),
+                                  Container(
+                                    height: constraints.maxWidth * 0.35,
+                                    width: constraints.maxWidth * 0.35,
+                                    constraints: BoxConstraints(
+                                      minHeight: 210,
+                                      minWidth: 210,
+                                      maxHeight: 300,
+                                      maxWidth: 300,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Color.fromRGBO(255, 245, 245, 1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: SvgPicture.asset(
+                                      "assets/MusicIcons/MusicLogo.svg",
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 5),
+                                    child: IconButton(
+                                      icon: SvgPicture.asset(
+                                        "assets/MusicIcons/AddPlaylist.svg",
+                                      ),
+                                      onPressed: () {},
+                                    ),
+                                  ),
+                                ],
                               ),
-                              child: SizedBox(
-                                height: 60,
-                                width: constraints.maxWidth * 0.5,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(color: Colors.blue),
-                                  child: Text('${constraints.maxWidth * 0.5}'),
+                              Container(
+                                padding: const EdgeInsets.only(top: 20),
+                                child: Column(
+                                  spacing: 3,
+                                  children: [
+                                    Text(
+                                      "Song:",
+                                      style: TextStyle(
+                                        color: Color.fromRGBO(255, 245, 245, 1),
+                                        fontSize: 14,
+                                        fontFamily: "Borel",
+                                      ),
+                                    ),
+                                    Text(
+                                      "Playing...",
+                                      style: TextStyle(
+                                        color: Color.fromRGBO(255, 245, 245, 1),
+                                        fontSize: 16,
+                                        fontFamily: "Borel",
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
+                              Container(
+                                padding: const EdgeInsets.only(top: 10),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Slider(
+                                      min: 0,
+                                      max: 100,
+                                      thumbColor: Color.fromRGBO(255, 0, 0, 1),
+                                      value: i,
+                                      activeColor: Color.fromRGBO(255, 0, 0, 1),
+                                      onChanged: (value) {
+                                        setState(() {
+                                          i = value;
+                                        });
+                                      },
+                                    ),
+                                    Container(
+                                      alignment: Alignment.center,
+                                      padding: const EdgeInsets.only(top: 5),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        spacing: 10,
+                                        children: [
+                                          IconButton(
+                                            icon: SvgPicture.asset(
+                                              "assets/MusicIcons/Shuffle.svg",
+                                              width: 20,
+                                              height: 20,
+                                            ),
+                                            onPressed: () {},
+                                          ),
+                                          IconButton(
+                                            icon: SvgPicture.asset(
+                                              "assets/MusicIcons/PreviousButton.svg",
+                                              width: 20,
+                                              height: 20,
+                                            ),
+                                            onPressed: () {},
+                                          ),
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              Container(
+                                                width: 50,
+                                                height: 50,
+                                                decoration: BoxDecoration(
+                                                  color: Color.fromRGBO(
+                                                    255,
+                                                    0,
+                                                    0,
+                                                    1,
+                                                  ),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+                                              IconButton(
+                                                icon: SvgPicture.asset(
+                                                  "assets/MusicIcons/Play.svg",
+                                                  width: 20,
+                                                  height: 20,
+                                                ),
+                                                onPressed: () {},
+                                              ),
+                                            ],
+                                          ),
+                                          IconButton(
+                                            icon: SvgPicture.asset(
+                                              "assets/MusicIcons/NextButton.svg",
+                                              width: 20,
+                                              height: 20,
+                                            ),
+                                            onPressed: () {},
+                                          ),
+                                          IconButton(
+                                            icon: SvgPicture.asset(
+                                              "assets/MusicIcons/Loop.svg",
+                                              width: 20,
+                                              height: 20,
+                                            ),
+                                            onPressed: () {},
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );

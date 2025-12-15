@@ -72,60 +72,9 @@ class MyMusicState extends State<MyMusic> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return Scaffold(
-              // extendBody: true,
               backgroundColor: snapshot.data!["mode"] == true
                   ? Colors.black
                   : Colors.white,
-              bottomNavigationBar: MediaQuery.of(context).size.width < 700
-                  ? Padding(
-                      padding: const EdgeInsets.only(
-                        bottom: 10,
-                        left: 5,
-                        right: 5,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(15),
-                        child: SizedBox(
-                          height: 60,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              // backgroundBlendMode: BlendMode.lighten,
-                              gradient: snapshot.data!["mode"] == true
-                                  ? LinearGradient(
-                                      colors: [Colors.black54, Colors.black45],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    )
-                                  : LinearGradient(
-                                      colors: [Colors.white70, Colors.white],
-                                    ),
-                            ),
-                            child: BottomNavigationBar(
-                              landscapeLayout: BottomNavigationBarLandscapeLayout.linear,
-                              type:
-                                  BottomNavigationBarType.fixed,
-                              items: bottomNavigationBarItems,
-                              currentIndex: navigationIndex,
-                              elevation: 10,
-                              onTap: (value) => setState(() {
-                                navigationIndex = value;
-                              }),
-                              showUnselectedLabels: false,
-                              backgroundColor: Colors.transparent,
-                              // (snapshot.data!["mode"] == true)
-                              //     ? Colors.white
-                              //     : Colors.black,
-                              unselectedItemColor:
-                                  (snapshot.data!["mode"] == true)
-                                  ? Colors.white
-                                  : Colors.black,
-                              selectedItemColor: Colors.red,
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                  : null,
               body: MediaQuery.of(context).size.width < 700
                   ? (navigationIndex == 0
                         ? Search_Page()
@@ -139,23 +88,6 @@ class MyMusicState extends State<MyMusic> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       spacing: 0,
                       children: [
-                        // NavigationRail(
-                        //   minWidth: 1,
-                        //   groupAlignment: 0,
-                        //   useIndicator: false,
-                        //   backgroundColor: Colors.black,
-                        //   indicatorColor: Colors.red,
-                        //   labelType: NavigationRailLabelType.selected,
-                        //   destinations: ItemsForLargerScreen,
-                        //   selectedIndex: index,
-                        //   selectedLabelTextStyle: TextStyle(color: Colors.red),
-                        //   selectedIconTheme: IconThemeData(color: Colors.red),
-                        //   onDestinationSelected: (value) {
-                        //     setState(() {
-                        //       index = value;
-                        //     });
-                        //   },
-                        // ),
                         navigationIndex == 0
                             ? Expanded(child: Search_Page())
                             : navigationIndex == 1
@@ -166,9 +98,48 @@ class MyMusicState extends State<MyMusic> {
                       ],
                     ),
               floatingActionButtonLocation:
-                  FloatingActionButtonLocation.startFloat,
+                  MediaQuery.of(context).size.width < 700
+                  ? FloatingActionButtonLocation.centerFloat
+                  : FloatingActionButtonLocation.startFloat,
               floatingActionButton: MediaQuery.of(context).size.width < 700
-                  ? null
+                  ? Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minWidth: 240,
+                            maxWidth: 300,
+                          ),
+                          child: SizedBox(
+                            height: 60,
+                            width: 100 * 0.5,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Color.fromRGBO(34, 34, 34, 1),
+                              ),
+                              child: BottomNavigationBar(
+                                landscapeLayout:
+                                    BottomNavigationBarLandscapeLayout.centered,
+                                type: BottomNavigationBarType.fixed,
+                                items: bottomNavigationBarItems,
+                                currentIndex: navigationIndex,
+                                onTap: (value) => setState(() {
+                                  navigationIndex = value;
+                                }),
+                                showUnselectedLabels: false,
+                                backgroundColor: Colors.transparent,
+                                unselectedItemColor:
+                                    (snapshot.data!["mode"] == true)
+                                    ? Colors.white
+                                    : Colors.black,
+                                selectedItemColor: Colors.red,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

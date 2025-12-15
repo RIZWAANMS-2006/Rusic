@@ -45,6 +45,7 @@ dependencies:
   weatherapi: ^1.1.1
   sleek_circular_slider: ^2.1.0
   lottie: ^3.3.1
+  flutter_svg: ^2.2.3
   
 
 dev_dependencies:
@@ -79,6 +80,7 @@ flutter:
     - assets/background_wallpapers/live_wallpaper/music_control_infiniteloop_wallpaper1.mp4
     - assets/background_wallpapers/live_wallpaper/bg_pc_image.png
     - assets/lottiefiles/GradientAnimatedBackground.json
+    - assets/MusicIcons/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
