@@ -1,10 +1,35 @@
 import 'dart:ui';
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import 'Music_Controller.dart';
 import 'HomePage_Components.dart';
 import 'package:music_controller/Settings/Settings_UI.dart';
+
+class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar tabBar;
+
+  _StickyTabBarDelegate(this.tabBar);
+
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(color: Color.fromRGBO(34, 34, 34, 1), child: tabBar);
+  }
+
+  @override
+  bool shouldRebuild(_StickyTabBarDelegate oldDelegate) {
+    return false;
+  }
+}
 
 // Creating "Music_Controller"
 class Home_Page extends StatefulWidget {
@@ -18,85 +43,61 @@ class Home_Page extends StatefulWidget {
 class Home_Page_State extends State<Home_Page> {
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      initialData: {"mode":true,"bgstatus":"PowerSaving Mode"},
-      future: FileSettings,
-      builder: (context, snapshot) {
-        if (snapshot.hasData == true) {
-          return Stack(
-            children: [
-              ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                child: Background_Dynamic_Theme(),
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+        body: NestedScrollView(
+          headerSliverBuilder: (context, innerbox) {
+            return [
+              CupertinoSliverNavigationBar(
+                largeTitle: Text("Library"),
+                middle: Text("Library"),
+                alwaysShowMiddle: false,
+                backgroundColor: Color.fromRGBO(34, 34, 34, 1),
+                stretch: true,
+                border: null,
               ),
-              SafeArea(
-                child: Container(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Container(
-                      //   child: Column(
-                      //     children: [
-                      //       Padding(
-                      //         padding: const EdgeInsets.only(
-                      //           top: 30,
-                      //           right: 20,
-                      //           left: 20,
-                      //         ),
-                      //         child: Total_Songs_Component(),
-                      //       ),
-                      //       Container(
-                      //         child: Row(
-                      //           mainAxisAlignment:
-                      //               MainAxisAlignment.spaceBetween,
-                      //           children: [
-                      //             Expanded(
-                      //               flex: 6,
-                      //               child: Padding(
-                      //                 padding: const EdgeInsets.only(
-                      //                   left: 20,
-                      //                   top: 30,
-                      //                 ),
-                      //                 child: Daily_Usage_Component(),
-                      //               ),
-                      //             ),
-                      //             Expanded(
-                      //               flex: 1,
-                      //               child: Container(height: 100),
-                      //             ),
-                      //             Expanded(
-                      //               flex: 6,
-                      //               child: Padding(
-                      //                 padding: const EdgeInsets.only(
-                      //                   right: 20,
-                      //                   top: 30,
-                      //                 ),
-                      //                 child: Date_Time_Component(),
-                      //               ),
-                      //             ),
-                      //           ],
-                      //         ),
-                      //       ),
-                      //     ],
-                      //   ),
-                      // ),
-                      Padding(
-                        padding: EdgeInsets.only(bottom: 60),
-                        child: Center(child: Home_Page_Music_Controller()),
-                      ),
+              SliverPersistentHeader(
+                floating: false,
+                pinned: true,
+                delegate: _StickyTabBarDelegate(
+                  TabBar(
+                    // labelColor: Colors.white,
+                    tabAlignment: TabAlignment.start,
+                    isScrollable: true,
+                    indicatorColor: Colors.red,
+                    tabs: [
+                      SizedBox(width: 100, child: Tab(text: "Online")),
+                      SizedBox(width: 100, child: Tab(text: "Favourites")),
+                      SizedBox(width: 100, child: Tab(text: "Playlists")),
+                      SizedBox(width: 100, child: Tab(text: "Locations")),
                     ],
                   ),
                 ),
               ),
+            ];
+          },
+          body: TabBarView(
+            children: [
+              Scaffold(
+                backgroundColor: Colors.transparent,
+                body: Center(child: Text("No Music On Air Yet...")),
+              ),
+              Scaffold(
+                backgroundColor: Colors.transparent,
+                body: Center(child: Text("No Favorite Yet...")),
+              ),Scaffold(
+                backgroundColor: Colors.transparent,
+                body: Center(child: Text("No Playlist Yet...")),
+              ),Scaffold(
+                backgroundColor: Colors.transparent,
+                body: Center(child: Text("No Locations Available...")),
+              ),
             ],
-          );
-        } else {
-          return Center(
-            child: CircularProgressIndicator(color: Colors.redAccent),
-          );
-        }
-      },
+          ),
+        ),
+      ),
     );
   }
 }

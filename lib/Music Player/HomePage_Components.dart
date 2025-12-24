@@ -93,15 +93,11 @@ class Background_Dynamic_Theme_State extends State<Background_Dynamic_Theme> {
                     child: SizedBox(
                       width: controller_darkmode.value.size.width,
                       height: controller_darkmode.value.size.height,
-                      child: snapshot.data!['mode'] == true
-                          ? WinVideoPlayer(controller_darkmode)
-                          : WinVideoPlayer(controller_lightmode),
+                      child: WinVideoPlayer(controller_darkmode),
                     ),
                   ),
                 )
-              : snapshot.data!['mode'] == true
-              ? VideoPlayer(controller_darkmode)
-              : VideoPlayer(controller_lightmode);
+              : VideoPlayer(controller_darkmode);
         } else if (snapshot.data!['bgstatus'] == "Weather Animation") {
           return StreamBuilder(
             stream: WeatherBackgroundFunction(),
@@ -109,16 +105,19 @@ class Background_Dynamic_Theme_State extends State<Background_Dynamic_Theme> {
               if (snapshot.hasData) {
                 return SizedBox.expand(child: snapshot.data);
               } else {
-                return Align(alignment: AlignmentGeometry.xy(10, 1), child: CircularProgressIndicator(color: Colors.red,));
+                return Align(
+                  alignment: AlignmentGeometry.xy(10, 1),
+                  child: CircularProgressIndicator(color: Colors.red),
+                );
               }
             },
           );
         } else if (snapshot.data!['bgstatus'] == 'PowerSaving Mode') {
-          return Container(
-            color: snapshot.data!['mode'] == true ? Colors.black : Colors.white,
-          );
+          return Container(color: Colors.black);
         } else {
-          return WeatherScene.weatherEvery.sceneWidget;//CircularProgressIndicator(color: Colors.redAccent);
+          return WeatherScene
+              .weatherEvery
+              .sceneWidget; //CircularProgressIndicator(color: Colors.redAccent);
         }
       },
     );
@@ -158,13 +157,9 @@ class Daily_Usage_Component_State extends State<Daily_Usage_Component> {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: (snapshot.data!["mode"] == true)
-                  ? Colors.black45
-                  : Colors.white70,
+              color: Colors.black45,
               borderRadius: BorderRadius.all(Radius.circular(10)),
-              backgroundBlendMode: (snapshot.data!["mode"] == true)
-                  ? BlendMode.darken
-                  : BlendMode.hardLight,
+              backgroundBlendMode: BlendMode.darken,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -174,9 +169,7 @@ class Daily_Usage_Component_State extends State<Daily_Usage_Component> {
                   "Total Usage:",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: (snapshot.data!["mode"] == true)
-                        ? Colors.white
-                        : Colors.black,
+                    color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0,
@@ -186,9 +179,7 @@ class Daily_Usage_Component_State extends State<Daily_Usage_Component> {
                 Text(
                   "${Daily_Usage} min",
                   style: TextStyle(
-                    color: (snapshot.data!["mode"] == true)
-                        ? Colors.white
-                        : Colors.black,
+                    color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0,
@@ -253,13 +244,9 @@ class Date_Time_Component_State extends State<Date_Time_Component> {
             height: 100,
             width: 100,
             decoration: BoxDecoration(
-              color: snapshot.data!["mode"] == true
-                  ? Colors.black45
-                  : Colors.white70,
+              color: Colors.black45,
               borderRadius: BorderRadius.all(Radius.circular(10)),
-              backgroundBlendMode: (snapshot.data!["mode"] == true)
-                  ? BlendMode.darken
-                  : BlendMode.hardLight,
+              backgroundBlendMode: BlendMode.darken,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -268,9 +255,7 @@ class Date_Time_Component_State extends State<Date_Time_Component> {
                 Text(
                   "Time:",
                   style: TextStyle(
-                    color: snapshot.data!["mode"] == true
-                        ? Colors.white
-                        : Colors.black,
+                    color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0,
@@ -280,9 +265,7 @@ class Date_Time_Component_State extends State<Date_Time_Component> {
                 Text(
                   "$hour:$minute $am_pm",
                   style: TextStyle(
-                    color: snapshot.data!["mode"] == true
-                        ? Colors.white
-                        : Colors.black,
+                    color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0,
@@ -316,13 +299,9 @@ class Total_Songs_Component extends StatelessWidget {
           width: double.infinity,
           height: 100,
           decoration: BoxDecoration(
-            color: snapshot.data!['mode'] == true
-                ? Colors.black45
-                : Colors.white70,
+            color: Colors.black45,
             borderRadius: BorderRadius.all(Radius.circular(10)),
-            backgroundBlendMode: snapshot.data!['mode'] == true
-                ? BlendMode.darken
-                : BlendMode.hardLight,
+            backgroundBlendMode: BlendMode.darken,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -331,9 +310,7 @@ class Total_Songs_Component extends StatelessWidget {
               Text(
                 "Total Songs:",
                 style: TextStyle(
-                  color: snapshot.data!['mode'] == true
-                      ? Colors.white
-                      : Colors.black,
+                  color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0,
@@ -343,9 +320,7 @@ class Total_Songs_Component extends StatelessWidget {
               Text(
                 "${Total_Songs}",
                 style: TextStyle(
-                  color: snapshot.data!['mode'] == true
-                      ? Colors.white
-                      : Colors.black,
+                  color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0,

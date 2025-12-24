@@ -2,34 +2,104 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:music_controller/main.dart';
 import 'package:music_controller/Settings/Settings_UI.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:music_controller/Music Player/HomePage_Components.dart';
+import 'package:music_controller/Managers/AudioManager.dart';
 
 // play and pause button variable declaration
 int indicatorState = 0;
 
+bool _isDragging = false;
+double _dragValue = 0.0;
+
 //Audio Playing feature variables and functions
-final AudioPlayer player = AudioPlayer();
 String audio_path = "";
+final manager = AudioManager();
 Future<void> audioPlayAndPauseFunction() async {
   if (audio_path.isNotEmpty) {
-    if (player.state == PlayerState.playing) {
-      player.pause();
+    // 1. Get the manager
+
+    // 2. Check: Is this the same song that is currently loaded?
+    if (manager.currentSongPath == audio_path) {
+      // It is the same song. Toggle Play/Pause.
+      if (manager.instance.playing) {
+        await manager.pause();
+      } else {
+        await manager.resume();
+      }
     } else {
-      await player.play(DeviceFileSource(audio_path));
+      // 3. It is a DIFFERENT song. Play it immediately.
+      await manager.play(audio_path);
     }
   }
 }
 
-Future<List<double?>> SliderFunction() async {
-  if (await player.getDuration() != null) {
-    return [
-      (await player.getDuration())?.inSeconds.toDouble(),
-      (await player.getCurrentPosition())?.inSeconds.toDouble(),
-    ];
-  } else {
-    return [0.0, 0.0];
+class MusicProgressBar extends StatefulWidget {
+  const MusicProgressBar({super.key});
+
+  @override
+  State<MusicProgressBar> createState() => _MusicProgressBarState();
+}
+
+class _MusicProgressBarState extends State<MusicProgressBar> {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<Duration>(
+      stream: AudioManager()
+          .positionStream, // Listen to the "Heartbeat" of the player
+      builder: (context, snapshot) {
+        // 2. Get the Real-Time Data
+        final totalDuration = AudioManager().totalDuration;
+        final currentPosition = snapshot.data ?? Duration.zero;
+
+        // 3. Safety Check: If song hasn't loaded, max might be 0. Avoid crash.
+        double max = totalDuration.inSeconds.toDouble();
+        if (max <= 0) max = 1.0;
+
+        // 4. Determine Slider Value
+        // If user is dragging, use their finger position (_dragValue).
+        // If music is playing, use the song position (currentPosition).
+        double value = _isDragging
+            ? _dragValue
+            : currentPosition.inSeconds.toDouble();
+
+        // Clamp ensures value never exceeds max (prevents "Value > Max" crash)
+        if (value > max) value = max;
+
+        return Slider(
+          min: 0,
+          max: max,
+          value: value,
+
+          // COLORS
+          thumbColor: const Color.fromRGBO(255, 0, 0, 1),
+          activeColor: const Color.fromRGBO(255, 0, 0, 1),
+          inactiveColor: const Color.fromRGBO(
+            255,
+            0,
+            0,
+            0.3,
+          ), // Faded red for background
+          // LOGIC
+          onChanged: (newValue) {
+            setState(() {
+              _isDragging = true; // Stop the stream from fighting the user
+              _dragValue = newValue;
+            });
+          },
+
+          onChangeEnd: (newValue) {
+            // Only seek when the user LETS GO of the slider
+            AudioManager().seek(Duration(seconds: newValue.toInt()));
+
+            setState(() {
+              _isDragging = false; // Let the stream take over again
+            });
+          },
+        );
+      },
+    );
   }
 }
 
@@ -43,18 +113,6 @@ class Bottom_Music_Controller extends StatefulWidget {
 }
 
 class Bottom_Music_Controller_State extends State<Bottom_Music_Controller> {
-  double bmch = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        bmch = 65;
-      });
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -64,26 +122,33 @@ class Bottom_Music_Controller_State extends State<Bottom_Music_Controller> {
         if (snapshot.hasData == true) {
           return GestureDetector(
             onTap: () => setState(() {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  transitionDuration: Duration(milliseconds: 700),
-                  pageBuilder: (context, animation, secondaryanimation) {
-                    return Full_Size_Music_Controller();
-                  },
-                ),
-              );
+              setState(() {
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    transitionDuration: Duration(milliseconds: 700),
+                    pageBuilder: (context, animation, secondaryanimation) {
+                      return Full_Size_Music_Controller();
+                    },
+                  ),
+                );
+              });
             }),
-            child: AnimatedContainer(
-              duration: Duration(milliseconds: 200),
-              curve: Curves.slowMiddle,
+            onHorizontalDragEnd: (details) {
+              if (details.primaryVelocity! > 0) {
+                print("Previous Song");
+                // Swiped Right
+              } else if (details.primaryVelocity! < 0) {
+                print("Next Song");
+                // Swiped Left
+              }
+            },
+            child: Container(
               alignment: Alignment.topCenter,
               width: double.infinity,
-              height: bmch,
+              height: 65,
               decoration: BoxDecoration(
-                color: (snapshot.data!['mode'] == true)
-                    ? Color.fromARGB(215, 255, 255, 255)
-                    : Colors.black,
+                color: setContainerContrastColor(context),
                 borderRadius: const BorderRadius.all(Radius.circular(20)),
               ),
               child: Center(
@@ -100,31 +165,28 @@ class Bottom_Music_Controller_State extends State<Bottom_Music_Controller> {
                             child: Container(
                               width: 45,
                               height: 45,
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: (snapshot.data!['mode'] == true)
-                                    ? Colors.black
-                                    : Colors.white,
+                                color: Color.fromRGBO(34, 34, 34, 1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Icon(
-                                Icons.music_note,
-                                size: 25,
-                                color: snapshot.data!['mode'] == true
-                                    ? Colors.white
-                                    : Colors.black,
+                              child: SvgPicture.asset(
+                                "assets/MusicIcons/Vector-3.svg",
                               ),
                             ),
                           ),
                         ),
-
-                        Text(
-                          audio_path == ''
-                              ? "No Song is Playing..."
-                              : audio_path.split(Platform.pathSeparator).last,
-                          style: TextStyle(
-                            color: (snapshot.data!['mode'] == true)
-                                ? Colors.black
-                                : Colors.white,
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.4,
+                          child: Text(
+                            audio_path == ''
+                                ? "No Song is Playing..."
+                                : audio_path.split(Platform.pathSeparator).last,
+                            // maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Color.fromRGBO(34, 34, 34, 1),
+                            ),
                           ),
                         ),
                       ],
@@ -136,24 +198,19 @@ class Bottom_Music_Controller_State extends State<Bottom_Music_Controller> {
                         children: [
                           IconButton(
                             icon: [
-                              Icon(
-                                Icons.play_arrow,
-                                size: 40,
-                                color: (snapshot.data!['mode'] == true)
-                                    ? Colors.black
-                                    : Colors.white,
+                              SvgPicture.asset(
+                                "assets/MusicIcons/Play.svg",
+                                color: Color.fromRGBO(34, 34, 34, 1),
+                                width: 25,
+                                height: 25,
                               ),
-                              Icon(
-                                Icons.pause,
-                                size: 40,
-                                color: (snapshot.data!['mode'] == true)
-                                    ? Colors.black
-                                    : Colors.white,
+                              SvgPicture.asset(
+                                "assets/MusicIcons/Pause.svg",
+                                color: Color.fromRGBO(34, 34, 34, 1),
+                                width: 25,
+                                height: 25,
                               ),
                             ][indicatorState],
-                            color: (snapshot.data!['mode'] == true)
-                                ? Colors.black
-                                : Colors.white,
                             onPressed: () {
                               if (indicatorState == 0) {
                                 setState(() {
@@ -170,22 +227,16 @@ class Bottom_Music_Controller_State extends State<Bottom_Music_Controller> {
                           ),
                           IconButton(
                             onPressed: () {},
-                            icon: Icon(
-                              Icons.repeat,
-                              size: 40,
-                              color: (snapshot.data!['mode'] == true)
-                                  ? Colors.black
-                                  : Colors.white,
+                            icon: SvgPicture.asset(
+                              "assets/MusicIcons/Loop.svg",
+                              color: Color.fromRGBO(34, 34, 34, 1),
                             ),
                           ),
                           IconButton(
                             onPressed: () {},
-                            icon: Icon(
-                              Icons.shuffle,
-                              size: 40,
-                              color: (snapshot.data!['mode'] == true)
-                                  ? Colors.black
-                                  : Colors.white,
+                            icon: SvgPicture.asset(
+                              "assets/MusicIcons/Shuffle.svg",
+                              color: Color.fromRGBO(34, 34, 34, 1),
                             ),
                           ),
                         ],
@@ -382,8 +433,185 @@ class Full_Size_Music_Controller_State
                 ? LayoutBuilder(
                     builder: (context, constraints) {
                       return Scaffold(
-                        backgroundColor: Color.fromRGBO(26, 26, 26, 1),
                         key: ValueKey('displaySize<700'),
+                        backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+                        appBar: AppBar(
+                          backgroundColor: Colors.transparent,
+                          leading: IconButton(
+                            icon: SvgPicture.asset(
+                              "assets/MusicIcons/DownArrow.svg",
+                            ),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ),
+                        floatingActionButtonLocation:
+                            MediaQuery.of(context).size.width < 700
+                            ? FloatingActionButtonLocation.centerFloat
+                            : FloatingActionButtonLocation.startFloat,
+                        floatingActionButton:
+                            MediaQuery.of(context).size.width < 700
+                            ? Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      minWidth: 240,
+                                      maxWidth: 300,
+                                    ),
+                                    child: SizedBox(
+                                      height: 60,
+                                      width: 100 * 0.5,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Color.fromRGBO(34, 34, 34, 1),
+                                        ),
+                                        child: BottomNavigationBar(
+                                          landscapeLayout:
+                                              BottomNavigationBarLandscapeLayout
+                                                  .centered,
+                                          type: BottomNavigationBarType.fixed,
+                                          items: bottomNavigationBarItems,
+                                          currentIndex: navigationIndex,
+                                          onTap: (value) {
+                                            navigationIndex = value;
+                                            setState(() {
+                                              Navigator.pop(context);
+                                            });
+                                          },
+                                          showUnselectedLabels: false,
+                                          showSelectedLabels: false,
+                                          backgroundColor: Color.fromRGBO(
+                                            34,
+                                            34,
+                                            34,
+                                            1,
+                                          ),
+                                          unselectedItemColor: Colors.white,
+                                          selectedItemColor: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      minHeight:
+                                          MediaQuery.of(context).size.height *
+                                          0.35,
+                                      minWidth: 60,
+                                    ),
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        spacing: 10,
+                                        children: [
+                                          Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                onPressed: () {
+                                                  navigationIndex = 0;
+                                                  setState(() {});
+                                                },
+                                                icon: Icon(
+                                                  Icons.search,
+                                                  color: navigationIndex == 0
+                                                      ? Colors.red
+                                                      : Colors.white,
+                                                ),
+                                              ),
+                                              if (navigationIndex == 0)
+                                                Text(
+                                                  "Search",
+                                                  style: TextStyle(
+                                                    color: navigationIndex == 0
+                                                        ? Colors.red
+                                                        : Colors.white,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                          Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                onPressed: () {
+                                                  navigationIndex = 1;
+                                                  setState(() {});
+                                                },
+                                                icon: Icon(
+                                                  Icons.library_music,
+                                                  color: navigationIndex == 1
+                                                      ? Colors.red
+                                                      : Colors.white,
+                                                ),
+                                              ),
+                                              if (navigationIndex == 1)
+                                                Text(
+                                                  "Home",
+                                                  style: TextStyle(
+                                                    color: navigationIndex == 1
+                                                        ? Colors.red
+                                                        : Colors.white,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                          Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                onPressed: () {
+                                                  navigationIndex = 2;
+                                                  setState(() {});
+                                                },
+                                                icon: Icon(
+                                                  Icons.settings,
+                                                  color: navigationIndex == 2
+                                                      ? Colors.red
+                                                      : Colors.white,
+                                                ),
+                                              ),
+                                              if (navigationIndex == 2)
+                                                Text(
+                                                  "Settings",
+                                                  style: TextStyle(
+                                                    color: navigationIndex == 2
+                                                        ? Colors.red
+                                                        : Colors.white,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                         body: Padding(
                           padding: EdgeInsets.only(
                             top: constraints.maxHeight * 0.15,
@@ -403,22 +631,25 @@ class Full_Size_Music_Controller_State
                                       onPressed: () {},
                                     ),
                                   ),
-                                  Container(
-                                    height: constraints.maxWidth * 0.35,
-                                    width: constraints.maxWidth * 0.35,
-                                    constraints: BoxConstraints(
-                                      minHeight: 210,
-                                      minWidth: 210,
-                                      maxHeight: 300,
-                                      maxWidth: 300,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Color.fromRGBO(255, 245, 245, 1),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: SvgPicture.asset(
-                                      "assets/MusicIcons/MusicLogo.svg",
+                                  Hero(
+                                    tag: 'music_icon',
+                                    child: Container(
+                                      height: constraints.maxWidth * 0.35,
+                                      width: constraints.maxWidth * 0.35,
+                                      constraints: BoxConstraints(
+                                        minHeight: 210,
+                                        minWidth: 210,
+                                        maxHeight: 300,
+                                        maxWidth: 300,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Color.fromRGBO(255, 245, 245, 1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: SvgPicture.asset(
+                                        "assets/MusicIcons/MusicLogo.svg",
+                                      ),
                                     ),
                                   ),
                                   Padding(
@@ -446,7 +677,12 @@ class Full_Size_Music_Controller_State
                                       ),
                                     ),
                                     Text(
-                                      "Playing...",
+                                      audio_path == ''
+                                          ? "No Song is Playing..."
+                                          : audio_path
+                                                .split(Platform.pathSeparator)
+                                                .last,
+                                      textAlign: TextAlign.center,
                                       style: TextStyle(
                                         color: Color.fromRGBO(255, 245, 245, 1),
                                         fontSize: 16,
@@ -461,18 +697,7 @@ class Full_Size_Music_Controller_State
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Slider(
-                                      min: 0,
-                                      max: 100,
-                                      thumbColor: Color.fromRGBO(255, 0, 0, 1),
-                                      value: i,
-                                      activeColor: Color.fromRGBO(255, 0, 0, 1),
-                                      onChanged: (value) {
-                                        setState(() {
-                                          i = value;
-                                        });
-                                      },
-                                    ),
+                                    MusicProgressBar(),
                                     Container(
                                       alignment: Alignment.center,
                                       padding: const EdgeInsets.only(top: 5),
@@ -514,12 +739,31 @@ class Full_Size_Music_Controller_State
                                                 ),
                                               ),
                                               IconButton(
-                                                icon: SvgPicture.asset(
-                                                  "assets/MusicIcons/Play.svg",
-                                                  width: 20,
-                                                  height: 20,
-                                                ),
-                                                onPressed: () {},
+                                                icon: [
+                                                  SvgPicture.asset(
+                                                    "assets/MusicIcons/Play.svg",
+                                                    width: 20,
+                                                    height: 20,
+                                                  ),
+                                                  SvgPicture.asset(
+                                                    "assets/MusicIcons/Pause.svg",
+                                                    width: 20,
+                                                    height: 20,
+                                                  ),
+                                                ][indicatorState],
+                                                onPressed: () {
+                                                  if (indicatorState == 0) {
+                                                    setState(() {
+                                                      audioPlayAndPauseFunction();
+                                                      indicatorState = 1;
+                                                    });
+                                                  } else {
+                                                    setState(() {
+                                                      audioPlayAndPauseFunction();
+                                                      indicatorState = 0;
+                                                    });
+                                                  }
+                                                },
                                               ),
                                             ],
                                           ),
@@ -584,13 +828,9 @@ class Home_Page_Music_Controller_State
             width: double.infinity,
             height: MediaQuery.of(context).size.height * 0.35 + 40,
             decoration: BoxDecoration(
-              color: (snapshot.data!['mode'] == true)
-                  ? Colors.black45
-                  : Colors.white38,
+              color: Colors.black45,
               borderRadius: BorderRadius.all(Radius.circular(20)),
-              backgroundBlendMode: (snapshot.data!['mode'] == true)
-                  ? BlendMode.darken
-                  : BlendMode.hardLight,
+              backgroundBlendMode: BlendMode.darken,
             ),
             child: (MediaQuery.of(context).size.width > 700)
                 ? Container(
@@ -605,16 +845,12 @@ class Home_Page_Music_Controller_State
                             height: 200,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: (snapshot.data!['mode'] == true)
-                                  ? Colors.white
-                                  : Colors.black,
+                              color: Colors.white,
                             ),
                             child: Icon(
                               Icons.music_note,
                               size: 80,
-                              color: (snapshot.data!['mode'] == true)
-                                  ? Colors.black
-                                  : Colors.white,
+                              color: Colors.black,
                             ),
                           ),
                         ),
@@ -625,14 +861,8 @@ class Home_Page_Music_Controller_State
                             child: Container(
                               height: 200,
                               decoration: BoxDecoration(
-                                color: (snapshot.data!['mode'] == true)
-                                    ? Colors.black45
-                                    : Colors.white38,
-                                backgroundBlendMode:
-                                    (snapshot.data!['mode'] == true)
-                                    ? BlendMode.darken
-                                    : BlendMode.hardLight,
-
+                                color: Colors.black45,
+                                backgroundBlendMode: BlendMode.darken,
                                 borderRadius: BorderRadius.all(
                                   Radius.circular(20),
                                 ),
@@ -640,40 +870,7 @@ class Home_Page_Music_Controller_State
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  FutureBuilder(
-                                    future: SliderFunction(),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
-                                        return Slider(
-                                          value: snapshot.data![1]!.toDouble(),
-                                          min: 0,
-                                          max: snapshot.data![0]!.toDouble(),
-                                          thumbColor: Colors.white,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              i = value;
-                                            });
-                                          },
-                                          activeColor: Colors.redAccent,
-                                          inactiveColor: Colors.white,
-                                        );
-                                      } else {
-                                        return Slider(
-                                          value: i,
-                                          min: 0,
-                                          max: snapshot.data![0]!.toDouble(),
-                                          thumbColor: Colors.white,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              i = value;
-                                            });
-                                          },
-                                          activeColor: Colors.redAccent,
-                                          inactiveColor: Colors.white,
-                                        );
-                                      }
-                                    },
-                                  ),
+                                  MusicProgressBar(),
                                   Container(
                                     width: 180,
                                     child: Row(
@@ -683,10 +880,7 @@ class Home_Page_Music_Controller_State
                                         IconButton(
                                           icon: Icon(
                                             Icons.skip_previous,
-                                            color:
-                                                (snapshot.data!['mode'] == true)
-                                                ? Colors.white
-                                                : Colors.black,
+                                            color: Colors.white,
                                             size: 40,
                                           ),
                                           onPressed: () {},
@@ -696,31 +890,23 @@ class Home_Page_Music_Controller_State
                                             Icon(
                                               Icons.play_circle_fill,
                                               size: 50,
-                                              color:
-                                                  (snapshot.data!['mode'] ==
-                                                      true)
-                                                  ? Colors.white
-                                                  : Colors.black,
+                                              color: Colors.white,
                                             ),
                                             Icon(
                                               Icons.pause_circle_filled,
                                               size: 50,
-                                              color:
-                                                  (snapshot.data!['mode'] ==
-                                                      true)
-                                                  ? Colors.white
-                                                  : Colors.black,
+                                              color: Colors.white,
                                             ),
                                           ][indicatorState],
                                           onPressed: () {
                                             if (indicatorState == 0) {
                                               setState(() {
-                                                player.resume();
+                                                audioPlayAndPauseFunction();
                                                 indicatorState = 1;
                                               });
                                             } else {
                                               setState(() {
-                                                player.pause();
+                                                audioPlayAndPauseFunction();
                                                 indicatorState = 0;
                                               });
                                             }
@@ -729,10 +915,7 @@ class Home_Page_Music_Controller_State
                                         IconButton(
                                           icon: Icon(
                                             Icons.skip_next,
-                                            color:
-                                                (snapshot.data!['mode'] == true)
-                                                ? Colors.white
-                                                : Colors.black,
+                                            color: Colors.white,
                                             size: 40,
                                           ),
                                           onPressed: () {},
@@ -765,9 +948,7 @@ class Home_Page_Music_Controller_State
                                 width: 100,
                                 height: 100,
                                 decoration: BoxDecoration(
-                                  color: (snapshot.data!['mode'] == true)
-                                      ? Colors.white
-                                      : Colors.black,
+                                  color: Colors.white,
                                   shape: BoxShape.rectangle,
                                   backgroundBlendMode: BlendMode.hardLight,
                                   borderRadius: BorderRadius.all(
@@ -777,24 +958,11 @@ class Home_Page_Music_Controller_State
                                 child: Icon(
                                   Icons.music_note,
                                   size: 40,
-                                  color: (snapshot.data!['mode'] == true)
-                                      ? Colors.black
-                                      : Colors.white,
+                                  color: Colors.black,
                                 ),
                               ),
                               Expanded(
-                                child: Slider(
-                                  thumbColor: Colors.white,
-                                  activeColor: Colors.redAccent,
-                                  min: 0,
-                                  max: 100,
-                                  value: i,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      i = value;
-                                    });
-                                  },
-                                ),
+                                child: MusicProgressBar(),
                               ),
                               Container(
                                 height: 50,
@@ -805,9 +973,7 @@ class Home_Page_Music_Controller_State
                                     IconButton(
                                       icon: Icon(
                                         Icons.skip_previous,
-                                        color: (snapshot.data!['mode'] == true)
-                                            ? Colors.white
-                                            : Colors.black,
+                                        color: Colors.white,
                                         size: 35,
                                       ),
                                       onPressed: () => {},
@@ -817,18 +983,12 @@ class Home_Page_Music_Controller_State
                                       icon: [
                                         Icon(
                                           Icons.play_circle_fill,
-                                          color:
-                                              (snapshot.data!['mode'] == true)
-                                              ? Colors.white
-                                              : Colors.black,
+                                          color: Colors.white,
                                           size: 40,
                                         ),
                                         Icon(
                                           Icons.pause_circle_filled,
-                                          color:
-                                              (snapshot.data!['mode'] == true)
-                                              ? Colors.white
-                                              : Colors.black,
+                                          color: Colors.white,
                                           size: 40,
                                         ),
                                       ][indicatorState],
@@ -853,9 +1013,7 @@ class Home_Page_Music_Controller_State
                                     IconButton(
                                       icon: Icon(
                                         Icons.skip_next,
-                                        color: (snapshot.data!['mode'] == true)
-                                            ? Colors.white
-                                            : Colors.black,
+                                        color: Colors.white,
                                         size: 35,
                                       ),
                                       onPressed: () => {},
@@ -942,64 +1100,24 @@ class SideBar_Music_Controller_State extends State<SideBar_Music_Controller> {
                         height: 170,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.all(Radius.circular(10)),
-                          color: snapshot.data!['mode'] == true
-                              ? Colors.white
-                              : Colors.black,
+                          color: Colors.white,
                         ),
                         child: Icon(
                           Icons.music_note,
                           size: 60,
-                          color: snapshot.data!['mode'] == true
-                              ? Colors.black
-                              : Colors.white,
+                          color: Colors.black,
                         ),
                       ),
                       Text(
                         audio_path == ''
                             ? "No Song is Playing..."
                             : audio_path.split(Platform.pathSeparator).last,
-                        style: TextStyle(
-                          color: snapshot.data!['mode'] == true
-                              ? Colors.white
-                              : Colors.black,
-                          fontSize: 16,
-                        ),
+                        style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          FutureBuilder(
-                            future: SliderFunction(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData != [null, null]) {
-                                return Slider(
-                                  value: snapshot.data![1]!.toDouble(),
-                                  min: 0,
-                                  max: snapshot.data![0]!.toDouble(),
-                                  thumbColor: Colors.white,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      player.seek(
-                                        Duration(seconds: value.toInt()),
-                                      );
-                                    });
-                                  },
-                                  activeColor: Colors.redAccent,
-                                  inactiveColor: Colors.white,
-                                );
-                              } else {
-                                return Slider(
-                                  value: 0,
-                                  min: 0,
-                                  max: 1,
-                                  thumbColor: Colors.white,
-                                  onChanged: null,
-                                  activeColor: Colors.redAccent,
-                                  inactiveColor: Colors.white,
-                                );
-                              }
-                            },
-                          ),
+                          MusicProgressBar(),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -1020,9 +1138,7 @@ class SideBar_Music_Controller_State extends State<SideBar_Music_Controller> {
                                 icon: Icon(
                                   Icons.repeat,
                                   size: 35,
-                                  color: snapshot.data!['mode'] == true
-                                      ? Colors.white
-                                      : Colors.black,
+                                  color: Colors.white,
                                 ),
                               ),
                               IconButton(
@@ -1030,9 +1146,7 @@ class SideBar_Music_Controller_State extends State<SideBar_Music_Controller> {
                                 icon: Icon(
                                   Icons.skip_previous,
                                   size: 35,
-                                  color: snapshot.data!['mode'] == true
-                                      ? Colors.white
-                                      : Colors.black,
+                                  color: Colors.white,
                                 ),
                               ),
                               IconButton(
@@ -1052,16 +1166,12 @@ class SideBar_Music_Controller_State extends State<SideBar_Music_Controller> {
                                 icon: [
                                   Icon(
                                     Icons.play_circle_fill,
-                                    color: (snapshot.data!['mode'] == true)
-                                        ? Colors.white
-                                        : Colors.black,
+                                    color: Colors.white,
                                     size: 40,
                                   ),
                                   Icon(
                                     Icons.pause_circle_filled,
-                                    color: (snapshot.data!['mode'] == true)
-                                        ? Colors.white
-                                        : Colors.black,
+                                    color: Colors.white,
                                     size: 40,
                                   ),
                                 ][indicatorState],
@@ -1074,9 +1184,7 @@ class SideBar_Music_Controller_State extends State<SideBar_Music_Controller> {
                                 icon: Icon(
                                   Icons.skip_next,
                                   size: 35,
-                                  color: snapshot.data!['mode'] == true
-                                      ? Colors.white
-                                      : Colors.black,
+                                  color: Colors.white,
                                 ),
                               ),
                               IconButton(
@@ -1084,9 +1192,7 @@ class SideBar_Music_Controller_State extends State<SideBar_Music_Controller> {
                                 icon: Icon(
                                   Icons.shuffle,
                                   size: 35,
-                                  color: snapshot.data!['mode'] == true
-                                      ? Colors.white
-                                      : Colors.black,
+                                  color: Colors.white,
                                 ),
                               ),
                             ],

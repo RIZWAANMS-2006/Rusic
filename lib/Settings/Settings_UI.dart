@@ -3,6 +3,18 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:convert';
 
+Color setContainerColor(BuildContext context) {
+  return Theme.of(context).brightness == Brightness.dark
+      ? Color.fromRGBO(34, 34, 34, 1)
+      : Color.fromRGBO(255, 245, 245, 1);
+}
+
+Color setContainerContrastColor(BuildContext context) {
+  return Theme.of(context).brightness == Brightness.dark
+      ? Color.fromRGBO(255, 245, 245, 1)
+      : Color.fromRGBO(34, 34, 34, 1);
+}
+
 //File Handling for Settings
 Future<Map<dynamic, dynamic>> settingsFunction() async {
   final dir = await getDownloadsDirectory();
@@ -56,13 +68,8 @@ class Settings_UI_State extends State<Settings_UI> {
       initialData: {"mode": true, "bgstatus": "PowerSaving Mode"},
       future: FileSettings,
       builder: (context, snapshot) {
-        return SafeArea(
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: (snapshot.data!['mode'] == true)
-                ? Colors.black
-                : Colors.white,
+        return Scaffold(
+          body: SafeArea(
             child: Padding(
               padding: const EdgeInsets.only(left: 20, top: 10, right: 20),
               child: Column(
@@ -85,12 +92,7 @@ class Settings_UI_State extends State<Settings_UI> {
                     height: 50,
                     decoration: BoxDecoration(
                       border: Border(
-                        bottom: BorderSide(
-                          color: (snapshot.data!['mode'] == true)
-                              ? Colors.white
-                              : Colors.black,
-                          width: 1,
-                        ),
+                        bottom: BorderSide(color: Colors.white, width: 1),
                       ),
                     ),
                     child: Row(
@@ -99,12 +101,7 @@ class Settings_UI_State extends State<Settings_UI> {
                       children: [
                         Text(
                           "SYSTEM PREFERENCES",
-                          style: TextStyle(
-                            color: (snapshot.data!['mode'] == true)
-                                ? Colors.white
-                                : Colors.black,
-                            fontSize: 18,
-                          ),
+                          style: TextStyle(color: Colors.white, fontSize: 18),
                         ),
                         FutureBuilder(
                           initialData: {
@@ -162,12 +159,7 @@ class Settings_UI_State extends State<Settings_UI> {
                     height: 50,
                     decoration: BoxDecoration(
                       border: Border(
-                        bottom: BorderSide(
-                          color: (snapshot.data!['mode'] == true)
-                              ? Colors.white
-                              : Colors.black,
-                          width: 1,
-                        ),
+                        bottom: BorderSide(color: Colors.white, width: 1),
                       ),
                     ),
                     child: Row(
@@ -175,26 +167,17 @@ class Settings_UI_State extends State<Settings_UI> {
                       children: [
                         Text(
                           "SYSTEM JOY",
-                          style: TextStyle(
-                            color: (snapshot.data!['mode'] == true)
-                                ? Colors.white
-                                : Colors.black,
-                            fontSize: 18,
-                          ),
+                          style: TextStyle(color: Colors.white, fontSize: 18),
                         ),
                         DropdownButton(
                           value: snapshot.data!['bgstatus'],
                           icon: Icon(null, color: Colors.redAccent),
                           underline: Container(),
-                          dropdownColor: (snapshot.data!['mode'] == true)
-                              ? Colors.black
-                              : Colors.white,
+                          dropdownColor: Colors.black,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
-                            color: (snapshot.data!['mode'] == true)
-                                ? Colors.white
-                                : Colors.black,
+                            color: Colors.white,
                           ),
                           borderRadius: BorderRadius.all(Radius.circular(10)),
                           alignment: Alignment.centerRight,

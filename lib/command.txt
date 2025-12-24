@@ -1,0 +1,103 @@
+floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            height: 240,
+            width: 60,
+            decoration: BoxDecoration(
+              color: Color.fromRGBO(34, 34, 34, 1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.grey,
+                width: 0.2,
+                style: BorderStyle.solid,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              spacing: 10,
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        navigationIndex = 0;
+                        setState(() {});
+                      },
+                      icon: Icon(
+                        Icons.search,
+                        color: navigationIndex == 0 ? Colors.red : Colors.white,
+                      ),
+                    ),
+                    if (navigationIndex == 0)
+                      Text(
+                        "Search",
+                        style: TextStyle(
+                          color: navigationIndex == 0
+                              ? Colors.red
+                              : Colors.white,
+                        ),
+                      ),
+                  ],
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        navigationIndex = 1;
+                        setState(() {});
+                      },
+                      icon: Icon(
+                        Icons.library_music,
+                        color: navigationIndex == 1 ? Colors.red : Colors.white,
+                      ),
+                    ),
+                    if (navigationIndex == 1)
+                      Text(
+                        "Home",
+                        style: TextStyle(
+                          color: navigationIndex == 1
+                              ? Colors.red
+                              : Colors.white,
+                        ),
+                      ),
+                  ],
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        navigationIndex = 2;
+                        setState(() {});
+                      },
+                      icon: Icon(
+                        Icons.settings,
+                        color: navigationIndex == 2 ? Colors.red : Colors.white,
+                      ),
+                    ),
+                    if (navigationIndex == 2)
+                      Text(
+                        "Settings",
+                        style: TextStyle(
+                          color: navigationIndex == 2
+                              ? Colors.red
+                              : Colors.white,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),

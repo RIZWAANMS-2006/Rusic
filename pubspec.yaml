@@ -34,17 +34,19 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  webview_all: ^0.5.2
   flutter_launcher_icons: ^0.14.3
-  audioplayers: ^6.4.0
+  just_audio: ^0.10.5
+  just_audio_media_kit: ^2.1.0
+  media_kit_libs_windows_audio: ^1.0.9
+  media_kit_libs_linux: ^1.2.1
   video_player: ^2.10.0
   path_provider: ^2.1.5
   window_size: ^0.1.0
   video_player_win: ^3.1.1
   weather_animation: ^1.1.2
   weatherapi: ^1.1.1
-  sleek_circular_slider: ^2.1.0
   lottie: ^3.3.1
+  supabase_flutter: ^2.12.0
   flutter_svg: ^2.2.3
   
 
@@ -96,6 +98,10 @@ flutter:
     - family: Doto
       fonts:
         - asset: assets/fonts/Doto-VariableFont_ROND,wght.ttf
+    - family: Asimovian
+      fonts:
+        - asset: assets/Asimovian/Asimovian-Regular.ttf
+
     - family: Calm
       fonts:
         - asset: assets/Delius_Unicase/DeliusUnicase-Regular.ttf
