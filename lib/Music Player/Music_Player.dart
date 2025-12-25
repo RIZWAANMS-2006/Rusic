@@ -1,9 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'Music_Controller.dart';
-import 'HomePage_Components.dart';
-import 'package:music_controller/Settings/Settings_UI.dart';
+import 'package:music_controller/Music Player/MusicPlayerScreens/OnlineScreen.dart';
 
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;
@@ -63,7 +61,6 @@ class Home_Page_State extends State<Home_Page> {
                 pinned: true,
                 delegate: _StickyTabBarDelegate(
                   TabBar(
-                    // labelColor: Colors.white,
                     tabAlignment: TabAlignment.start,
                     isScrollable: true,
                     indicatorColor: Colors.red,
@@ -80,17 +77,16 @@ class Home_Page_State extends State<Home_Page> {
           },
           body: TabBarView(
             children: [
-              Scaffold(
-                backgroundColor: Colors.transparent,
-                body: Center(child: Text("No Music On Air Yet...")),
-              ),
+              OnlineScreen(),
               Scaffold(
                 backgroundColor: Colors.transparent,
                 body: Center(child: Text("No Favorite Yet...")),
-              ),Scaffold(
+              ),
+              Scaffold(
                 backgroundColor: Colors.transparent,
                 body: Center(child: Text("No Playlist Yet...")),
-              ),Scaffold(
+              ),
+              Scaffold(
                 backgroundColor: Colors.transparent,
                 body: Center(child: Text("No Locations Available...")),
               ),

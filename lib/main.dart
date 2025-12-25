@@ -21,14 +21,9 @@ Future<void> main() async {
   // };
 
   // Initialize Supabase
-  await Supabase.initialize(
-    url: String.fromEnvironment(
-      'SUPABASE_URL',
-    ), // Found in Project Settings -> API
-    anonKey: String.fromEnvironment(
-      'SUPABASE_ANON_KEY',
-    ), // Found in Project Settings -> API
-  );
+  final supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  final supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 
   // Set Preferred Orientations and System UI Mode
   await SystemChrome.setPreferredOrientations([

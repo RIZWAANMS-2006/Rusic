@@ -447,174 +447,55 @@ class Full_Size_Music_Controller_State
                           ),
                         ),
                         floatingActionButtonLocation:
-                            MediaQuery.of(context).size.width < 700
-                            ? FloatingActionButtonLocation.centerFloat
-                            : FloatingActionButtonLocation.startFloat,
-                        floatingActionButton:
-                            MediaQuery.of(context).size.width < 700
-                            ? Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      minWidth: 240,
-                                      maxWidth: 300,
+                            FloatingActionButtonLocation.centerFloat,
+                        floatingActionButton: Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minWidth: 240,
+                                maxWidth: 300,
+                              ),
+                              child: SizedBox(
+                                height: 60,
+                                width: 100 * 0.5,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Color.fromRGBO(34, 34, 34, 1),
+                                  ),
+                                  child: BottomNavigationBar(
+                                    landscapeLayout:
+                                        BottomNavigationBarLandscapeLayout
+                                            .centered,
+                                    type: BottomNavigationBarType.fixed,
+                                    items: bottomNavigationBarItems,
+                                    currentIndex: navigationIndex,
+                                    onTap: (value) {
+                                      navigationIndex = value;
+                                      setState(() {
+                                        Navigator.pop(context);
+                                      });
+                                    },
+                                    showUnselectedLabels: false,
+                                    showSelectedLabels: false,
+                                    backgroundColor: Color.fromRGBO(
+                                      34,
+                                      34,
+                                      34,
+                                      1,
                                     ),
-                                    child: SizedBox(
-                                      height: 60,
-                                      width: 100 * 0.5,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Color.fromRGBO(34, 34, 34, 1),
-                                        ),
-                                        child: BottomNavigationBar(
-                                          landscapeLayout:
-                                              BottomNavigationBarLandscapeLayout
-                                                  .centered,
-                                          type: BottomNavigationBarType.fixed,
-                                          items: bottomNavigationBarItems,
-                                          currentIndex: navigationIndex,
-                                          onTap: (value) {
-                                            navigationIndex = value;
-                                            setState(() {
-                                              Navigator.pop(context);
-                                            });
-                                          },
-                                          showUnselectedLabels: false,
-                                          showSelectedLabels: false,
-                                          backgroundColor: Color.fromRGBO(
-                                            34,
-                                            34,
-                                            34,
-                                            1,
-                                          ),
-                                          unselectedItemColor: Colors.white,
-                                          selectedItemColor: Colors.white,
-                                        ),
-                                      ),
-                                    ),
+                                    unselectedItemColor: Colors.white,
+                                    selectedItemColor: Colors.white,
                                   ),
                                 ),
-                              )
-                            : Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      minHeight:
-                                          MediaQuery.of(context).size.height *
-                                          0.35,
-                                      minWidth: 60,
-                                    ),
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        spacing: 10,
-                                        children: [
-                                          Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                onPressed: () {
-                                                  navigationIndex = 0;
-                                                  setState(() {});
-                                                },
-                                                icon: Icon(
-                                                  Icons.search,
-                                                  color: navigationIndex == 0
-                                                      ? Colors.red
-                                                      : Colors.white,
-                                                ),
-                                              ),
-                                              if (navigationIndex == 0)
-                                                Text(
-                                                  "Search",
-                                                  style: TextStyle(
-                                                    color: navigationIndex == 0
-                                                        ? Colors.red
-                                                        : Colors.white,
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                          Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                onPressed: () {
-                                                  navigationIndex = 1;
-                                                  setState(() {});
-                                                },
-                                                icon: Icon(
-                                                  Icons.library_music,
-                                                  color: navigationIndex == 1
-                                                      ? Colors.red
-                                                      : Colors.white,
-                                                ),
-                                              ),
-                                              if (navigationIndex == 1)
-                                                Text(
-                                                  "Home",
-                                                  style: TextStyle(
-                                                    color: navigationIndex == 1
-                                                        ? Colors.red
-                                                        : Colors.white,
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                          Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                onPressed: () {
-                                                  navigationIndex = 2;
-                                                  setState(() {});
-                                                },
-                                                icon: Icon(
-                                                  Icons.settings,
-                                                  color: navigationIndex == 2
-                                                      ? Colors.red
-                                                      : Colors.white,
-                                                ),
-                                              ),
-                                              if (navigationIndex == 2)
-                                                Text(
-                                                  "Settings",
-                                                  style: TextStyle(
-                                                    color: navigationIndex == 2
-                                                        ? Colors.red
-                                                        : Colors.white,
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
                               ),
+                            ),
+                          ),
+                        ),
                         body: Padding(
                           padding: EdgeInsets.only(
-                            top: constraints.maxHeight * 0.15,
+                            top: constraints.maxHeight * 0.10,
                           ),
                           child: Column(
                             children: [
@@ -961,9 +842,7 @@ class Home_Page_Music_Controller_State
                                   color: Colors.black,
                                 ),
                               ),
-                              Expanded(
-                                child: MusicProgressBar(),
-                              ),
+                              Expanded(child: MusicProgressBar()),
                               Container(
                                 height: 50,
                                 width: double.infinity,
