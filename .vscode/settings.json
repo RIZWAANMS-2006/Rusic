@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "D:/Codeing/Dart (Flutter)/music_controller/linux"
+    "cmake.sourceDirectory": "D:/Codeing/Dart (Flutter)/music_controller/linux",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

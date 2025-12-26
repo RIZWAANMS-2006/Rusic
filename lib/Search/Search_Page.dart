@@ -2,53 +2,9 @@ import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import "package:music_controller/Settings/Settings_UI.dart";
-import "package:path_provider/path_provider.dart";
+import "package:music_controller/Managers/PathManager.dart";
 import "dart:io";
 import 'package:music_controller/Music Player/Music_Controller.dart';
-
-Future<String> getOrCreateMyMusicDirectory() async {
-  Directory? myMusicDir;
-  if (Platform.isAndroid) {
-    myMusicDir = Directory('/storage/emulated/0/Download/MyMusic');
-  } else if (Platform.isWindows) {
-    myMusicDir = await getDownloadsDirectory();
-  } else if (Platform.isLinux) {
-    final String? home = Platform.environment['HOME'];
-    final String separator = Platform.pathSeparator;
-    final String musicPath = '$home${separator}Downloads${separator}MyMusic';
-    myMusicDir = Directory(musicPath);
-  }
-  if (await myMusicDir!.exists()) {
-    return myMusicDir.path;
-  } else {
-    await myMusicDir.create(recursive: true);
-    return myMusicDir.path;
-  }
-}
-
-Future<List<File>> getMediaFiles(String path) async {
-  final dir = Directory(path);
-  final files = dir.listSync(recursive: true);
-  // List of common audio and video file extensions
-  final extensions = [
-    '.mp3', '.wav', '.aac', '.flac', '.ogg', '.m4a', // audio
-    '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm', '.3gp', // video
-  ];
-  return files
-      .whereType<File>()
-      .where(
-        (file) =>
-            extensions.any((ext) => file.path.toLowerCase().endsWith(ext)),
-      )
-      .toList();
-}
-
-Future<List<File>> comboFunction() async {
-  List<File> mediaFiles = await getMediaFiles(
-    await getOrCreateMyMusicDirectory(),
-  );
-  return mediaFiles;
-}
 
 class Search_Page extends StatefulWidget {
   const Search_Page({super.key});
@@ -88,13 +44,13 @@ class _MusicSearchBarState extends State<MusicSearchBar> {
 }
 
 class _Search_PageState extends State<Search_Page> {
-  late Future<List<File>> mediaFileFuture;
+  late Future<Map<String, List<File>>> mediaFileFuture;
   int hoverIndex = -1;
 
   @override
   void initState() {
     super.initState();
-    mediaFileFuture = comboFunction();
+    mediaFileFuture = Pathmanager().fetchAllMediaFiles();
   }
 
   @override
@@ -127,6 +83,11 @@ class _Search_PageState extends State<Search_Page> {
                     ),
                   );
                 } else {
+                  final mediaByLocation = snapshot.data!;
+                  final allFiles = mediaByLocation.values
+                      .expand((files) => files)
+                      .toList();
+
                   if (MediaQuery.of(context).size.width > 700) {
                     return Stack(
                       children: [
@@ -135,14 +96,12 @@ class _Search_PageState extends State<Search_Page> {
                           maxCrossAxisExtent: 400,
                           childAspectRatio: 3,
                           shrinkWrap: false,
-                          children: List.generate(snapshot.data!.length, (
-                            index,
-                          ) {
+                          children: List.generate(allFiles.length, (index) {
                             return Padding(
                               padding: const EdgeInsets.only(right: 5, top: 5),
                               child: GestureDetector(
                                 onTap: () {
-                                  audio_path = snapshot.data![index].path;
+                                  audio_path = allFiles[index].path;
                                   audioPlayAndPauseFunction();
                                   setState(() {});
                                 },
@@ -170,7 +129,7 @@ class _Search_PageState extends State<Search_Page> {
                                       ),
                                       child: Center(
                                         child: Text(
-                                          snapshot.data![index].path
+                                          allFiles[index].path
                                               .split(Platform.pathSeparator)
                                               .last,
                                           textAlign: TextAlign.center,
@@ -203,7 +162,7 @@ class _Search_PageState extends State<Search_Page> {
                               alwaysShowMiddle: false,
                             ),
                             SliverList.builder(
-                              itemCount: snapshot.data!.length,
+                              itemCount: allFiles.length,
                               itemBuilder: (context, index) {
                                 return ConstrainedBox(
                                   constraints: BoxConstraints(
@@ -212,7 +171,7 @@ class _Search_PageState extends State<Search_Page> {
                                   ),
                                   child: ListTile(
                                     onTap: () {
-                                      audio_path = snapshot.data![index].path;
+                                      audio_path = allFiles[index].path;
                                       audioPlayAndPauseFunction();
                                       if (indicatorState == 0) {
                                         indicatorState = 1;
@@ -237,7 +196,7 @@ class _Search_PageState extends State<Search_Page> {
                                     ),
                                     tileColor: setContainerColor(context),
                                     title: Text(
-                                      snapshot.data![index].path
+                                      allFiles[index].path
                                           .split(Platform.pathSeparator)
                                           .last,
                                       textAlign: TextAlign.left,
@@ -280,9 +239,6 @@ class _Search_PageState extends State<Search_Page> {
               },
             ),
           ),
-          MediaQuery.of(context).size.width > 700
-              ? SideBar_Music_Controller()
-              : Container(),
         ],
       ),
     );

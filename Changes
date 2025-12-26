@@ -1,0 +1,94 @@
+# Changes
+# Date: 2025-12-26
+
+android:
+  - issue: Build failed due to Android Gradle Plugin (AGP) version conflict
+    symptom: >
+      Gradle error reporting plugin already on classpath with different version;
+      incompatible Gradle wrapper; warnings about Kotlin/Java alignment.
+    root_cause: >
+      Mixed AGP versions across plugin management and build files (8.7.3 vs 8.9.1),
+      Gradle wrapper version below AGP requirements, JVM toolchain/Kotlin misaligned,
+      and compileSdk/targetSdk too low for dependencies.
+    fixes:
+      - Unified AGP to 8.9.1 across Gradle configuration
+      - Upgraded Gradle wrapper to 8.11.1
+      - Set compileSdk and targetSdk to 36
+      - Configured Java toolchain 17 and Kotlin 2.1.0
+      - (Optional) Added Foojay resolver to auto-provision correct JDK
+    files_changed:
+      - android/settings.gradle.kts
+      - android/gradle/wrapper/gradle-wrapper.properties
+      - android/app/build.gradle.kts
+    reproduce:
+      - Run: flutter run (with mismatched AGP/Gradle/Kotlin versions)
+      - Observe Gradle error about plugin already on classpath with different version
+    verification:
+      - Run: flutter clean; flutter pub get; flutter run
+      - App builds APK and installs without version conflict
+    outcome: App builds and installs successfully on device/emulator.
+
+  - issue: Android Search showed no audio/video files on device (Android 11+)
+    symptom: >
+      PermissionStatus.denied in logs; path exists (/storage/emulated/0/Download),
+      but 0 media files detected.
+    root_cause: >
+      Scoped storage restrictions on Android 11+ requiring MANAGE_EXTERNAL_STORAGE
+      for broad file access; permission not granted at runtime; scanning executed
+      without proper access; incorrect fallback directory API initially used.
+    fixes:
+      - Declared MANAGE_EXTERNAL_STORAGE, READ/WRITE_EXTERNAL_STORAGE in manifest
+      - Integrated permission_handler and requested storage + manageExternalStorage on startup
+      - Implemented robust directory resolution and fallbacks (Download → app dirs)
+      - Added detailed logging and safer media filtering
+      - Corrected path_provider usage (getApplicationDocumentsDirectory)
+    files_changed:
+      - android/app/src/main/AndroidManifest.xml
+      - lib/main.dart
+      - lib/Search/Search_Page.dart
+    reproduce:
+      - Launch app on Android 11+ and deny storage permission when prompted
+      - Navigate to Search; logs show PermissionStatus.denied and 0 media files detected
+    verification:
+      - Grant storage/manage external storage permissions on startup
+      - Logs show scanning path and matched media > 0; Search lists media items
+    outcome: Permission dialog appears; directory scan succeeds; Search lists media files.
+
+ios:
+  - issue: No iOS-specific issues related to these changes
+    symptom: N/A
+    root_cause: Android-only build and storage permission constraints; iOS was unaffected.
+    fixes:
+      - No platform-specific changes required for iOS as part of these tasks
+    files_changed:
+      - None
+    reproduce:
+      - N/A for this set of Android-focused changes
+    verification:
+      - Build and launch on iOS to confirm no regressions in app startup and navigation
+    outcome: iOS build configuration remains unchanged; no new permissions or code paths added.
+
+desktop:
+  - issue: No desktop-specific issues (Windows/Linux/macOS) related to these changes
+    symptom: N/A
+    root_cause: Desktop platforms do not use Android scoped storage or AGP/Gradle Android toolchain.
+    fixes:
+      - No platform-specific changes required for desktop; existing code already uses platform-appropriate directories
+        (e.g., getDownloadsDirectory on Windows; user home paths on Linux/macOS)
+    files_changed:
+      - None
+    reproduce:
+      - N/A for AGP/scoped storage; not applicable to desktop
+    verification:
+      - Run on desktop; confirm file scanning uses platform directories and app functions as before
+    outcome: Desktop behavior unchanged; Android fixes do not affect desktop builds.
+
+commands:
+  - description: Clean build and run (used to verify fixes)
+    run:
+      - flutter clean
+      - flutter pub get
+      - flutter run
+  - description: Check dependency updates (optional)
+    run:
+      - flutter pub outdated

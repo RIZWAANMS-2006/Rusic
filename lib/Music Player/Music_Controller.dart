@@ -115,142 +115,125 @@ class Bottom_Music_Controller extends StatefulWidget {
 class Bottom_Music_Controller_State extends State<Bottom_Music_Controller> {
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      initialData: {"mode": true, "bgstatus": "PowerSaving Mode"},
-      future: FileSettings,
-      builder: (context, snapshot) {
-        if (snapshot.hasData == true) {
-          return GestureDetector(
-            onTap: () => setState(() {
-              setState(() {
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    transitionDuration: Duration(milliseconds: 700),
-                    pageBuilder: (context, animation, secondaryanimation) {
-                      return Full_Size_Music_Controller();
-                    },
-                  ),
-                );
-              });
-            }),
-            onHorizontalDragEnd: (details) {
-              if (details.primaryVelocity! > 0) {
-                print("Previous Song");
-                // Swiped Right
-              } else if (details.primaryVelocity! < 0) {
-                print("Next Song");
-                // Swiped Left
-              }
-            },
-            child: Container(
-              alignment: Alignment.topCenter,
-              width: double.infinity,
-              height: 65,
-              decoration: BoxDecoration(
-                color: setContainerContrastColor(context),
-                borderRadius: const BorderRadius.all(Radius.circular(20)),
-              ),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8, right: 10),
-                          child: Hero(
-                            tag: 'music_icon',
-                            child: Container(
-                              width: 45,
-                              height: 45,
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Color.fromRGBO(34, 34, 34, 1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: SvgPicture.asset(
-                                "assets/MusicIcons/Vector-3.svg",
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.4,
-                          child: Text(
-                            audio_path == ''
-                                ? "No Song is Playing..."
-                                : audio_path.split(Platform.pathSeparator).last,
-                            // maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Color.fromRGBO(34, 34, 34, 1),
-                            ),
-                          ),
-                        ),
-                      ],
+    return GestureDetector(
+      onTap: () => setState(() {
+        setState(() {
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              transitionDuration: Duration(milliseconds: 700),
+              pageBuilder: (context, animation, secondaryanimation) {
+                return Full_Size_Music_Controller();
+              },
+            ),
+          );
+        });
+      }),
+      onHorizontalDragEnd: (details) {
+        if (details.primaryVelocity! > 0) {
+          print("Previous Song");
+          // Swiped Right
+        } else if (details.primaryVelocity! < 0) {
+          print("Next Song");
+          // Swiped Left
+        }
+      },
+      child: Container(
+        alignment: Alignment.topCenter,
+        width: double.infinity,
+        height: 65,
+        decoration: BoxDecoration(
+          color: setContainerContrastColor(context),
+          borderRadius: const BorderRadius.all(Radius.circular(20)),
+        ),
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, right: 10),
+                    child: Container(
+                      width: 45,
+                      height: 45,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Color.fromRGBO(34, 34, 34, 1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: SvgPicture.asset("assets/MusicIcons/Vector-3.svg"),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 7),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            icon: [
-                              SvgPicture.asset(
-                                "assets/MusicIcons/Play.svg",
-                                color: Color.fromRGBO(34, 34, 34, 1),
-                                width: 25,
-                                height: 25,
-                              ),
-                              SvgPicture.asset(
-                                "assets/MusicIcons/Pause.svg",
-                                color: Color.fromRGBO(34, 34, 34, 1),
-                                width: 25,
-                                height: 25,
-                              ),
-                            ][indicatorState],
-                            onPressed: () {
-                              if (indicatorState == 0) {
-                                setState(() {
-                                  audioPlayAndPauseFunction();
-                                  indicatorState = 1;
-                                });
-                              } else {
-                                setState(() {
-                                  audioPlayAndPauseFunction();
-                                  indicatorState = 0;
-                                });
-                              }
-                            },
-                          ),
-                          IconButton(
-                            onPressed: () {},
-                            icon: SvgPicture.asset(
-                              "assets/MusicIcons/Loop.svg",
-                              color: Color.fromRGBO(34, 34, 34, 1),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () {},
-                            icon: SvgPicture.asset(
-                              "assets/MusicIcons/Shuffle.svg",
-                              color: Color.fromRGBO(34, 34, 34, 1),
-                            ),
-                          ),
-                        ],
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.4,
+                    child: Text(
+                      audio_path == ''
+                          ? "No Song is Playing..."
+                          : audio_path.split(Platform.pathSeparator).last,
+                      // maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Color.fromRGBO(34, 34, 34, 1)),
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 7),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: [
+                        SvgPicture.asset(
+                          "assets/MusicIcons/Play.svg",
+                          color: Color.fromRGBO(34, 34, 34, 1),
+                          width: 25,
+                          height: 25,
+                        ),
+                        SvgPicture.asset(
+                          "assets/MusicIcons/Pause.svg",
+                          color: Color.fromRGBO(34, 34, 34, 1),
+                          width: 25,
+                          height: 25,
+                        ),
+                      ][indicatorState],
+                      onPressed: () {
+                        if (indicatorState == 0) {
+                          setState(() {
+                            audioPlayAndPauseFunction();
+                            indicatorState = 1;
+                          });
+                        } else {
+                          setState(() {
+                            audioPlayAndPauseFunction();
+                            indicatorState = 0;
+                          });
+                        }
+                      },
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: SvgPicture.asset(
+                        "assets/MusicIcons/Loop.svg",
+                        color: Color.fromRGBO(34, 34, 34, 1),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: SvgPicture.asset(
+                        "assets/MusicIcons/Shuffle.svg",
+                        color: Color.fromRGBO(34, 34, 34, 1),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          );
-        } else {
-          return CircularProgressIndicator(color: Colors.redAccent);
-        }
-      },
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -512,25 +495,22 @@ class Full_Size_Music_Controller_State
                                       onPressed: () {},
                                     ),
                                   ),
-                                  Hero(
-                                    tag: 'music_icon',
-                                    child: Container(
-                                      height: constraints.maxWidth * 0.35,
-                                      width: constraints.maxWidth * 0.35,
-                                      constraints: BoxConstraints(
-                                        minHeight: 210,
-                                        minWidth: 210,
-                                        maxHeight: 300,
-                                        maxWidth: 300,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Color.fromRGBO(255, 245, 245, 1),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: SvgPicture.asset(
-                                        "assets/MusicIcons/MusicLogo.svg",
-                                      ),
+                                  Container(
+                                    height: constraints.maxWidth * 0.35,
+                                    width: constraints.maxWidth * 0.35,
+                                    constraints: BoxConstraints(
+                                      minHeight: 210,
+                                      minWidth: 210,
+                                      maxHeight: 300,
+                                      maxWidth: 300,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Color.fromRGBO(255, 245, 245, 1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: SvgPicture.asset(
+                                      "assets/MusicIcons/MusicLogo.svg",
                                     ),
                                   ),
                                   Padding(

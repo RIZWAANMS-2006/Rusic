@@ -9,11 +9,24 @@ import 'Settings/Settings_UI.dart';
 import 'Search/Search_Page.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 Future<void> main() async {
   // Initialize JustAudioMediaKit And Flutter Bindings
   JustAudioMediaKit.ensureInitialized();
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Request Android permissions early (Android 11+)
+  if (Platform.isAndroid) {
+    // Request READ_EXTERNAL_STORAGE first (more reliable than MANAGE_EXTERNAL_STORAGE)
+    PermissionStatus readStatus = await Permission.storage.request();
+    print('Storage permission status after request: $readStatus');
+
+    // Also try MANAGE_EXTERNAL_STORAGE for broader access
+    PermissionStatus manageStatus = await Permission.manageExternalStorage
+        .request();
+    print('Manage external storage permission status: $manageStatus');
+  }
 
   // Custom Error Widget
   // ErrorWidget.builder = (FlutterErrorDetails details) {
@@ -175,9 +188,10 @@ class WideScreenState extends State<WideScreen> {
           Expanded(
             child: IndexedStack(
               index: navigationIndex,
-              children: const [Search_Page(), Home_Page(), Settings_UI()],
+              children: const [Search_Page(), Library(), Settings_UI()],
             ),
           ),
+          SideBar_Music_Controller(),
         ],
       ),
     );
@@ -215,15 +229,15 @@ class CompactScreenState extends State<CompactScreen> {
               }),
               backgroundColor: Color.fromRGBO(34, 34, 34, 1),
               showUnselectedLabels: false,
-              unselectedItemColor: Colors.white,
-              selectedItemColor: Colors.red,
+              // unselectedItemColor: Colors.white,
+              selectedItemColor: Theme.of(context).colorScheme.primary,
             ),
           ),
         ),
       ),
       body: IndexedStack(
         index: navigationIndex,
-        children: const [Search_Page(), Home_Page(), Settings_UI()],
+        children: const [Search_Page(), Library(), Settings_UI()],
       ),
     );
   }

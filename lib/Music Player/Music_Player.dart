@@ -30,15 +30,19 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 // Creating "Music_Controller"
-class Home_Page extends StatefulWidget {
-  const Home_Page({super.key});
+class Library extends StatefulWidget {
+  const Library({super.key});
 
   @override
-  State<Home_Page> createState() => Home_Page_State();
+  State<Library> createState() => LibraryState();
 }
 
 // Creating "Music Controller State Class"
-class Home_Page_State extends State<Home_Page> {
+class LibraryState extends State<Library>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(

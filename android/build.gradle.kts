@@ -1,3 +1,8 @@
+plugins {
+    id("com.android.application") version "8.9.1" apply false
+    id("org.jetbrains.kotlin.android") version "2.1.0" apply false
+}
+
 allprojects {
     repositories {
         google()
@@ -14,6 +19,18 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+}
+
+subprojects {
+    configurations.all {
+        resolutionStrategy {
+            force(
+                "androidx.core:core:1.13.1",
+                "androidx.core:core-ktx:1.13.1",
+                "androidx.browser:browser:1.7.0"
+            )
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {
