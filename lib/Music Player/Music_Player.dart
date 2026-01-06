@@ -45,6 +45,7 @@ class LibraryState extends State<Library>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return DefaultTabController(
       length: 4,
       child: Scaffold(

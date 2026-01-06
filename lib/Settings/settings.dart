@@ -54,14 +54,14 @@ WidgetStateProperty<Icon> Switch_Icons =
 
 String mainvalue = 'Live Wallpaper';
 
-class Settings_UI extends StatefulWidget {
-  const Settings_UI({super.key});
+class Settings extends StatefulWidget {
+  const Settings({super.key});
 
   @override
-  State<Settings_UI> createState() => Settings_UI_State();
+  State<Settings> createState() => Settings_UI_State();
 }
 
-class Settings_UI_State extends State<Settings_UI> {
+class Settings_UI_State extends State<Settings> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(

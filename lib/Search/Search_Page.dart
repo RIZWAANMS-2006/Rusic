@@ -1,16 +1,16 @@
 import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
-import "package:music_controller/Settings/Settings_UI.dart";
-import "package:music_controller/Managers/PathManager.dart";
+import "package:music_controller/Settings/settings.dart";
+import "package:music_controller/Managers/path_manager.dart";
 import "dart:io";
-import 'package:music_controller/Music Player/Music_Controller.dart';
+import 'package:music_controller/Music Player/music_controller.dart';
 
-class Search_Page extends StatefulWidget {
-  const Search_Page({super.key});
+class Search extends StatefulWidget {
+  const Search({super.key});
 
   @override
-  State<Search_Page> createState() => _Search_PageState();
+  State<Search> createState() => _SearchState();
 }
 
 class MusicSearchBar extends StatefulWidget {
@@ -43,7 +43,7 @@ class _MusicSearchBarState extends State<MusicSearchBar> {
   }
 }
 
-class _Search_PageState extends State<Search_Page> {
+class _SearchState extends State<Search> {
   late Future<Map<String, List<File>>> mediaFileFuture;
   int hoverIndex = -1;
 
@@ -87,7 +87,6 @@ class _Search_PageState extends State<Search_Page> {
                   final allFiles = mediaByLocation.values
                       .expand((files) => files)
                       .toList();
-
                   if (MediaQuery.of(context).size.width > 700) {
                     return Stack(
                       children: [

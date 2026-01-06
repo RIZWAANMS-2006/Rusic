@@ -1,12 +1,11 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:music_controller/Music Player/Music_Controller.dart';
+import 'package:music_controller/Music Player/music_controller.dart';
 import "package:window_size/window_size.dart";
-import 'Music Player/Music_Player.dart';
-import 'Settings/Settings_UI.dart';
-import 'Search/Search_Page.dart';
+import 'Music Player/music_player.dart';
+import 'Settings/settings.dart';
+import 'Search/search_page.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -188,10 +187,13 @@ class WideScreenState extends State<WideScreen> {
           Expanded(
             child: IndexedStack(
               index: navigationIndex,
-              children: const [Search_Page(), Library(), Settings_UI()],
+              children: const [Search(), Library(), Settings()],
             ),
           ),
-          SideBar_Music_Controller(),
+          SizedBox(
+            width: 350,
+            height: double.infinity,
+            child: SideMusicController()),
         ],
       ),
     );
@@ -237,7 +239,7 @@ class CompactScreenState extends State<CompactScreen> {
       ),
       body: IndexedStack(
         index: navigationIndex,
-        children: const [Search_Page(), Library(), Settings_UI()],
+        children: const [Search(), Library(), Settings()],
       ),
     );
   }

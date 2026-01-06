@@ -3,9 +3,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:music_controller/main.dart';
-import 'package:music_controller/Settings/Settings_UI.dart';
-import 'package:music_controller/Music Player/HomePage_Components.dart';
-import 'package:music_controller/Managers/AudioManager.dart';
+import 'package:music_controller/Settings/settings.dart';
+import 'package:music_controller/Music%20Player/dynamic_background.dart';
+import 'package:music_controller/Managers/audio_manager.dart';
 
 // play and pause button variable declaration
 int indicatorState = 0;
@@ -893,179 +893,140 @@ class Home_Page_Music_Controller_State
   }
 }
 
-class SideBar_Music_Controller extends StatefulWidget {
-  const SideBar_Music_Controller({super.key});
+class SideMusicController extends StatefulWidget {
+  const SideMusicController({super.key});
 
   @override
-  State<SideBar_Music_Controller> createState() =>
-      SideBar_Music_Controller_State();
+  State<SideMusicController> createState() => SideMusicControllerState();
 }
 
-class SideBar_Music_Controller_State extends State<SideBar_Music_Controller> {
-  double sbmcw = -350;
+class SideMusicControllerState extends State<SideMusicController> {
 
   @override
   void initState() {
     super.initState();
-    // Animate sidebar in after build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        sbmcw = 0;
-      });
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      initialData: {"mode": true, "bgstatus": "PowerSaving Mode"},
-      future: FileSettings,
-      builder: (context, snapshot) {
-        return SizedBox(
-          width: 350,
-          height: MediaQuery.of(context).size.height,
-          child: Stack(
-            // alignment: AlignmentDirectional.center,
-            children: [
-              AnimatedPositioned(
-                duration: Duration(milliseconds: 500),
-                curve: Curves.easeInOutCubic,
-                right: sbmcw,
-                child: SizedBox(
-                  width: 350, // match parent Container width
-                  height: MediaQuery.of(
-                    context,
-                  ).size.height, // match parent Container height
-                  child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                    child: Background_Dynamic_Theme(),
-                  ),
-                ),
+    return Stack(
+      // alignment: AlignmentDirectional.center,
+      children: [
+        ImageFiltered(
+          imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: WeatherBackground(),
+        ),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          spacing: 15,
+          children: [
+            Container(
+              width: 170,
+              height: 170,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                color: Colors.white,
               ),
-              AnimatedPositioned(
-                duration: Duration(milliseconds: 500),
-                curve: Curves.easeInOutCubic,
-                right: sbmcw,
-                child: SizedBox(
-                  width: 350,
-                  height: MediaQuery.of(context).size.height,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    spacing: 15,
-                    children: [
-                      Container(
-                        width: 170,
-                        height: 170,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
+              child: Icon(
+                Icons.music_note,
+                size: 60,
+                color: Colors.black,
+              ),
+            ),
+            Text(
+              audio_path == ''
+                  ? "No Song is Playing..."
+                  : audio_path.split(Platform.pathSeparator).last,
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                MusicProgressBar(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        if (indicatorState == 1) {
+                          setState(() {
+                            audioPlayAndPauseFunction();
+                            indicatorState = 0;
+                          });
+                        } else {
+                          setState(() {
+                            audioPlayAndPauseFunction();
+                            indicatorState = 1;
+                          });
+                        }
+                      },
+                      icon: Icon(
+                        Icons.repeat,
+                        size: 35,
+                        color: Colors.white,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.skip_previous,
+                        size: 35,
+                        color: Colors.white,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        if (indicatorState == 1) {
+                          setState(() {
+                            audioPlayAndPauseFunction();
+                            indicatorState = 0;
+                          });
+                        } else {
+                          setState(() {
+                            audioPlayAndPauseFunction();
+                            indicatorState = 1;
+                          });
+                        }
+                      },
+                      icon: [
+                        Icon(
+                          Icons.play_circle_fill,
                           color: Colors.white,
+                          size: 40,
                         ),
-                        child: Icon(
-                          Icons.music_note,
-                          size: 60,
-                          color: Colors.black,
+                        Icon(
+                          Icons.pause_circle_filled,
+                          color: Colors.white,
+                          size: 40,
                         ),
+                      ][indicatorState],
+                      color: 
+                           Colors.black,
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.skip_next,
+                        size: 35,
+                        color: Colors.white,
                       ),
-                      Text(
-                        audio_path == ''
-                            ? "No Song is Playing..."
-                            : audio_path.split(Platform.pathSeparator).last,
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.shuffle,
+                        size: 35,
+                        color: Colors.white,
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          MusicProgressBar(),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IconButton(
-                                onPressed: () {
-                                  if (indicatorState == 1) {
-                                    setState(() {
-                                      audioPlayAndPauseFunction();
-                                      indicatorState = 0;
-                                    });
-                                  } else {
-                                    setState(() {
-                                      audioPlayAndPauseFunction();
-                                      indicatorState = 1;
-                                    });
-                                  }
-                                },
-                                icon: Icon(
-                                  Icons.repeat,
-                                  size: 35,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () {},
-                                icon: Icon(
-                                  Icons.skip_previous,
-                                  size: 35,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  if (indicatorState == 1) {
-                                    setState(() {
-                                      audioPlayAndPauseFunction();
-                                      indicatorState = 0;
-                                    });
-                                  } else {
-                                    setState(() {
-                                      audioPlayAndPauseFunction();
-                                      indicatorState = 1;
-                                    });
-                                  }
-                                },
-                                icon: [
-                                  Icon(
-                                    Icons.play_circle_fill,
-                                    color: Colors.white,
-                                    size: 40,
-                                  ),
-                                  Icon(
-                                    Icons.pause_circle_filled,
-                                    color: Colors.white,
-                                    size: 40,
-                                  ),
-                                ][indicatorState],
-                                color: (snapshot.data!['mode'] == true)
-                                    ? Colors.white
-                                    : Colors.black,
-                              ),
-                              IconButton(
-                                onPressed: () {},
-                                icon: Icon(
-                                  Icons.skip_next,
-                                  size: 35,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () {},
-                                icon: Icon(
-                                  Icons.shuffle,
-                                  size: 35,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+              ],
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
