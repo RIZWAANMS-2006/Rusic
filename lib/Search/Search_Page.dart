@@ -13,14 +13,9 @@ class Search extends StatefulWidget {
   State<Search> createState() => _SearchState();
 }
 
-class MusicSearchBar extends StatefulWidget {
+class MusicSearchBar extends StatelessWidget {
   const MusicSearchBar({super.key});
 
-  @override
-  State<StatefulWidget> createState() => _MusicSearchBarState();
-}
-
-class _MusicSearchBarState extends State<MusicSearchBar> {
   @override
   Widget build(BuildContext context) {
     return SearchAnchor(
@@ -88,66 +83,84 @@ class _SearchState extends State<Search> {
                       .expand((files) => files)
                       .toList();
                   if (MediaQuery.of(context).size.width > 700) {
-                    return Stack(
-                      children: [
-                        GridView.extent(
-                          padding: const EdgeInsets.only(left: 5, bottom: 5),
-                          maxCrossAxisExtent: 400,
-                          childAspectRatio: 3,
-                          shrinkWrap: false,
-                          children: List.generate(allFiles.length, (index) {
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 5, top: 5),
-                              child: GestureDetector(
-                                onTap: () {
-                                  audio_path = allFiles[index].path;
-                                  audioPlayAndPauseFunction();
-                                  setState(() {});
-                                },
-                                child: AnimatedScale(
-                                  scale: (hoverIndex == index) ? 1.015 : 1,
-                                  duration: Duration(milliseconds: 75),
-                                  curve: Curves.linear,
-                                  child: MouseRegion(
-                                    onEnter: (event) {
-                                      setState(() {
-                                        hoverIndex = index;
-                                      });
-                                    },
-                                    onExit: (event) {
-                                      setState(() {
-                                        hoverIndex = -1;
-                                      });
-                                    },
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(10),
+                    return Scaffold(
+                      floatingActionButton: MusicSearchBar(),
+                      floatingActionButtonLocation: .centerFloat,
+                      body: CustomScrollView(
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
+                        ),
+                        slivers: [
+                          CupertinoSliverNavigationBar(
+                            stretch: true,
+                            backgroundColor:
+                                setContainerColor(context), // Replace with your color logic
+                            largeTitle: const Text("Search"),
+                            // middle: const Text("Search"),
+                            alwaysShowMiddle: false,
+                            transitionBetweenRoutes: false,
+                            border: null,
+                          ),
+                          SliverPadding(
+                            padding: const EdgeInsets.only(
+                              left: 5,
+                              bottom: 5,
+                              right: 5,
+                              top: 5,
+                            ),
+                            sliver: SliverGrid.extent(
+                              maxCrossAxisExtent: 400,
+                              childAspectRatio: 3,
+                              mainAxisSpacing: 5,
+                              crossAxisSpacing: 5,
+                              children: List.generate(allFiles.length, (
+                                index,
+                              ) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    audio_path = allFiles[index].path;
+                                    audioPlayAndPauseFunction();
+                                    setState(() {});
+                                  },
+                                  child: AnimatedScale(
+                                    scale: (hoverIndex == index) ? 1.015 : 1,
+                                    duration: Duration(milliseconds: 75),
+                                    curve: Curves.linear,
+                                    child: MouseRegion(
+                                      onEnter: (event) {
+                                        setState(() {
+                                          hoverIndex = index;
+                                        });
+                                      },
+                                      onExit: (event) {
+                                        setState(() {
+                                          hoverIndex = -1;
+                                        });
+                                      },
+                                      child: DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(10),
+                                          ),
+                                          color: setContainerColor(context),
                                         ),
-                                        color: setContainerColor(context),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          allFiles[index].path
-                                              .split(Platform.pathSeparator)
-                                              .last,
-                                          textAlign: TextAlign.center,
+                                        child: Center(
+                                          child: Text(
+                                            allFiles[index].path
+                                                .split(Platform.pathSeparator)
+                                                .last,
+                                            textAlign: TextAlign.center,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                            );
-                          }),
-                        ),
-                        Positioned(
-                          bottom: 20,
-                          left: 20,
-                          right: 20,
-                          child: Center(child: MusicSearchBar()),
-                        ),
-                      ],
+                                );
+                              }),
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   } else {
                     return Stack(
@@ -205,12 +218,7 @@ class _SearchState extends State<Search> {
                                 );
                               },
                             ),
-                            SliverToBoxAdapter(
-                              child: Container(
-                                height: 170,
-                                color: setContainerColor(context),
-                              ),
-                            ),
+                            SliverToBoxAdapter(child: SizedBox(height: 170)),
                           ],
                         ),
                         Positioned(
