@@ -3,9 +3,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:music_controller/main.dart';
-import 'package:music_controller/Settings/settings.dart';
-import 'package:music_controller/Music%20Player/dynamic_background.dart';
-import 'package:music_controller/Managers/audio_manager.dart';
+import 'package:music_controller/settings/settings.dart';
+import 'package:music_controller/music_player/dynamic_background.dart';
+import 'package:music_controller/managers/audio_manager.dart';
 
 // play and pause button variable declaration
 int indicatorState = 0;

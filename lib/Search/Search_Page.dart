@@ -1,10 +1,10 @@
 import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
-import "package:music_controller/Settings/settings.dart";
-import "package:music_controller/Managers/path_manager.dart";
+import "package:music_controller/settings/settings.dart";
+import "package:music_controller/managers/path_manager.dart";
 import "dart:io";
-import 'package:music_controller/Music Player/music_controller.dart';
+import 'package:music_controller/music_player/music_controller.dart';
 
 class Search extends StatefulWidget {
   const Search({super.key});
@@ -85,7 +85,7 @@ class _SearchState extends State<Search> {
                   if (MediaQuery.of(context).size.width > 700) {
                     return Scaffold(
                       floatingActionButton: MusicSearchBar(),
-                      floatingActionButtonLocation: .centerFloat,
+                      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
                       body: CustomScrollView(
                         physics: const BouncingScrollPhysics(
                           parent: AlwaysScrollableScrollPhysics(),

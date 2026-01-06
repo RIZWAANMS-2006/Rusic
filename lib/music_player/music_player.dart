@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:music_controller/Music Player/MusicPlayerScreens/OnlineScreen.dart';
+import 'package:music_controller/music_player/music_player_screens/online_screen.dart';
 
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;
