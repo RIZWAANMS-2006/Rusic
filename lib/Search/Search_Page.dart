@@ -6,13 +6,6 @@ import "package:music_controller/managers/path_manager.dart";
 import "dart:io";
 import 'package:music_controller/music_player/music_controller.dart';
 
-class Search extends StatefulWidget {
-  const Search({super.key});
-
-  @override
-  State<Search> createState() => _SearchState();
-}
-
 class MusicSearchBar extends StatelessWidget {
   const MusicSearchBar({super.key});
 
@@ -38,6 +31,13 @@ class MusicSearchBar extends StatelessWidget {
   }
 }
 
+class Search extends StatefulWidget {
+  const Search({super.key});
+
+  @override
+  State<Search> createState() => _SearchState();
+}
+
 class _SearchState extends State<Search> {
   late Future<Map<String, List<File>>> mediaFileFuture;
   int hoverIndex = -1;
@@ -57,7 +57,7 @@ class _SearchState extends State<Search> {
           ? null
           : Padding(
               padding: const EdgeInsets.only(bottom: 75, left: 5, right: 5),
-              child: Bottom_Music_Controller(),
+              child: BottomMusicController(),
             ),
       body: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -85,7 +85,8 @@ class _SearchState extends State<Search> {
                   if (MediaQuery.of(context).size.width > 700) {
                     return Scaffold(
                       floatingActionButton: MusicSearchBar(),
-                      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+                      floatingActionButtonLocation:
+                          FloatingActionButtonLocation.centerFloat,
                       body: CustomScrollView(
                         physics: const BouncingScrollPhysics(
                           parent: AlwaysScrollableScrollPhysics(),
@@ -93,8 +94,9 @@ class _SearchState extends State<Search> {
                         slivers: [
                           CupertinoSliverNavigationBar(
                             stretch: true,
-                            backgroundColor:
-                                setContainerColor(context), // Replace with your color logic
+                            backgroundColor: setContainerColor(
+                              context,
+                            ), // Replace with your color logic
                             largeTitle: const Text("Search"),
                             // middle: const Text("Search"),
                             alwaysShowMiddle: false,
@@ -113,9 +115,7 @@ class _SearchState extends State<Search> {
                               childAspectRatio: 3,
                               mainAxisSpacing: 5,
                               crossAxisSpacing: 5,
-                              children: List.generate(allFiles.length, (
-                                index,
-                              ) {
+                              children: List.generate(allFiles.length, (index) {
                                 return GestureDetector(
                                   onTap: () {
                                     audio_path = allFiles[index].path;

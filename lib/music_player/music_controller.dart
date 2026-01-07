@@ -8,7 +8,6 @@ import 'package:music_controller/music_player/dynamic_background.dart';
 import 'package:music_controller/managers/audio_manager.dart';
 import "package:music_controller/managers/ui_manager.dart";
 
-
 // play and pause button variable declaration
 int indicatorState = 0;
 
@@ -106,15 +105,15 @@ class _MusicProgressBarState extends State<MusicProgressBar> {
 }
 
 //Bottom Music Controller
-class Bottom_Music_Controller extends StatefulWidget {
-  const Bottom_Music_Controller({super.key});
+class BottomMusicController extends StatefulWidget {
+  const BottomMusicController({super.key});
 
   @override
-  State<Bottom_Music_Controller> createState() =>
-      Bottom_Music_Controller_State();
+  State<BottomMusicController> createState() =>
+      BottomMusicControllerState();
 }
 
-class Bottom_Music_Controller_State extends State<Bottom_Music_Controller> {
+class BottomMusicControllerState extends State<BottomMusicController> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -681,192 +680,90 @@ class Home_Page_Music_Controller_State
     extends State<Home_Page_Music_Controller> {
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      initialData: {"mode": true, "bgstatus": "PowerSaving Mode"},
-      future: FileSettings,
-      builder: (context, snapshot) {
-        return Padding(
-          padding: const EdgeInsets.only(right: 20, left: 20),
-          child: Container(
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height * 0.35 + 40,
-            decoration: BoxDecoration(
-              color: Colors.black45,
-              borderRadius: BorderRadius.all(Radius.circular(20)),
-              backgroundBlendMode: BlendMode.darken,
-            ),
-            child: (MediaQuery.of(context).size.width > 700)
-                ? Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 20, right: 20),
-                          child: Container(
-                            width: 250,
-                            height: 200,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                            ),
-                            child: Icon(
-                              Icons.music_note,
-                              size: 80,
-                              color: Colors.black,
-                            ),
-                          ),
+    return Padding(
+      padding: const EdgeInsets.only(right: 20, left: 20),
+      child: Container(
+        width: double.infinity,
+        height: MediaQuery.of(context).size.height * 0.35 + 40,
+        decoration: BoxDecoration(
+          color: Colors.black45,
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+          backgroundBlendMode: BlendMode.darken,
+        ),
+        child: (MediaQuery.of(context).size.width > 700)
+            ? Container(
+                width: double.infinity,
+                height: double.infinity,
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20, right: 20),
+                      child: Container(
+                        width: 250,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
                         ),
-                        Expanded(
-                          flex: 10,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 40),
-                            child: Container(
-                              height: 200,
-                              decoration: BoxDecoration(
-                                color: Colors.black45,
-                                backgroundBlendMode: BlendMode.darken,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(20),
-                                ),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  MusicProgressBar(),
-                                  Container(
-                                    width: 180,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.skip_previous,
-                                            color: Colors.white,
-                                            size: 40,
-                                          ),
-                                          onPressed: () {},
-                                        ),
-                                        IconButton(
-                                          icon: [
-                                            Icon(
-                                              Icons.play_circle_fill,
-                                              size: 50,
-                                              color: Colors.white,
-                                            ),
-                                            Icon(
-                                              Icons.pause_circle_filled,
-                                              size: 50,
-                                              color: Colors.white,
-                                            ),
-                                          ][indicatorState],
-                                          onPressed: () {
-                                            if (indicatorState == 0) {
-                                              setState(() {
-                                                audioPlayAndPauseFunction();
-                                                indicatorState = 1;
-                                              });
-                                            } else {
-                                              setState(() {
-                                                audioPlayAndPauseFunction();
-                                                indicatorState = 0;
-                                              });
-                                            }
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.skip_next,
-                                            color: Colors.white,
-                                            size: 40,
-                                          ),
-                                          onPressed: () {},
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                        child: Icon(
+                          Icons.music_note,
+                          size: 80,
+                          color: Colors.black,
                         ),
-                      ],
+                      ),
                     ),
-                  )
-                : Row(
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                            left: 30,
-                            right: 30,
-                            top: 20,
-                            bottom: 20,
+                    Expanded(
+                      flex: 10,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 40),
+                        child: Container(
+                          height: 200,
+                          decoration: BoxDecoration(
+                            color: Colors.black45,
+                            backgroundBlendMode: BlendMode.darken,
+                            borderRadius: BorderRadius.all(Radius.circular(20)),
                           ),
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              MusicProgressBar(),
                               Container(
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.rectangle,
-                                  backgroundBlendMode: BlendMode.hardLight,
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(20),
-                                  ),
-                                ),
-                                child: Icon(
-                                  Icons.music_note,
-                                  size: 40,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              Expanded(child: MusicProgressBar()),
-                              Container(
-                                height: 50,
-                                width: double.infinity,
+                                width: 180,
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     IconButton(
                                       icon: Icon(
                                         Icons.skip_previous,
                                         color: Colors.white,
-                                        size: 35,
+                                        size: 40,
                                       ),
-                                      onPressed: () => {},
+                                      onPressed: () {},
                                     ),
                                     IconButton(
-                                      alignment: Alignment.center,
                                       icon: [
                                         Icon(
                                           Icons.play_circle_fill,
+                                          size: 50,
                                           color: Colors.white,
-                                          size: 40,
                                         ),
                                         Icon(
                                           Icons.pause_circle_filled,
+                                          size: 50,
                                           color: Colors.white,
-                                          size: 40,
                                         ),
                                       ][indicatorState],
-                                      color: (snapshot.data!['mode'] == true)
-                                          ? Colors.white
-                                          : Colors.black,
-                                      iconSize: 40,
                                       onPressed: () {
-                                        if (indicatorState == 1) {
+                                        if (indicatorState == 0) {
                                           setState(() {
                                             audioPlayAndPauseFunction();
-                                            indicatorState = 0;
+                                            indicatorState = 1;
                                           });
                                         } else {
                                           setState(() {
                                             audioPlayAndPauseFunction();
-                                            indicatorState = 1;
+                                            indicatorState = 0;
                                           });
                                         }
                                       },
@@ -875,9 +772,9 @@ class Home_Page_Music_Controller_State
                                       icon: Icon(
                                         Icons.skip_next,
                                         color: Colors.white,
-                                        size: 35,
+                                        size: 40,
                                       ),
-                                      onPressed: () => {},
+                                      onPressed: () {},
                                     ),
                                   ],
                                 ),
@@ -886,11 +783,103 @@ class Home_Page_Music_Controller_State
                           ),
                         ),
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        left: 30,
+                        right: 30,
+                        top: 20,
+                        bottom: 20,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.rectangle,
+                              backgroundBlendMode: BlendMode.hardLight,
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(20),
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.music_note,
+                              size: 40,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Expanded(child: MusicProgressBar()),
+                          Container(
+                            height: 50,
+                            width: double.infinity,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.skip_previous,
+                                    color: Colors.white,
+                                    size: 35,
+                                  ),
+                                  onPressed: () => {},
+                                ),
+                                IconButton(
+                                  alignment: Alignment.center,
+                                  icon: [
+                                    Icon(
+                                      Icons.play_circle_fill,
+                                      color: Colors.white,
+                                      size: 40,
+                                    ),
+                                    Icon(
+                                      Icons.pause_circle_filled,
+                                      color: Colors.white,
+                                      size: 40,
+                                    ),
+                                  ][indicatorState],
+                                  color: Colors.white,
+                                  iconSize: 40,
+                                  onPressed: () {
+                                    if (indicatorState == 1) {
+                                      setState(() {
+                                        audioPlayAndPauseFunction();
+                                        indicatorState = 0;
+                                      });
+                                    } else {
+                                      setState(() {
+                                        audioPlayAndPauseFunction();
+                                        indicatorState = 1;
+                                      });
+                                    }
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.skip_next,
+                                    color: Colors.white,
+                                    size: 35,
+                                  ),
+                                  onPressed: () => {},
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-          ),
-        );
-      },
+                ],
+              ),
+      ),
     );
   }
 }
@@ -903,7 +892,6 @@ class SideMusicController extends StatefulWidget {
 }
 
 class SideMusicControllerState extends State<SideMusicController> {
-
   @override
   void initState() {
     super.initState();
@@ -930,11 +918,7 @@ class SideMusicControllerState extends State<SideMusicController> {
                 borderRadius: BorderRadius.all(Radius.circular(10)),
                 color: Colors.white,
               ),
-              child: Icon(
-                Icons.music_note,
-                size: 60,
-                color: Colors.black,
-              ),
+              child: Icon(Icons.music_note, size: 60, color: Colors.black),
             ),
             Text(
               audio_path == ''
@@ -963,11 +947,7 @@ class SideMusicControllerState extends State<SideMusicController> {
                           });
                         }
                       },
-                      icon: Icon(
-                        Icons.repeat,
-                        size: 35,
-                        color: Colors.white,
-                      ),
+                      icon: Icon(Icons.repeat, size: 35, color: Colors.white),
                     ),
                     IconButton(
                       onPressed: () {},
@@ -1003,8 +983,7 @@ class SideMusicControllerState extends State<SideMusicController> {
                           size: 40,
                         ),
                       ][indicatorState],
-                      color: 
-                           Colors.black,
+                      color: Colors.black,
                     ),
                     IconButton(
                       onPressed: () {},
@@ -1016,11 +995,7 @@ class SideMusicControllerState extends State<SideMusicController> {
                     ),
                     IconButton(
                       onPressed: () {},
-                      icon: Icon(
-                        Icons.shuffle,
-                        size: 35,
-                        color: Colors.white,
-                      ),
+                      icon: Icon(Icons.shuffle, size: 35, color: Colors.white),
                     ),
                   ],
                 ),
