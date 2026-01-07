@@ -1,7 +1,7 @@
 import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
-import "package:music_controller/settings/settings.dart";
+import "package:music_controller/managers/ui_manager.dart";
 import "package:music_controller/managers/path_manager.dart";
 import "dart:io";
 import 'package:music_controller/music_player/music_controller.dart';
