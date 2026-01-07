@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:music_controller/Managers/settings_manager.dart';
-import 'package:weather_animation/weather_animation.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});

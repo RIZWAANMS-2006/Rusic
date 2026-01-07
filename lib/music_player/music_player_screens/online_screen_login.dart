@@ -14,6 +14,7 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
   final _formKey = GlobalKey<FormState>();
   TextEditingController urlController = TextEditingController();
   TextEditingController apiKeyController = TextEditingController();
+  TextEditingController serverAddressController = TextEditingController();
   late TabController _tabController;
 
   @override
@@ -25,6 +26,9 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
   @override
   void dispose() {
     _tabController.dispose();
+    urlController.dispose();
+    apiKeyController.dispose();
+    serverAddressController.dispose();
     super.dispose();
   }
 
@@ -53,7 +57,7 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                   ),
                   labelColor: Colors.black,
                   unselectedLabelColor: Colors.grey[400],
-                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                  overlayColor: WidgetStateProperty.all(Colors.transparent),
                   indicatorSize: TabBarIndicatorSize.tab,
                   tabs: const [
                     Tab(text: "Supabase"),
@@ -104,6 +108,9 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                                     TextFormField(
                                       controller: urlController,
                                       validator: (value) {
+                                        if (_tabController.index != 0) {
+                                          return null;
+                                        }
                                         if (value == null || value.isEmpty) {
                                           return 'Enter Valid URL';
                                         }
@@ -116,6 +123,9 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                                       controller: apiKeyController,
                                       obscureText: true,
                                       validator: (value) {
+                                        if (_tabController.index != 0) {
+                                          return null;
+                                        }
                                         if (value == null || value.isEmpty) {
                                           return 'Enter Valid Anon-API Key';
                                         }
@@ -143,7 +153,11 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                                     SizedBox(height: 20),
                                     Text("Server Address"),
                                     TextFormField(
+                                      controller: serverAddressController,
                                       validator: (value) {
+                                        if (_tabController.index != 1) {
+                                          return null;
+                                        }
                                         if (value == null || value.isEmpty) {
                                           return 'Enter Valid Server Address';
                                         }
@@ -163,11 +177,19 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                       right: 0,
                       child: FilledButton(
                         onPressed: () {
+                          print(
+                            'Validating form on tab: ${_tabController.index}',
+                          );
+                          print('URL: ${urlController.text}');
+                          print('API Key: ${apiKeyController.text}');
                           if (_formKey.currentState!.validate()) {
+                            print('Form validated successfully');
                             widget.onSubmit(
                               urlController.text.trim(),
                               apiKeyController.text.trim(),
                             );
+                          } else {
+                            print('Form validation failed');
                           }
                         },
                         style: ButtonStyle(
