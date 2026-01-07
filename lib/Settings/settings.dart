@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
@@ -52,6 +53,24 @@ class Settings extends StatefulWidget {
 class Settings_UI_State extends State<Settings> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
+    return Scaffold(
+      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+      body: CustomScrollView(
+        slivers: [
+          CupertinoSliverNavigationBar(
+            backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+            middle: Text(
+              "Settings",
+              style: TextStyle(color: Colors.white),
+            ),
+            largeTitle: Text(
+              "Settings",
+              style: TextStyle(color: Colors.white),
+            ),
+            alwaysShowMiddle: false,
+          )
+        ],
+      ),
+    );
   }
 }
