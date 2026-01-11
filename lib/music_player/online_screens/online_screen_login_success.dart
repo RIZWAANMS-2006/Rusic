@@ -1,6 +1,7 @@
 // ignore_for_file: unused_field
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnlineScreenLoginSuccess extends StatefulWidget {
   final void Function() onLogout;
@@ -12,6 +13,21 @@ class OnlineScreenLoginSuccess extends StatefulWidget {
 }
 
 class OnlineScreenLoginSuccessState extends State<OnlineScreenLoginSuccess> {
+  String _tableName = 'Online';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTableName();
+  }
+
+  Future<void> _loadTableName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _tableName = prefs.getString('supabaseTableName') ?? 'Online';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -20,7 +36,7 @@ class OnlineScreenLoginSuccessState extends State<OnlineScreenLoginSuccess> {
           return Scaffold(
             appBar: AppBar(
               title: Text(
-                "Supabase",
+                _tableName,
                 style: TextStyle(
                   fontSize: 22,
                   fontFamily: "Normal",
@@ -57,43 +73,42 @@ class OnlineScreenLoginSuccessState extends State<OnlineScreenLoginSuccess> {
                 ),
               ],
             ),
+            // floatingActionButton: FloatingActionButton(onPressed: () {}),
             backgroundColor: Colors.transparent,
-            body: Container()
-            
-            // CustomScrollView(
-            //   physics: BouncingScrollPhysics(),
-            //   slivers: [
-            //     SliverPadding(
-            //       padding: const EdgeInsets.only(left: 5, bottom: 5),
-            //       sliver: SliverGrid.builder(
-            //         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            //           maxCrossAxisExtent: 400,
-            //           childAspectRatio: 3,
-            //           mainAxisSpacing: 0,
-            //           crossAxisSpacing: 0,
-            //         ),
-            //         itemCount: 50,
-            //         itemBuilder: (context, i) => Container(
-            //           margin: EdgeInsets.only(right: 5, top: 5),
-            //           decoration: BoxDecoration(
-            //             color: Color.fromRGBO(50, 50, 50, 1),
-            //             borderRadius: BorderRadius.circular(5),
-            //           ),
-            //           child: Center(
-            //             child: Text(
-            //               "Online Song Item ${i + 1}",
-            //               style: TextStyle(color: Colors.white),
-            //             ),
-            //           ),
-            //         ),
-            //       ),
-            //     ),
-                // SliverFillRemaining(
-                //   hasScrollBody: false,
-                //   child: SizedBox(height: 100),
-                // ),
-              // ],
-            // ),
+            body: CustomScrollView(
+              physics: BouncingScrollPhysics(),
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.only(left: 5, bottom: 5),
+                  sliver: SliverGrid.builder(
+                    gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 400,
+                      childAspectRatio: 3,
+                      mainAxisSpacing: 0,
+                      crossAxisSpacing: 0,
+                    ),
+                    itemCount: 50,
+                    itemBuilder: (context, i) => Container(
+                      margin: EdgeInsets.only(right: 5, top: 5),
+                      decoration: BoxDecoration(
+                        color: Color.fromRGBO(50, 50, 50, 1),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "Online Song Item ${i + 1}",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: SizedBox(height: 100),
+                ),
+              ],
+            ),
           );
         } else {
           return Scaffold(

@@ -10,6 +10,7 @@ import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:music_controller/Managers/settings_manager.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 Future<void> main() async {
   // Initialize JustAudioMediaKit And Flutter Bindings
@@ -60,10 +61,19 @@ Future<void> main() async {
 int navigationIndex = 1;
 
 // Bottom Navigation Bar Items
-const List<BottomNavigationBarItem> bottomNavigationBarItems = [
-  BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-  BottomNavigationBarItem(icon: Icon(Icons.library_music), label: 'Home'),
-  BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+List<Widget> bottomNavigationBarItems = [
+  Padding(
+    padding: const EdgeInsets.all(7.0),
+    child: Icon(Icons.search),
+  ),
+  Padding(
+    padding: const EdgeInsets.all(7.0),
+    child: Icon(Icons.library_music),
+  ),
+  Padding(
+    padding: const EdgeInsets.all(7.0),
+    child: Icon(Icons.settings),
+  ),
 ];
 
 // Navigation Rail Destinations
@@ -97,7 +107,7 @@ class MxMusicConsoleState extends State<MxMusicConsole> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "MxMusicConsole",
+      title: "Rusic",
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: 'Asimovian',
@@ -196,7 +206,8 @@ class WideScreenState extends State<WideScreen> {
           SizedBox(
             width: 350,
             height: double.infinity,
-            child: SideMusicController()),
+            child: SideMusicController(),
+          ),
         ],
       ),
     );
@@ -216,29 +227,20 @@ class CompactScreenState extends State<CompactScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            height: 60,
-            width: 240,
-            decoration: BoxDecoration(color: Color.fromRGBO(34, 34, 34, 1)),
-            child: BottomNavigationBar(
-              landscapeLayout: BottomNavigationBarLandscapeLayout.centered,
-              type: BottomNavigationBarType.fixed,
-              items: bottomNavigationBarItems,
-              currentIndex: navigationIndex,
-              onTap: (value) => setState(() {
-                navigationIndex = value;
-              }),
-              backgroundColor: Color.fromRGBO(34, 34, 34, 1),
-              showUnselectedLabels: false,
-              // unselectedItemColor: Colors.white,
-              selectedItemColor: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-        ),
+      bottomNavigationBar: CurvedNavigationBar(
+        color: Color.fromRGBO(34, 34, 34, 1),
+        backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+        buttonBackgroundColor: Theme.of(context).colorScheme.primary,
+        height: 70,
+        animationDuration: Duration(milliseconds: 300),
+        animationCurve: Curves.linearToEaseOut,
+        index: 1,
+        items: bottomNavigationBarItems,
+        onTap: (index) {
+          setState(() {
+            navigationIndex = index;
+          });
+        },
       ),
       body: IndexedStack(
         index: navigationIndex,

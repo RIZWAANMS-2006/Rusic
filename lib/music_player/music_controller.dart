@@ -108,8 +108,7 @@ class BottomMusicController extends StatefulWidget {
   const BottomMusicController({super.key});
 
   @override
-  State<BottomMusicController> createState() =>
-      BottomMusicControllerState();
+  State<BottomMusicController> createState() => BottomMusicControllerState();
 }
 
 class BottomMusicControllerState extends State<BottomMusicController> {
@@ -154,7 +153,7 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(left: 8, right: 10),
+                    padding: const EdgeInsets.only(left: 8, right: 8),
                     child: Container(
                       width: 45,
                       height: 45,
@@ -167,7 +166,7 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                     ),
                   ),
                   SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.4,
+                    width: MediaQuery.of(context).size.width * 0.36,
                     child: Text(
                       audio_path == ''
                           ? "No Song is Playing..."
@@ -180,7 +179,7 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                 ],
               ),
               Padding(
-                padding: const EdgeInsets.only(right: 7),
+                padding: const EdgeInsets.only(right: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -429,52 +428,16 @@ class Full_Size_Music_Controller_State
                             },
                           ),
                         ),
-                        floatingActionButtonLocation:
-                            FloatingActionButtonLocation.centerFloat,
-                        floatingActionButton: Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                minWidth: 240,
-                                maxWidth: 300,
-                              ),
-                              child: SizedBox(
-                                height: 60,
-                                width: 100 * 0.5,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Color.fromRGBO(34, 34, 34, 1),
-                                  ),
-                                  child: BottomNavigationBar(
-                                    landscapeLayout:
-                                        BottomNavigationBarLandscapeLayout
-                                            .centered,
-                                    type: BottomNavigationBarType.fixed,
-                                    items: bottomNavigationBarItems,
-                                    currentIndex: navigationIndex,
-                                    onTap: (value) {
-                                      navigationIndex = value;
-                                      setState(() {
-                                        Navigator.pop(context);
-                                      });
-                                    },
-                                    showUnselectedLabels: false,
-                                    showSelectedLabels: false,
-                                    backgroundColor: Color.fromRGBO(
-                                      34,
-                                      34,
-                                      34,
-                                      1,
-                                    ),
-                                    unselectedItemColor: Colors.white,
-                                    selectedItemColor: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                        bottomSheet: NavigationBar(
+                          destinations: bottomNavigationBarItems,
+                          selectedIndex: navigationIndex,
+                          onDestinationSelected: (value) {
+                            Navigator.pop(context);
+                            setState(() {
+                              navigationIndex = value;
+                            });
+                          },
+                          backgroundColor: Color.fromRGBO(34, 34, 34, 1),
                         ),
                         body: Padding(
                           padding: EdgeInsets.only(

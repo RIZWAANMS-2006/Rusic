@@ -1,12 +1,19 @@
 // ignore_for_file: avoid_print
 
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Manages file system paths and permissions for media file access across platforms.
+///
+/// This class uses a user-consent model where the app only accesses folders
+/// that the user has explicitly selected via the folder picker.
 class Pathmanager {
   // ==================== STATIC CONSTANTS ====================
+
+  /// Key for storing user-selected library folders in SharedPreferences.
+  static const String _libraryFoldersKey = 'user_library_folders';
 
   /// Supported audio file extensions.
   static const List<String> _audioExtensions = [
@@ -45,19 +52,6 @@ class Pathmanager {
     }
   }
 
-  /// Ensures a directory exists, creating it recursively if needed.
-  Future<void> _ensureDirectoryExists(Directory directory) async {
-    try {
-      if (!await directory.exists()) {
-        print('[PathManager] Creating directory: ${directory.path}');
-        await directory.create(recursive: true);
-      }
-    } catch (e) {
-      print('[PathManager] Failed to create directory ${directory.path}: $e');
-      rethrow;
-    }
-  }
-
   /// Checks if a file path has a supported media extension.
   bool _isMediaFile(String filePath) {
     final lowercasePath = filePath.toLowerCase();
@@ -82,55 +76,11 @@ class Pathmanager {
     return lastName;
   }
 
-  // ==================== PRIVATE PLATFORM-SPECIFIC METHODS ====================
+  /// Requests storage permissions on Android.
+  /// Returns true if permissions are granted.
+  Future<bool> _requestAndroidPermissions() async {
+    if (!Platform.isAndroid) return true;
 
-  /// Returns standard directory names for Android platform.
-  List<String> _getAndroidDirectoryNames() {
-    return [
-      'Download',
-      'Music',
-      'Movies',
-      'DCIM',
-      'Pictures',
-      'Podcasts',
-      'Audiobooks',
-      'Recordings',
-      'Notifications',
-      'Ringtones',
-      'Alarms',
-    ];
-  }
-
-  /// Returns standard directory names for Windows platform.
-  List<String> _getWindowsDirectoryNames() {
-    return [
-      'Downloads',
-      'Music',
-      'Videos',
-      'Pictures',
-      'Documents\\Music',
-      'OneDrive\\Music',
-      'OneDrive\\Documents',
-      'Public\\Music',
-      'Public\\Videos',
-    ];
-  }
-
-  /// Returns standard directory names for Linux platform.
-  List<String> _getLinuxDirectoryNames() {
-    return [
-      'Downloads',
-      'Music',
-      'Videos',
-      'Documents',
-      'Public',
-      'Downloads/MyMusic',
-    ];
-  }
-
-  /// Returns all accessible media directories on Android.
-  Future<List<String>> _getAllAndroidMediaDirectories() async {
-    // Request necessary permissions
     final storageStatus = await Permission.storage.request();
     final manageStorageStatus = await Permission.manageExternalStorage
         .request();
@@ -138,279 +88,131 @@ class Pathmanager {
     print('[PathManager] Storage permission: $storageStatus');
     print('[PathManager] Manage storage permission: $manageStorageStatus');
 
-    final accessiblePaths = <String>[];
-
-    // Common Android media directories
-    final commonPaths = [
-      '/storage/emulated/0/Download',
-      '/storage/emulated/0/Music',
-      '/storage/emulated/0/Movies',
-      '/storage/emulated/0/DCIM',
-      '/storage/emulated/0/Pictures',
-      '/storage/emulated/0/Podcasts',
-      '/storage/emulated/0/Audiobooks',
-      '/storage/emulated/0/Recordings',
-      '/storage/emulated/0/Notifications',
-      '/storage/emulated/0/Ringtones',
-      '/storage/emulated/0/Alarms',
-    ];
-
-    for (final path in commonPaths) {
-      final dir = Directory(path);
-      if (await _isDirectoryAccessible(dir)) {
-        accessiblePaths.add(path);
-      }
-    }
-
-    // Add app-specific fallback if no public directories are accessible
-    if (accessiblePaths.isEmpty) {
-      try {
-        final appDocsDir = await getApplicationDocumentsDirectory();
-        accessiblePaths.add(appDocsDir.path);
-        print('[PathManager] Using app documents fallback: ${appDocsDir.path}');
-      } catch (e) {
-        print('[PathManager] App documents unavailable: $e');
-      }
-    }
-
-    print(
-      '[PathManager] Accessible Android directories: ${accessiblePaths.length}',
-    );
-    return accessiblePaths;
+    return storageStatus.isGranted || manageStorageStatus.isGranted;
   }
 
-  /// Resolves media directory for Android with permission handling and fallbacks.
-  Future<String> _resolveAndroidMediaPath() async {
-    // Request necessary permissions
-    final storageStatus = await Permission.storage.request();
-    final manageStorageStatus = await Permission.manageExternalStorage
-        .request();
+  // ==================== USER LIBRARY FOLDER MANAGEMENT ====================
 
-    print('[PathManager] Storage permission: $storageStatus');
-    print('[PathManager] Manage storage permission: $manageStorageStatus');
-
-    // Primary: shared Download directory
-    final primaryPath = Directory('/storage/emulated/0/Download');
-    if (await _isDirectoryAccessible(primaryPath)) {
-      print('[PathManager] Using shared Download: ${primaryPath.path}');
-      return primaryPath.path;
-    }
-
-    // Fallback 1: app documents directory
-    try {
-      final appDocsDir = await getApplicationDocumentsDirectory();
-      print('[PathManager] Using app documents: ${appDocsDir.path}');
-      return appDocsDir.path;
-    } catch (e) {
-      print('[PathManager] App documents unavailable: $e');
-    }
-
-    // Fallback 2: external storage root
-    final storageRoot = Directory('/storage/emulated/0');
-    if (await _isDirectoryAccessible(storageRoot)) {
-      print('[PathManager] Using storage root: ${storageRoot.path}');
-      return storageRoot.path;
-    }
-
-    throw Exception('Unable to access any media directory on Android');
+  /// Gets all user-selected library folders from persistent storage.
+  ///
+  /// Returns an empty list if no folders have been selected yet.
+  Future<List<String>> getSavedLibraryFolders() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_libraryFoldersKey) ?? [];
   }
 
-  /// Returns all accessible media directories on Windows.
-  Future<List<String>> _getAllWindowsMediaDirectories() async {
-    final accessiblePaths = <String>[];
-
-    // Try standard Windows media directories
+  /// Opens a folder picker dialog and adds the selected folder to the library.
+  ///
+  /// Returns `true` if a new folder was successfully added.
+  /// Returns `false` if:
+  /// - User canceled the picker
+  /// - Selected folder is already in the library (duplicate)
+  /// - An error occurred
+  Future<bool> addLibraryFolder() async {
     try {
-      final userProfile = Platform.environment['USERPROFILE'];
-      final publicProfile = Platform.environment['PUBLIC'];
+      // Open folder picker dialog
+      String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
 
-      if (userProfile != null) {
-        final mediaDirs = [
-          '$userProfile\\Downloads',
-          '$userProfile\\Music',
-          '$userProfile\\Videos',
-          '$userProfile\\Pictures',
-          '$userProfile\\Documents\\Music',
-          '$userProfile\\OneDrive\\Music',
-          '$userProfile\\OneDrive\\Documents',
-        ];
+      if (selectedDirectory != null) {
+        final prefs = await SharedPreferences.getInstance();
 
-        for (final path in mediaDirs) {
-          final dir = Directory(path);
-          if (await _isDirectoryAccessible(dir)) {
-            accessiblePaths.add(path);
-          }
+        // Get current folder list
+        List<String> currentFolders =
+            prefs.getStringList(_libraryFoldersKey) ?? [];
+
+        // Avoid duplicates
+        if (!currentFolders.contains(selectedDirectory)) {
+          currentFolders.add(selectedDirectory);
+          await prefs.setStringList(_libraryFoldersKey, currentFolders);
+          print('[PathManager] Added library folder: $selectedDirectory');
+          return true;
+        } else {
+          print('[PathManager] Folder already exists: $selectedDirectory');
         }
-      }
-
-      // Add public/shared directories
-      if (publicProfile != null) {
-        final publicDirs = ['$publicProfile\\Music', '$publicProfile\\Videos'];
-
-        for (final path in publicDirs) {
-          final dir = Directory(path);
-          if (await _isDirectoryAccessible(dir)) {
-            accessiblePaths.add(path);
-          }
-        }
+      } else {
+        print('[PathManager] Folder picker canceled');
       }
     } catch (e) {
-      print('[PathManager] Error accessing Windows user directories: $e');
+      print('[PathManager] Error adding folder: $e');
     }
-
-    // Fallback to path_provider if no directories found
-    if (accessiblePaths.isEmpty) {
-      final downloadsDir = await getDownloadsDirectory();
-      if (downloadsDir != null && await _isDirectoryAccessible(downloadsDir)) {
-        accessiblePaths.add(downloadsDir.path);
-      }
-    }
-
-    print(
-      '[PathManager] Accessible Windows directories: ${accessiblePaths.length}',
-    );
-    return accessiblePaths;
+    return false;
   }
 
-  /// Resolves media directory for Windows platform.
-  Future<String> _resolveWindowsMediaPath() async {
-    final downloadsDir = await getDownloadsDirectory();
-    if (downloadsDir != null) {
-      await _ensureDirectoryExists(downloadsDir);
-      return downloadsDir.path;
-    }
-
-    final documentsDir = await getApplicationDocumentsDirectory();
-    return documentsDir.path;
-  }
-
-  /// Returns all accessible media directories on Linux.
-  Future<List<String>> _getAllLinuxMediaDirectories() async {
-    final accessiblePaths = <String>[];
-    final homeDir = Platform.environment['HOME'];
-
-    if (homeDir != null) {
-      final mediaDirs = [
-        '$homeDir/Downloads',
-        '$homeDir/Music',
-        '$homeDir/Videos',
-        '$homeDir/Documents',
-        '$homeDir/Public',
-        '$homeDir/Downloads/MyMusic',
-      ];
-
-      for (final path in mediaDirs) {
-        final dir = Directory(path);
-        if (await _isDirectoryAccessible(dir)) {
-          accessiblePaths.add(path);
-        }
+  /// Adds a specific folder path to the library without opening a picker.
+  ///
+  /// Useful for programmatically adding folders.
+  /// Returns `true` if successfully added, `false` if duplicate or error.
+  Future<bool> addLibraryFolderPath(String folderPath) async {
+    try {
+      final dir = Directory(folderPath);
+      if (!await dir.exists()) {
+        print('[PathManager] Folder does not exist: $folderPath');
+        return false;
       }
 
-      // Check mounted drives
-      final mediaUserPath = '/media/$homeDir'.replaceAll('/home/', '');
-      final mountedDirs = ['/media/$mediaUserPath', '/mnt'];
+      final prefs = await SharedPreferences.getInstance();
+      List<String> currentFolders =
+          prefs.getStringList(_libraryFoldersKey) ?? [];
 
-      for (final path in mountedDirs) {
-        final dir = Directory(path);
-        if (await _isDirectoryAccessible(dir)) {
-          // Add subdirectories of mounted locations
-          try {
-            final subDirs = dir
-                .listSync()
-                .whereType<Directory>()
-                .map((d) => d.path)
-                .toList();
-            accessiblePaths.addAll(subDirs);
-          } catch (e) {
-            print('[PathManager] Error listing mounted drives: $e');
-          }
-        }
+      if (!currentFolders.contains(folderPath)) {
+        currentFolders.add(folderPath);
+        await prefs.setStringList(_libraryFoldersKey, currentFolders);
+        print('[PathManager] Added library folder: $folderPath');
+        return true;
       }
+    } catch (e) {
+      print('[PathManager] Error adding folder path: $e');
     }
-
-    print(
-      '[PathManager] Accessible Linux directories: ${accessiblePaths.length}',
-    );
-    return accessiblePaths;
+    return false;
   }
 
-  /// Resolves media directory for Linux platform.
-  Future<String> _resolveLinuxMediaPath() async {
-    final homeDir = Platform.environment['HOME'];
-    final separator = Platform.pathSeparator;
-    final mediaPath = '$homeDir${separator}Downloads${separator}MyMusic';
-
-    final targetDir = Directory(mediaPath);
-    await _ensureDirectoryExists(targetDir);
-    return targetDir.path;
-  }
-
-  // ==================== PUBLIC UTILITY METHODS ====================
-
-  /// Returns the list of standard media directory names for the current platform.
+  /// Removes a folder from the user's library.
   ///
-  /// Returns directory names only (not full paths) that the platform typically uses
-  /// for storing media files.
-  ///
-  /// Example outputs:
-  /// - Android: ["Download", "Music", "Movies", "DCIM", etc.]
-  /// - Windows: ["Downloads", "Music", "Videos", "Pictures", etc.]
-  /// - Linux: ["Downloads", "Music", "Videos", "Documents", etc.]
-  List<String> getPlatformMediaDirectoryNames() {
-    if (Platform.isAndroid) {
-      return _getAndroidDirectoryNames();
-    } else if (Platform.isWindows) {
-      return _getWindowsDirectoryNames();
-    } else if (Platform.isLinux) {
-      return _getLinuxDirectoryNames();
+  /// The folder itself is not deleted, only removed from the app's scan list.
+  Future<void> removeLibraryFolder(String folderPath) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      List<String> currentFolders =
+          prefs.getStringList(_libraryFoldersKey) ?? [];
+
+      currentFolders.remove(folderPath);
+      await prefs.setStringList(_libraryFoldersKey, currentFolders);
+      print('[PathManager] Removed library folder: $folderPath');
+    } catch (e) {
+      print('[PathManager] Error removing folder: $e');
     }
-
-    // Default fallback
-    return ['Documents'];
   }
 
-  /// Resolves and returns the primary media directory path.
-  ///
-  /// On Android: requests storage permissions, then attempts /storage/emulated/0/Download
-  /// with fallbacks to app-specific directories.
-  /// On Windows: uses system Downloads directory.
-  /// On Linux: uses ~/Downloads/MyMusic.
-  ///
-  /// Throws [Exception] if no accessible directory can be found on Android.
-  Future<String> resolveMediaDirectory() async {
-    if (Platform.isAndroid) {
-      return await _resolveAndroidMediaPath();
-    } else if (Platform.isWindows) {
-      return await _resolveWindowsMediaPath();
-    } else if (Platform.isLinux) {
-      return await _resolveLinuxMediaPath();
+  /// Clears all user-selected library folders.
+  Future<void> clearAllLibraryFolders() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_libraryFoldersKey);
+      print('[PathManager] Cleared all library folders');
+    } catch (e) {
+      print('[PathManager] Error clearing folders: $e');
     }
-
-    // Default fallback for other platforms
-    final documentsDir = await getApplicationDocumentsDirectory();
-    return documentsDir.path;
   }
 
-  /// Returns all possible media directory paths for the current platform.
-  ///
-  /// On Android: Downloads, Music, Movies, DCIM, Pictures
-  /// On Windows: Downloads, Music, Videos
-  /// On Linux: Downloads, Music, Videos
-  ///
-  /// Returns only directories that exist and are accessible.
-  Future<List<String>> getAllMediaDirectories() async {
-    if (Platform.isAndroid) {
-      return await _getAllAndroidMediaDirectories();
-    } else if (Platform.isWindows) {
-      return await _getAllWindowsMediaDirectories();
-    } else if (Platform.isLinux) {
-      return await _getAllLinuxMediaDirectories();
-    }
-
-    // Default fallback for other platforms
-    final documentsDir = await getApplicationDocumentsDirectory();
-    return [documentsDir.path];
+  /// Checks if the user has any library folders selected.
+  Future<bool> hasLibraryFolders() async {
+    final folders = await getSavedLibraryFolders();
+    return folders.isNotEmpty;
   }
+
+  /// Gets library folders with their extracted names for display purposes.
+  ///
+  /// Returns a list of maps containing:
+  /// - 'path': full folder path
+  /// - 'name': extracted folder name for display
+  Future<List<Map<String, String>>> getLibraryFoldersWithNames() async {
+    final folders = await getSavedLibraryFolders();
+    return folders.map((path) {
+      return {'path': path, 'name': _extractDirectoryName(path)};
+    }).toList();
+  }
+
+  // ==================== LIBRARY SCANNING METHODS ====================
 
   /// Scans the specified directory and returns all media files (audio + video).
   ///
@@ -442,48 +244,45 @@ class Pathmanager {
     }
   }
 
-  // ==================== IMPORTANT PUBLIC METHODS ====================
-
-  /// Resolves the primary media directory and scans for media files.
+  /// Scans ONLY the user-selected library folders for media files.
   ///
-  /// This is a convenience method for scanning only the primary directory.
-  /// Use [fetchAllMediaFiles] to scan all possible media directories.
-  ///
-  /// Returns a Map with a single entry where the key is the directory name
-  /// and the value is the list of media files found.
-  Future<Map<String, List<File>>> fetchPrimaryDirectoryMediaFiles() async {
-    final mediaDirectoryPath = await resolveMediaDirectory();
-    final mediaFiles = await scanMediaFiles(mediaDirectoryPath);
-    final dirName = _extractDirectoryName(mediaDirectoryPath);
-
-    return {dirName: mediaFiles};
-  }
-
-  /// Scans all accessible media directories and returns media files grouped by location.
-  ///
-  /// This method finds all platform-appropriate media directories
-  /// (Downloads, Music, Movies/Videos, DCIM, etc.) and scans each one
-  /// for audio and video files.
+  /// This is the recommended method for scanning media files as it respects
+  /// user preferences and only accesses folders the user has explicitly allowed.
   ///
   /// Returns a Map where:
-  /// - Keys: directory names (e.g., "Music", "Downloads", "Movies")
+  /// - Keys: directory names (e.g., "Music", "Downloads")
   /// - Values: list of media files found in that directory
   ///
-  /// This is the primary method for comprehensive media file discovery.
-  Future<Map<String, List<File>>> fetchAllMediaFiles() async {
-    final allDirectories = await getAllMediaDirectories();
+  /// Returns an empty map if no library folders have been selected.
+  Future<Map<String, List<File>>> fetchMediaFilesFromLibrary() async {
+    // Request permissions on Android before scanning
+    await _requestAndroidPermissions();
+
+    final libraryFolders = await getSavedLibraryFolders();
     final mediaFilesByLocation = <String, List<File>>{};
 
-    print('[PathManager] Scanning ${allDirectories.length} directories...');
+    if (libraryFolders.isEmpty) {
+      print('[PathManager] No library folders selected');
+      return mediaFilesByLocation;
+    }
 
-    for (final directoryPath in allDirectories) {
-      final filesInDirectory = await scanMediaFiles(directoryPath);
+    print(
+      '[PathManager] Scanning ${libraryFolders.length} user library folders...',
+    );
 
-      if (filesInDirectory.isNotEmpty) {
-        // Extract directory name from full path
-        final dirName = _extractDirectoryName(directoryPath);
-        mediaFilesByLocation[dirName] = filesInDirectory;
-        print('[PathManager] $dirName: ${filesInDirectory.length} files');
+    for (final folderPath in libraryFolders) {
+      final dir = Directory(folderPath);
+
+      if (await _isDirectoryAccessible(dir)) {
+        final filesInDirectory = await scanMediaFiles(folderPath);
+
+        if (filesInDirectory.isNotEmpty) {
+          final dirName = _extractDirectoryName(folderPath);
+          mediaFilesByLocation[dirName] = filesInDirectory;
+          print('[PathManager] $dirName: ${filesInDirectory.length} files');
+        }
+      } else {
+        print('[PathManager] Folder no longer accessible: $folderPath');
       }
     }
 
@@ -492,9 +291,121 @@ class Pathmanager {
       (sum, files) => sum + files.length,
     );
     print(
-      '[PathManager] Total: $totalFiles files across ${mediaFilesByLocation.length} locations',
+      '[PathManager] Library total: $totalFiles files across ${mediaFilesByLocation.length} locations',
     );
 
     return mediaFilesByLocation;
+  }
+
+  /// Scans library folders and returns a flat list of all media files.
+  ///
+  /// Unlike [fetchMediaFilesFromLibrary], this returns all files in a single list
+  /// without grouping by directory. Useful when you just need all songs.
+  Future<List<File>> fetchAllMediaFilesFromLibrary() async {
+    // Request permissions on Android before scanning
+    await _requestAndroidPermissions();
+
+    final libraryFolders = await getSavedLibraryFolders();
+    final allMediaFiles = <File>[];
+
+    if (libraryFolders.isEmpty) {
+      print('[PathManager] No library folders selected');
+      return allMediaFiles;
+    }
+
+    for (final folderPath in libraryFolders) {
+      final dir = Directory(folderPath);
+
+      if (await dir.exists()) {
+        try {
+          final files = dir.listSync(recursive: true);
+
+          for (final file in files) {
+            if (file is File && _isMediaFile(file.path)) {
+              allMediaFiles.add(file);
+            }
+          }
+        } catch (e) {
+          print('[PathManager] Error scanning $folderPath: $e');
+        }
+      }
+    }
+
+    print('[PathManager] Found ${allMediaFiles.length} media files in library');
+    return allMediaFiles;
+  }
+
+  /// Scans library folders and returns only audio files.
+  Future<List<File>> fetchAudioFilesFromLibrary() async {
+    // Request permissions on Android before scanning
+    await _requestAndroidPermissions();
+
+    final libraryFolders = await getSavedLibraryFolders();
+    final audioFiles = <File>[];
+
+    if (libraryFolders.isEmpty) {
+      return audioFiles;
+    }
+
+    for (final folderPath in libraryFolders) {
+      final dir = Directory(folderPath);
+
+      if (await dir.exists()) {
+        try {
+          final files = dir.listSync(recursive: true);
+
+          for (final file in files) {
+            if (file is File) {
+              final lowercasePath = file.path.toLowerCase();
+              if (_audioExtensions.any((ext) => lowercasePath.endsWith(ext))) {
+                audioFiles.add(file);
+              }
+            }
+          }
+        } catch (e) {
+          print('[PathManager] Error scanning $folderPath: $e');
+        }
+      }
+    }
+
+    print('[PathManager] Found ${audioFiles.length} audio files in library');
+    return audioFiles;
+  }
+
+  /// Scans library folders and returns only video files.
+  Future<List<File>> fetchVideoFilesFromLibrary() async {
+    // Request permissions on Android before scanning
+    await _requestAndroidPermissions();
+
+    final libraryFolders = await getSavedLibraryFolders();
+    final videoFiles = <File>[];
+
+    if (libraryFolders.isEmpty) {
+      return videoFiles;
+    }
+
+    for (final folderPath in libraryFolders) {
+      final dir = Directory(folderPath);
+
+      if (await dir.exists()) {
+        try {
+          final files = dir.listSync(recursive: true);
+
+          for (final file in files) {
+            if (file is File) {
+              final lowercasePath = file.path.toLowerCase();
+              if (_videoExtensions.any((ext) => lowercasePath.endsWith(ext))) {
+                videoFiles.add(file);
+              }
+            }
+          }
+        } catch (e) {
+          print('[PathManager] Error scanning $folderPath: $e');
+        }
+      }
+    }
+
+    print('[PathManager] Found ${videoFiles.length} video files in library');
+    return videoFiles;
   }
 }
