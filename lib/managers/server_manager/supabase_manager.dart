@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:music_controller/ui/media_ui.dart';
 
 class SupabaseConnection {
   final String supabaseUrl;
@@ -24,8 +25,34 @@ class SupabaseConnection {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchSongs() async {
-    final response = await client.from(tableName).select();
-    return List<Map<String, dynamic>>.from(response as List);
+  /// Fetches all songs from the Supabase table and converts them to OnlineSong objects
+  Future<List<OnlineSong>> fetchOnlineSongs() async {
+    try {
+      print('Starting fetchOnlineSongs from table: $tableName');
+      final response = await client.from(tableName).select();
+      print('Raw response type: ${response.runtimeType}');
+      print('Raw response: $response');
+
+      final List<Map<String, dynamic>> data = List<Map<String, dynamic>>.from(
+        response as List,
+      );
+      print('Fetched ${data.length} songs from Supabase');
+      if (data.isNotEmpty) {
+        print('First song data: ${data.first}');
+        print('First song keys: ${data.first.keys}');
+      }
+      final songs = data.map((map) => OnlineSong.fromMap(map)).toList();
+      print('Converted to ${songs.length} OnlineSong objects');
+      if (songs.isNotEmpty) {
+        print(
+          'First song - Title: ${songs.first.title}, URL: ${songs.first.url}',
+        );
+      }
+      return songs;
+    } catch (e, stackTrace) {
+      print('ERROR in fetchOnlineSongs: $e');
+      print('Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 }

@@ -62,18 +62,9 @@ int navigationIndex = 1;
 
 // Bottom Navigation Bar Items
 List<Widget> bottomNavigationBarItems = [
-  Padding(
-    padding: const EdgeInsets.all(7.0),
-    child: Icon(Icons.search),
-  ),
-  Padding(
-    padding: const EdgeInsets.all(7.0),
-    child: Icon(Icons.library_music),
-  ),
-  Padding(
-    padding: const EdgeInsets.all(7.0),
-    child: Icon(Icons.settings),
-  ),
+  Padding(padding: const EdgeInsets.all(7.0), child: Icon(Icons.search)),
+  Padding(padding: const EdgeInsets.all(7.0), child: Icon(Icons.library_music)),
+  Padding(padding: const EdgeInsets.all(7.0), child: Icon(Icons.settings)),
 ];
 
 // Navigation Rail Destinations
@@ -226,10 +217,11 @@ class CompactScreenState extends State<CompactScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       bottomNavigationBar: CurvedNavigationBar(
-        color: Color.fromRGBO(34, 34, 34, 1),
-        backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+        color: Color.fromRGBO(34, 34, 34, 0.85),
+        backgroundColor: Colors.transparent,
         buttonBackgroundColor: Theme.of(context).colorScheme.primary,
         height: 70,
         animationDuration: Duration(milliseconds: 300),

@@ -31,24 +31,53 @@ class _SettingsState extends State<Settings> {
     ];
     return Scaffold(
       backgroundColor: Color.fromRGBO(26, 26, 26, 1),
-      body: CustomScrollView(
-        slivers: [
-          CupertinoSliverNavigationBar(
-            backgroundColor: Color.fromRGBO(26, 26, 26, 1),
-            middle: Text("Settings", style: TextStyle(color: Colors.white)),
-            largeTitle: Text("Settings", style: TextStyle(color: Colors.white)),
-            alwaysShowMiddle: false,
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              CupertinoSliverNavigationBar(
+                backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+                middle: Text("Settings", style: TextStyle(color: Colors.white)),
+                largeTitle: Text(
+                  "Settings",
+                  style: TextStyle(color: Colors.white),
+                ),
+                alwaysShowMiddle: false,
+              ),
+              if (MediaQuery.of(context).size.width <= 700)
+                SliverList(
+                  delegate: SliverChildListDelegate([...settingsItems]),
+                )
+              else
+                SliverGrid.extent(
+                  maxCrossAxisExtent: 400,
+                  childAspectRatio: 3,
+                  mainAxisSpacing: 5,
+                  crossAxisSpacing: 5,
+                  children: [...settingsItems],
+                ),
+              const SliverToBoxAdapter(child: SizedBox(height: 170)),
+            ],
           ),
-          if (MediaQuery.of(context).size.width <= 700)
-            SliverList(delegate: SliverChildListDelegate([...settingsItems]))
-          else
-            SliverGrid.extent(
-              maxCrossAxisExtent: 400,
-              childAspectRatio: 3,
-              mainAxisSpacing: 5,
-              crossAxisSpacing: 5,
-              children: [...settingsItems],
+          // Bottom gradient fade
+          Positioned(
+            bottom: 0,
+            child: Container(
+              height: 100,
+              width: MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withOpacity(0.0),
+                    Colors.black.withOpacity(0.9),
+                    Colors.black,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
             ),
+          ),
         ],
       ),
     );

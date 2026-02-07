@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:music_controller/music_player/online_screens/online_screen.dart';
+import 'package:music_controller/music_player/locations_screen/location_screen.dart';
 
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;
@@ -38,8 +39,7 @@ class Library extends StatefulWidget {
 }
 
 // Creating "Music Controller State Class"
-class LibraryState extends State<Library>
-    with AutomaticKeepAliveClientMixin {
+class LibraryState extends State<Library> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -91,10 +91,7 @@ class LibraryState extends State<Library>
                 backgroundColor: Colors.transparent,
                 body: Center(child: Text("No Playlist Yet...")),
               ),
-              Scaffold(
-                backgroundColor: Colors.transparent,
-                body: Center(child: Text("No Locations Available...")),
-              ),
+              LocationScreen(),
             ],
           ),
         ),
