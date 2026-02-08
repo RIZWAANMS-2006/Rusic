@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:music_controller/managers/path_manager.dart';
-import 'package:music_controller/ui/media_ui.dart';
 import 'dart:io';
 
 class LocationScreen extends StatefulWidget {
@@ -17,7 +16,6 @@ class _LocationScreenState extends State<LocationScreen> {
 
   // State for viewing files in a specific location
   String? _selectedLocationName;
-  String? _selectedFolderPath;
   List<File>? _selectedLocationFiles;
   int _hoverIndex = -1;
 
@@ -35,7 +33,6 @@ class _LocationScreenState extends State<LocationScreen> {
   ) {
     setState(() {
       _selectedLocationName = locationName;
-      _selectedFolderPath = folderPath;
       _selectedLocationFiles = files;
     });
   }
@@ -44,7 +41,6 @@ class _LocationScreenState extends State<LocationScreen> {
   void _backToLocationsList() {
     setState(() {
       _selectedLocationName = null;
-      _selectedFolderPath = null;
       _selectedLocationFiles = null;
       _hoverIndex = -1;
     });
@@ -444,10 +440,6 @@ class _LocationScreenState extends State<LocationScreen> {
 
   /// Extracts the directory path from a file path
   String _extractDirectoryPath(String filePath) {
-    // This should match a saved library folder
-    final pathManager = Pathmanager();
-    // We'll use the file path and try to find which library folder it belongs to
-    // For now, we'll return the parent directory
     final file = File(filePath);
     return file.parent.path;
   }

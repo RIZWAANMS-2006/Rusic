@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:music_controller/Managers/settings_manager.dart';
+import 'package:music_controller/managers/settings_manager.dart';
 import 'package:music_controller/managers/credentials_manager.dart';
 
 class Settings extends StatefulWidget {

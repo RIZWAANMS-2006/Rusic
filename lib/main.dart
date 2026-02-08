@@ -9,7 +9,7 @@ import 'search/search_page.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:music_controller/Managers/settings_manager.dart';
+import 'package:music_controller/managers/settings_manager.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 Future<void> main() async {
