@@ -81,91 +81,85 @@ class _SettingsState extends State<Settings> {
   Widget build(BuildContext context) {
     List<Widget> settingsItems = [
       // Dark Mode Toggle
-      Center(
-        child: SwitchListTile(
-          value: SettingsManager.getDarkMode,
-          onChanged: (value) {
-            SettingsManager.setDarkMode(value);
-            setState(() {});
-          },
-          title: Text("System Mode", style: TextStyle(color: Colors.white)),
-        ),
+      SwitchListTile(
+        value: SettingsManager.getDarkMode,
+        onChanged: (value) {
+          SettingsManager.setDarkMode(value);
+          setState(() {});
+        },
+        title: Text("System Mode", style: TextStyle(color: Colors.white)),
       ),
       // Crossfade Duration
-      Center(
-        child: ListTile(
-          title: const Text(
-            "Crossfade Duration",
-            style: TextStyle(color: Colors.white),
-          ),
-          subtitle: Text(
-            SettingsManager.getCrossfadeDuration == 0
-                ? "Off"
-                : "${SettingsManager.getCrossfadeDuration} seconds",
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
-          ),
-          trailing: SizedBox(
-            width: 80,
-            child: TextField(
-              controller: _crossfadeController,
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-              decoration: InputDecoration(
-                hintText: "0",
-                hintStyle: TextStyle(color: Colors.grey[600]),
-                suffixText: "s",
-                suffixStyle: const TextStyle(color: Colors.grey),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                filled: true,
-                fillColor: const Color.fromRGBO(50, 50, 50, 1),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
+      ListTile(
+        title: const Text(
+          "Crossfade Duration",
+          style: TextStyle(color: Colors.white),
+        ),
+        subtitle: Text(
+          SettingsManager.getCrossfadeDuration == 0
+              ? "Off"
+              : "${SettingsManager.getCrossfadeDuration} seconds",
+          style: const TextStyle(color: Colors.grey, fontSize: 12),
+        ),
+        trailing: SizedBox(
+          width: 80,
+          child: TextField(
+            controller: _crossfadeController,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+            decoration: InputDecoration(
+              hintText: "0",
+              hintStyle: TextStyle(color: Colors.grey[600]),
+              suffixText: "s",
+              suffixStyle: const TextStyle(color: Colors.grey),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
               ),
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              onChanged: (value) {
-                final parsed = int.tryParse(value) ?? 0;
-                SettingsManager.setCrossfadeDuration(parsed);
-                setState(() {});
-              },
+              filled: true,
+              fillColor: const Color.fromRGBO(50, 50, 50, 1),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
             ),
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onChanged: (value) {
+              final parsed = int.tryParse(value) ?? 0;
+              SettingsManager.setCrossfadeDuration(parsed);
+              setState(() {});
+            },
           ),
         ),
       ),
       // Database Logout
-      Center(
-        child: ListTile(
-          leading: Icon(
-            Icons.cloud_off,
-            color: _hasSupabaseCredentials ? Colors.red[300] : Colors.grey,
-          ),
-          title: const Text(
-            "Database Logout",
-            style: TextStyle(color: Colors.white),
-          ),
-          subtitle: Text(
-            _hasSupabaseCredentials ? "Connected to Supabase" : "Not connected",
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
-          ),
-          trailing: ElevatedButton(
-            onPressed: _hasSupabaseCredentials ? _logoutSupabase : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[700],
-              disabledBackgroundColor: Colors.grey[800],
-              foregroundColor: Colors.white,
-              disabledForegroundColor: Colors.grey,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+      ListTile(
+        leading: Icon(
+          Icons.cloud_off,
+          color: _hasSupabaseCredentials ? Colors.red[300] : Colors.grey,
+        ),
+        title: const Text(
+          "Database Logout",
+          style: TextStyle(color: Colors.white),
+        ),
+        subtitle: Text(
+          _hasSupabaseCredentials ? "Connected to Supabase" : "Not connected",
+          style: const TextStyle(color: Colors.grey, fontSize: 12),
+        ),
+        trailing: ElevatedButton(
+          onPressed: _hasSupabaseCredentials ? _logoutSupabase : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red[700],
+            disabledBackgroundColor: Colors.grey[800],
+            foregroundColor: Colors.white,
+            disabledForegroundColor: Colors.grey,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: const Text("Log Out"),
           ),
+          child: const Text("Log Out"),
         ),
       ),
     ];
@@ -184,18 +178,7 @@ class _SettingsState extends State<Settings> {
                 ),
                 alwaysShowMiddle: false,
               ),
-              if (MediaQuery.of(context).size.width <= 700)
-                SliverList(
-                  delegate: SliverChildListDelegate([...settingsItems]),
-                )
-              else
-                SliverGrid.extent(
-                  maxCrossAxisExtent: 400,
-                  childAspectRatio: 3,
-                  mainAxisSpacing: 5,
-                  crossAxisSpacing: 5,
-                  children: [...settingsItems],
-                ),
+              SliverList(delegate: SliverChildListDelegate([...settingsItems])),
               const SliverToBoxAdapter(child: SizedBox(height: 170)),
             ],
           ),
