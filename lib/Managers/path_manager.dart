@@ -458,12 +458,10 @@ class Pathmanager {
 
       if (await _isDirectoryAccessible(dir)) {
         final filesInDirectory = await scanMediaFiles(folderPath);
-
-        if (filesInDirectory.isNotEmpty) {
-          final dirName = _extractDirectoryName(folderPath);
-          mediaFilesByLocation[dirName] = filesInDirectory;
-          print('[PathManager] $dirName: ${filesInDirectory.length} files');
-        }
+        final dirName = _extractDirectoryName(folderPath);
+        // Always include saved folders, even if they have no media files yet
+        mediaFilesByLocation[dirName] = filesInDirectory;
+        print('[PathManager] $dirName: ${filesInDirectory.length} files');
       } else {
         print('[PathManager] Folder no longer accessible: $folderPath');
       }

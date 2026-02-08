@@ -273,17 +273,40 @@ class _LocationScreenState extends State<LocationScreen> {
 
     return Stack(
       children: [
-        CustomScrollView(
-          slivers: [
-            _buildNavigationBar(),
-            SliverPadding(
-              padding: const EdgeInsets.all(12),
-              sliver: isDesktop
-                  ? _buildDesktopLocationsList(mediaByLocation)
-                  : _buildMobileLocationsList(mediaByLocation),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 170)),
-          ],
+        FutureBuilder<List<String>>(
+          future: _pathManager.getSavedLibraryFolders(),
+          builder: (context, folderSnapshot) {
+            // Build a map from folder name -> full path for lookup
+            final folderNameToPath = <String, String>{};
+            if (folderSnapshot.hasData) {
+              for (final path in folderSnapshot.data!) {
+                final name = path
+                    .replaceAll(RegExp(r'[/\\]+$'), '')
+                    .split(RegExp(r'[/\\]'))
+                    .last;
+                folderNameToPath[name] = path;
+              }
+            }
+
+            return CustomScrollView(
+              slivers: [
+                _buildNavigationBar(),
+                SliverPadding(
+                  padding: const EdgeInsets.all(12),
+                  sliver: isDesktop
+                      ? _buildDesktopLocationsList(
+                          mediaByLocation,
+                          folderNameToPath,
+                        )
+                      : _buildMobileLocationsList(
+                          mediaByLocation,
+                          folderNameToPath,
+                        ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 170)),
+              ],
+            );
+          },
         ),
         // Bottom gradient fade
         Positioned(
@@ -308,48 +331,57 @@ class _LocationScreenState extends State<LocationScreen> {
     );
   }
 
-  Widget _buildDesktopLocationsList(Map<String, List<File>> mediaByLocation) {
+  Widget _buildDesktopLocationsList(
+    Map<String, List<File>> mediaByLocation,
+    Map<String, String> folderNameToPath,
+  ) {
     return SliverGrid.extent(
       maxCrossAxisExtent: 400,
       childAspectRatio: 2.5,
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
       children: mediaByLocation.entries.map((entry) {
-        return _buildLocationCard(entry.key, entry.value);
+        return _buildLocationCard(entry.key, entry.value, folderNameToPath);
       }).toList(),
     );
   }
 
-  Widget _buildMobileLocationsList(Map<String, List<File>> mediaByLocation) {
+  Widget _buildMobileLocationsList(
+    Map<String, List<File>> mediaByLocation,
+    Map<String, String> folderNameToPath,
+  ) {
     return SliverList.builder(
       itemCount: mediaByLocation.length,
       itemBuilder: (context, index) {
         final entry = mediaByLocation.entries.elementAt(index);
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: _buildLocationCard(entry.key, entry.value),
+          child: _buildLocationCard(entry.key, entry.value, folderNameToPath),
         );
       },
     );
   }
 
-  Widget _buildLocationCard(String locationName, List<File> files) {
+  Widget _buildLocationCard(
+    String locationName,
+    List<File> files,
+    Map<String, String> folderNameToPath,
+  ) {
+    // Resolve the full folder path from saved library folders
+    final resolvedPath =
+        folderNameToPath[locationName] ??
+        (files.isNotEmpty ? _extractDirectoryPath(files.first.path) : null);
+
     return GestureDetector(
       onTap: () async {
-        if (files.isNotEmpty) {
-          final fullPath = _extractDirectoryPath(files.first.path);
-          // Scan files and view them in the same screen
-          final scannedFiles = await _pathManager.scanMediaFiles(fullPath);
-          _viewLocationFiles(locationName, fullPath, scannedFiles);
+        if (resolvedPath != null) {
+          final scannedFiles = await _pathManager.scanMediaFiles(resolvedPath);
+          _viewLocationFiles(locationName, resolvedPath, scannedFiles);
         }
       },
       onLongPress: () async {
-        // Get the full path from files
-        final fullPath = files.isNotEmpty
-            ? _extractDirectoryPath(files.first.path)
-            : null;
-        if (fullPath != null) {
-          await _removeFolder(fullPath);
+        if (resolvedPath != null) {
+          await _removeFolder(resolvedPath);
         }
       },
       child: Container(
