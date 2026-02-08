@@ -1,7 +1,7 @@
 // ignore_for_file: unused_field
 
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:music_controller/managers/credentials_manager.dart';
 import 'package:music_controller/managers/server_manager/supabase_manager.dart';
 import 'package:music_controller/ui/media_ui.dart';
 
@@ -21,19 +21,23 @@ class OnlineScreenLoginSuccessState extends State<OnlineScreenLoginSuccess> {
   @override
   void initState() {
     super.initState();
+    print('[OnlineScreenLoginSuccess] initState called');
     _loadAndFetchSongs();
   }
 
   Future<void> _loadAndFetchSongs() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final tableName = prefs.getString('supabaseTableName') ?? 'Online';
-      final url = prefs.getString('supabaseUrl');
-      final apiKey = prefs.getString('supabaseAnonKey');
+      final credentials = CredentialsManager();
+      final credentialsData = await credentials.getSupabaseCredentials();
+      final tableName = credentialsData['tableName'] ?? 'Online';
+      final url = credentialsData['url'];
+      final apiKey = credentialsData['apiKey'];
 
       print('Loading songs from table: $tableName');
       print('URL exists: ${url != null}');
       print('API Key exists: ${apiKey != null}');
+
+      if (!mounted) return;
 
       setState(() {
         _tableName = tableName;
@@ -46,6 +50,9 @@ class OnlineScreenLoginSuccessState extends State<OnlineScreenLoginSuccess> {
           supabaseAnonKey: apiKey,
           tableName: tableName,
         );
+
+        if (!mounted) return;
+
         setState(() {
           _songsFuture = connection.fetchOnlineSongs();
         });

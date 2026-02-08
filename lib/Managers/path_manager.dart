@@ -15,6 +15,10 @@ class Pathmanager {
   /// Key for storing user-selected library folders in SharedPreferences.
   static const String _libraryFoldersKey = 'user_library_folders';
 
+  /// Key for tracking if default folders have been initialized.
+  static const String _defaultFoldersInitializedKey =
+      'default_folders_initialized';
+
   /// Supported audio file extensions.
   static const List<String> _audioExtensions = [
     '.mp3',
@@ -92,6 +96,185 @@ class Pathmanager {
   }
 
   // ==================== USER LIBRARY FOLDER MANAGEMENT ====================
+
+  /// Gets the standard user directories (Downloads, Music, Videos) based on platform.
+  ///
+  /// Returns a list of directory paths that exist.
+  /// - Windows: C:\Users\[username]\Downloads, Music, Videos
+  /// - Linux: /home/[username]/Downloads, Music, Videos
+  /// - macOS: /Users/[username]/Downloads, Music, Movies
+  /// - Android: Skipped (uses different storage model)
+  Future<List<String>> getDefaultSystemDirectories() async {
+    final List<String> defaultDirs = [];
+
+    try {
+      if (Platform.isAndroid) {
+        // Skip for Android - uses different storage model
+        print('[PathManager] Skipping default directories for Android');
+        return defaultDirs;
+      }
+
+      // Get user home directory
+      final String? home =
+          Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+
+      if (home == null) {
+        print('[PathManager] Could not determine home directory');
+        return defaultDirs;
+      }
+
+      print('[PathManager] Home directory: $home');
+
+      // Standard directory names based on platform
+      final List<String> dirNames = Platform.isMacOS
+          ? [
+              'Downloads',
+              'Music',
+              'Movies',
+            ] // macOS uses "Movies" instead of "Videos"
+          : ['Downloads', 'Music', 'Videos'];
+
+      // Check each directory
+      for (final dirName in dirNames) {
+        final dirPath = Platform.isWindows
+            ? '$home\\$dirName'
+            : '$home/$dirName';
+
+        final dir = Directory(dirPath);
+        if (await dir.exists()) {
+          defaultDirs.add(dirPath);
+          print('[PathManager] Found default directory: $dirPath');
+        } else {
+          print('[PathManager] Directory does not exist: $dirPath');
+        }
+      }
+    } catch (e) {
+      print('[PathManager] Error getting default directories: $e');
+    }
+
+    return defaultDirs;
+  }
+
+  /// Initializes default library folders on first launch.
+  ///
+  /// Adds Downloads, Music, and Videos (or Movies on macOS) directories
+  /// to the library if they exist and haven't been initialized before.
+  ///
+  /// Returns the number of directories that were added.
+  Future<int> initializeDefaultLibraryFolders() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Check if already initialized
+      final alreadyInitialized =
+          prefs.getBool(_defaultFoldersInitializedKey) ?? false;
+
+      if (alreadyInitialized) {
+        print('[PathManager] Default folders already initialized');
+        return 0;
+      }
+
+      print('[PathManager] Starting default folder initialization...');
+
+      // Get default system directories
+      final defaultDirs = await getDefaultSystemDirectories();
+
+      print(
+        '[PathManager] Found ${defaultDirs.length} default directories: $defaultDirs',
+      );
+
+      if (defaultDirs.isEmpty) {
+        print('[PathManager] No default directories found');
+        // Mark as initialized even if no directories found
+        await prefs.setBool(_defaultFoldersInitializedKey, true);
+        return 0;
+      }
+
+      // Add each directory to library
+      int addedCount = 0;
+      for (final dirPath in defaultDirs) {
+        print('[PathManager] Attempting to add: $dirPath');
+        final success = await addLibraryFolderPath(dirPath);
+        if (success) {
+          addedCount++;
+          print('[PathManager] Successfully added: $dirPath');
+        } else {
+          print('[PathManager] Failed to add: $dirPath');
+        }
+      }
+
+      // Mark as initialized
+      await prefs.setBool(_defaultFoldersInitializedKey, true);
+      print('[PathManager] Initialized $addedCount default directories');
+
+      return addedCount;
+    } catch (e) {
+      print('[PathManager] Error initializing default folders: $e');
+      return 0;
+    }
+  }
+
+  /// Force initializes default folders even if already initialized.
+  ///
+  /// Useful when user has no folders and wants to reset to defaults.
+  Future<int> forceInitializeDefaultFolders() async {
+    try {
+      print('[PathManager] Force initializing default folders...');
+
+      // Get default system directories
+      final defaultDirs = await getDefaultSystemDirectories();
+
+      print(
+        '[PathManager] Found ${defaultDirs.length} default directories: $defaultDirs',
+      );
+
+      if (defaultDirs.isEmpty) {
+        print('[PathManager] No default directories found to add');
+        return 0;
+      }
+
+      // Add each directory to library
+      int addedCount = 0;
+      for (final dirPath in defaultDirs) {
+        print('[PathManager] Force adding: $dirPath');
+        final success = await addLibraryFolderPath(dirPath);
+        if (success) {
+          addedCount++;
+          print('[PathManager] Successfully added: $dirPath');
+        } else {
+          print('[PathManager] Already exists or failed: $dirPath');
+        }
+      }
+
+      // Mark as initialized
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_defaultFoldersInitializedKey, true);
+      print('[PathManager] Force initialized $addedCount new directories');
+
+      return addedCount;
+    } catch (e) {
+      print('[PathManager] Error force initializing default folders: $e');
+      return 0;
+    }
+  }
+
+  /// Checks if default folders have been initialized.
+  Future<bool> areDefaultFoldersInitialized() async {
+    final prefs = await SharedPreferences.getInstance();
+    final initialized = prefs.getBool(_defaultFoldersInitializedKey) ?? false;
+    print('[PathManager] areDefaultFoldersInitialized: $initialized');
+    return initialized;
+  }
+
+  /// Resets the default folder initialization flag.
+  ///
+  /// After calling this, the next call to initializeDefaultLibraryFolders()
+  /// will add default folders again. Useful for troubleshooting.
+  Future<void> resetDefaultFoldersInitialization() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_defaultFoldersInitializedKey);
+    print('[PathManager] Reset default folders initialization flag');
+  }
 
   /// Gets all user-selected library folders from persistent storage.
   ///

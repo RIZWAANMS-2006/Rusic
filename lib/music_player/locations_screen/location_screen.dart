@@ -15,9 +15,68 @@ class _LocationScreenState extends State<LocationScreen> {
   late Future<Map<String, List<File>>> mediaFilesFuture;
   final Pathmanager _pathManager = Pathmanager();
 
+  // State for viewing files in a specific location
+  String? _selectedLocationName;
+  String? _selectedFolderPath;
+  List<File>? _selectedLocationFiles;
+  int _hoverIndex = -1;
+
   @override
   void initState() {
     super.initState();
+    _initializeAndRefresh();
+  }
+
+  /// Navigate to view files in a specific location
+  void _viewLocationFiles(
+    String locationName,
+    String folderPath,
+    List<File> files,
+  ) {
+    setState(() {
+      _selectedLocationName = locationName;
+      _selectedFolderPath = folderPath;
+      _selectedLocationFiles = files;
+    });
+  }
+
+  /// Go back to locations list view
+  void _backToLocationsList() {
+    setState(() {
+      _selectedLocationName = null;
+      _selectedFolderPath = null;
+      _selectedLocationFiles = null;
+      _hoverIndex = -1;
+    });
+  }
+
+  /// Check if currently viewing a specific location's files
+  bool get _isViewingLocationFiles => _selectedLocationName != null;
+
+  /// Initialize default folders and refresh media files
+  Future<void> _initializeAndRefresh() async {
+    // Initialize default folders on first launch
+    final addedCount = await _pathManager.initializeDefaultLibraryFolders();
+    print('[LocationScreen] Added $addedCount default directories');
+
+    // Check if we actually have any folders
+    final hasFolders = await _pathManager.hasLibraryFolders();
+    final folderCount = (await _pathManager.getSavedLibraryFolders()).length;
+    print(
+      '[LocationScreen] Has folders: $hasFolders, Actual count: $folderCount',
+    );
+
+    // If initialization returned 0 AND there are no folders, reset flag and force initialize
+    if (addedCount == 0 && !hasFolders) {
+      print(
+        '[LocationScreen] No folders despite initialization, resetting flag and forcing...',
+      );
+      await _pathManager.resetDefaultFoldersInitialization();
+      final forcedCount = await _pathManager.forceInitializeDefaultFolders();
+      print('[LocationScreen] Force added $forcedCount directories');
+    }
+
+    // Refresh media files after initialization
     _refreshMediaFiles();
   }
 
@@ -83,25 +142,29 @@ class _LocationScreenState extends State<LocationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color.fromRGBO(26, 26, 26, 1),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addFolder,
-        tooltip: 'Add Folder',
-        child: Icon(Icons.add),
-      ),
-      body: FutureBuilder<Map<String, List<File>>>(
-        future: mediaFilesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return _buildLoadingState();
-          } else if (snapshot.hasError) {
-            return _buildErrorState(snapshot.error.toString());
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return _buildEmptyState();
-          } else {
-            return _buildLocationsList(snapshot.data!);
-          }
-        },
-      ),
+      floatingActionButton: _isViewingLocationFiles
+          ? null
+          : FloatingActionButton(
+              onPressed: _addFolder,
+              tooltip: 'Add Folder',
+              child: Icon(Icons.add),
+            ),
+      body: _isViewingLocationFiles
+          ? _buildLocationFilesView()
+          : FutureBuilder<Map<String, List<File>>>(
+              future: mediaFilesFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return _buildLoadingState();
+                } else if (snapshot.hasError) {
+                  return _buildErrorState(snapshot.error.toString());
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return _buildEmptyState();
+                } else {
+                  return _buildLocationsList(snapshot.data!);
+                }
+              },
+            ),
     );
   }
 
@@ -188,13 +251,20 @@ class _LocationScreenState extends State<LocationScreen> {
   }
 
   Widget _buildNavigationBar() {
-    return CupertinoSliverNavigationBar(
-      stretch: true,
-      backgroundColor: Color.fromRGBO(34, 34, 34, 1),
-      largeTitle: Text('Locations'),
-      alwaysShowMiddle: false,
-      transitionBetweenRoutes: false,
-      border: null,
+    return SliverAppBar(
+      title: Text(
+        _isViewingLocationFiles ? _selectedLocationName! : 'Locations',
+        style: TextStyle(fontFamily: "Normal", fontWeight: FontWeight.w500),
+      ),
+      backgroundColor: Colors.transparent,
+      floating: false,
+      pinned: true,
+      leading: _isViewingLocationFiles
+          ? IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: _backToLocationsList,
+            )
+          : null,
     );
   }
 
@@ -268,8 +338,9 @@ class _LocationScreenState extends State<LocationScreen> {
       onTap: () async {
         if (files.isNotEmpty) {
           final fullPath = _extractDirectoryPath(files.first.path);
-          // Navigate to file viewer
-          _navigateToFilesView(locationName, fullPath);
+          // Scan files and view them in the same screen
+          final scannedFiles = await _pathManager.scanMediaFiles(fullPath);
+          _viewLocationFiles(locationName, fullPath, scannedFiles);
         }
       },
       onLongPress: () async {
@@ -346,110 +417,66 @@ class _LocationScreenState extends State<LocationScreen> {
     return file.parent.path;
   }
 
-  Future<void> _navigateToFilesView(
-    String locationName,
-    String folderPath,
-  ) async {
-    final files = await _pathManager.scanMediaFiles(folderPath);
-    if (mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => LocationFilesView(
-            locationName: locationName,
-            folderPath: folderPath,
-            files: files,
-          ),
-        ),
-      );
-    }
-  }
-}
-
-/// Screen to display files in a specific location
-class LocationFilesView extends StatefulWidget {
-  final String locationName;
-  final String folderPath;
-  final List<File> files;
-
-  const LocationFilesView({
-    super.key,
-    required this.locationName,
-    required this.folderPath,
-    required this.files,
-  });
-
-  @override
-  State<LocationFilesView> createState() => _LocationFilesViewState();
-}
-
-class _LocationFilesViewState extends State<LocationFilesView> {
-  int hoverIndex = -1;
-
-  @override
-  Widget build(BuildContext context) {
+  /// Builds the view showing files in a specific location
+  Widget _buildLocationFilesView() {
     final isDesktop = MediaQuery.of(context).size.width > 700;
 
-    return Scaffold(
-      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          widget.locationName,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-        ),
-      ),
-      body: Stack(
-        children: [
-          widget.files.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.music_note, size: 64, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No files found',
-                        style: TextStyle(color: Colors.white, fontSize: 18),
+    return Stack(
+      children: [
+        _selectedLocationFiles!.isEmpty
+            ? CustomScrollView(
+                slivers: [
+                  _buildNavigationBar(),
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.music_note, size: 64, color: Colors.grey),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No files found',
+                            style: TextStyle(color: Colors.white, fontSize: 18),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                )
-              : CustomScrollView(
-                  slivers: [
-                    isDesktop ? _buildDesktopGrid() : _buildMobileList(),
-                    const SliverToBoxAdapter(child: SizedBox(height: 170)),
-                  ],
-                ),
-          // Bottom gradient fade
-          Positioned(
-            bottom: 0,
-            child: Container(
-              height: 100,
-              width: MediaQuery.of(context).size.width,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withOpacity(0.0),
-                    Colors.black.withOpacity(0.9),
-                    Colors.black,
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
+                ],
+              )
+            : CustomScrollView(
+                slivers: [
+                  _buildNavigationBar(),
+                  isDesktop
+                      ? _buildFilesDesktopGrid()
+                      : _buildFilesMobileList(),
+                  const SliverToBoxAdapter(child: SizedBox(height: 170)),
+                ],
+              ),
+        // Bottom gradient fade
+        Positioned(
+          bottom: 0,
+          child: Container(
+            height: 100,
+            width: MediaQuery.of(context).size.width,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.black.withOpacity(0.0),
+                  Colors.black.withOpacity(0.9),
+                  Colors.black,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildDesktopGrid() {
+  Widget _buildFilesDesktopGrid() {
     return SliverPadding(
       padding: const EdgeInsets.all(5),
       sliver: SliverGrid.extent(
@@ -457,18 +484,18 @@ class _LocationFilesViewState extends State<LocationFilesView> {
         childAspectRatio: 3,
         mainAxisSpacing: 5,
         crossAxisSpacing: 5,
-        children: List.generate(widget.files.length, (index) {
-          return _buildFileItem(widget.files[index], index);
+        children: List.generate(_selectedLocationFiles!.length, (index) {
+          return _buildFileItem(_selectedLocationFiles![index], index);
         }),
       ),
     );
   }
 
-  Widget _buildMobileList() {
+  Widget _buildFilesMobileList() {
     return SliverList.builder(
-      itemCount: widget.files.length,
+      itemCount: _selectedLocationFiles!.length,
       itemBuilder: (context, index) {
-        return _buildFileListTile(widget.files[index], index);
+        return _buildFileListTile(_selectedLocationFiles![index], index);
       },
     );
   }
@@ -481,12 +508,12 @@ class _LocationFilesViewState extends State<LocationFilesView> {
         // Handle file tap
       },
       child: AnimatedScale(
-        scale: (hoverIndex == index) ? 1.015 : 1,
+        scale: (_hoverIndex == index) ? 1.015 : 1,
         duration: const Duration(milliseconds: 75),
         curve: Curves.linear,
         child: MouseRegion(
-          onEnter: (_) => setState(() => hoverIndex = index),
-          onExit: (_) => setState(() => hoverIndex = -1),
+          onEnter: (_) => setState(() => _hoverIndex = index),
+          onExit: (_) => setState(() => _hoverIndex = -1),
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.all(Radius.circular(10)),

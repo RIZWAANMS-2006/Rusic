@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:music_controller/music_player/online_screens/online_screen_login.dart';
 import 'package:music_controller/music_player/online_screens/online_screen_login_success.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:music_controller/managers/credentials_manager.dart';
 import 'package:music_controller/managers/server_manager/supabase_manager.dart';
 
 class OnlineScreen extends StatefulWidget {
@@ -28,10 +28,11 @@ class OnlineScreenState extends State<OnlineScreen> {
   }
 
   Future<void> _checkExistingConnection() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedUrl = prefs.getString('supabaseUrl');
-    final savedKey = prefs.getString('supabaseAnonKey');
-    final savedTableName = prefs.getString('supabaseTableName');
+    final credentials = CredentialsManager();
+    final credentialsData = await credentials.getSupabaseCredentials();
+    final savedUrl = credentialsData['url'];
+    final savedKey = credentialsData['apiKey'];
+    final savedTableName = credentialsData['tableName'];
 
     if (savedUrl != null && savedKey != null && savedTableName != null) {
       supabaseConnection = SupabaseConnection(
@@ -40,6 +41,9 @@ class OnlineScreenState extends State<OnlineScreen> {
         tableName: savedTableName,
       );
       final ok = await supabaseConnection!.isConnected();
+
+      if (!mounted) return;
+
       setState(() {
         _url = savedUrl;
         _apiKey = savedKey;
@@ -48,6 +52,8 @@ class OnlineScreenState extends State<OnlineScreen> {
         isChecking = false;
       });
     } else {
+      if (!mounted) return;
+
       setState(() {
         connectionStatus = false;
         isChecking = false;
@@ -67,12 +73,20 @@ class OnlineScreenState extends State<OnlineScreen> {
       tableName: tableName,
     );
     final ok = await supabaseConnection!.isConnected();
+    print('[OnlineScreen] Connection status: $ok');
+
     if (ok) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('supabaseUrl', url);
-      await prefs.setString('supabaseAnonKey', apiKey);
-      await prefs.setString('supabaseTableName', tableName);
+      final credentials = CredentialsManager();
+      await credentials.saveSupabaseCredentials(
+        url: url,
+        apiKey: apiKey,
+        tableName: tableName,
+      );
+      print('[OnlineScreen] Credentials saved successfully');
     }
+
+    if (!mounted) return;
+
     setState(() {
       _url = url;
       _apiKey = apiKey;
@@ -83,10 +97,11 @@ class OnlineScreenState extends State<OnlineScreen> {
   }
 
   Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('supabaseUrl');
-    await prefs.remove('supabaseAnonKey');
-    await prefs.remove('supabaseTableName');
+    final credentials = CredentialsManager();
+    await credentials.clearSupabaseCredentials();
+
+    if (!mounted) return;
+
     setState(() {
       supabaseConnection = null;
       _url = null;
