@@ -15,6 +15,8 @@ class SettingsManager {
       userSettings.getString('lastSongPlayedName') ?? "No Song is Playing...";
   static String get getLastSongPlayedPath =>
       userSettings.getString('lastSongPlayedPath') ?? "";
+  static int get getCrossfadeDuration =>
+      userSettings.getInt('crossfadeDuration') ?? 0;
 
   //Set Functions
   static Future<void> setDarkMode(bool value) async {
@@ -33,8 +35,13 @@ class SettingsManager {
     await userSettings.setString('lastSongPlayedPath', value);
   }
 
+  static Future<void> setCrossfadeDuration(int value) async {
+    await userSettings.setInt('crossfadeDuration', value);
+  }
+
   static Future<void> setDefaults() async {
     await userSettings.setBool('darkMode', true);
     await userSettings.setString('fontFamily', "normal");
+    await userSettings.setInt('crossfadeDuration', 0);
   }
 }
