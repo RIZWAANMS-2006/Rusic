@@ -35,12 +35,13 @@ class OnlineScreenState extends State<OnlineScreen> {
     final savedTableName = credentialsData['tableName'];
 
     if (savedUrl != null && savedKey != null && savedTableName != null) {
-      supabaseConnection = SupabaseConnection(
+      final connection = SupabaseConnection(
         supabaseUrl: savedUrl,
         supabaseAnonKey: savedKey,
         tableName: savedTableName,
       );
-      final ok = await supabaseConnection!.isConnected();
+      supabaseConnection = connection;
+      final ok = await connection.isConnected();
 
       if (!mounted) return;
 
@@ -67,12 +68,13 @@ class OnlineScreenState extends State<OnlineScreen> {
     String tableName,
   ) async {
     setState(() => isChecking = true);
-    supabaseConnection = SupabaseConnection(
+    final connection = SupabaseConnection(
       supabaseUrl: url,
       supabaseAnonKey: apiKey,
       tableName: tableName,
     );
-    final ok = await supabaseConnection!.isConnected();
+    supabaseConnection = connection;
+    final ok = await connection.isConnected();
     print('[OnlineScreen] Connection status: $ok');
 
     if (ok) {

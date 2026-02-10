@@ -11,8 +11,8 @@ WeatherRequest wr = WeatherRequest(
 Stream<Widget?> weatherDetailsFunction() async* {
   while (true) {
     RealtimeWeather rw = await wr.getRealtimeWeatherByCityName("chennai");
-    String? temp = rw.current.condition.text;
-    if (temp!.toLowerCase().contains('sun') ||
+    String temp = rw.current.condition.text ?? 'Unknown';
+    if (temp.toLowerCase().contains('sun') ||
         temp.toLowerCase().contains('clear')) {
       yield Row(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -182,8 +182,8 @@ Stream<Widget?> weatherDetailsFunction() async* {
 Stream<Widget?> WeatherBackgroundFunction() async* {
   while (true) {
     RealtimeWeather rw = await wr.getRealtimeWeatherByCityName("chennai");
-    String? temp = rw.current.condition.text;
-    if (temp!.toLowerCase().contains('sun') ||
+    String temp = rw.current.condition.text ?? 'Unknown';
+    if (temp.toLowerCase().contains('sun') ||
         temp.toLowerCase().contains('clear')) {
       if (DateTime.now().hour <= 17 && DateTime.now().hour >= 6) {
         yield WeatherScene.scorchingSun.sceneWidget;

@@ -192,7 +192,8 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                           );
                           print('URL: ${urlController.text}');
                           print('API Key: ${apiKeyController.text}');
-                          if (_formKey.currentState!.validate()) {
+                          final formState = _formKey.currentState;
+                          if (formState != null && formState.validate()) {
                             print('Form validated successfully');
                             widget.onSubmit(
                               urlController.text.trim(),

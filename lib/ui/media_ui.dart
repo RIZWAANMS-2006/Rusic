@@ -78,10 +78,12 @@ class _MediaUIState extends State<MediaUI> {
             return _buildLoadingState();
           } else if (snapshot.hasError) {
             return _buildErrorState(snapshot.error.toString());
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          }
+          final data = snapshot.data;
+          if (data == null || data.isEmpty) {
             return _buildEmptyState();
           } else {
-            return _buildContent(snapshot.data!);
+            return _buildContent(data);
           }
         },
       );
@@ -643,10 +645,12 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
             return _buildLoadingState();
           } else if (snapshot.hasError) {
             return _buildErrorState(snapshot.error.toString());
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          }
+          final data = snapshot.data;
+          if (data == null || data.isEmpty) {
             return _buildEmptyState();
           } else {
-            return _buildContent(snapshot.data!);
+            return _buildContent(data);
           }
         },
       );

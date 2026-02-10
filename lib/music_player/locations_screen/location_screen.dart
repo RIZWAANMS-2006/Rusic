@@ -11,7 +11,7 @@ class LocationScreen extends StatefulWidget {
 }
 
 class _LocationScreenState extends State<LocationScreen> {
-  late Future<Map<String, List<File>>> mediaFilesFuture;
+  Future<Map<String, List<File>>>? mediaFilesFuture;
   final Pathmanager _pathManager = Pathmanager();
 
   // State for viewing files in a specific location
@@ -47,7 +47,8 @@ class _LocationScreenState extends State<LocationScreen> {
   }
 
   /// Check if currently viewing a specific location's files
-  bool get _isViewingLocationFiles => _selectedLocationName != null;
+  bool get _isViewingLocationFiles =>
+      _selectedLocationName != null && _selectedLocationFiles != null;
 
   /// Initialize default folders and refresh media files
   Future<void> _initializeAndRefresh() async {
@@ -147,6 +148,8 @@ class _LocationScreenState extends State<LocationScreen> {
             ),
       body: _isViewingLocationFiles
           ? _buildLocationFilesView()
+          : mediaFilesFuture == null
+          ? _buildLoadingState()
           : FutureBuilder<Map<String, List<File>>>(
               future: mediaFilesFuture,
               builder: (context, snapshot) {
@@ -154,10 +157,12 @@ class _LocationScreenState extends State<LocationScreen> {
                   return _buildLoadingState();
                 } else if (snapshot.hasError) {
                   return _buildErrorState(snapshot.error.toString());
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                }
+                final data = snapshot.data;
+                if (data == null || data.isEmpty) {
                   return _buildEmptyState();
                 } else {
-                  return _buildLocationsList(snapshot.data!);
+                  return _buildLocationsList(data);
                 }
               },
             ),
@@ -249,7 +254,9 @@ class _LocationScreenState extends State<LocationScreen> {
   Widget _buildNavigationBar() {
     return SliverAppBar(
       title: Text(
-        _isViewingLocationFiles ? _selectedLocationName! : 'Locations',
+        _isViewingLocationFiles
+            ? (_selectedLocationName ?? 'Location')
+            : 'Locations',
         style: TextStyle(fontFamily: "Normal", fontWeight: FontWeight.w500),
       ),
       backgroundColor: Colors.transparent,
@@ -265,8 +272,6 @@ class _LocationScreenState extends State<LocationScreen> {
   }
 
   Widget _buildLocationsList(Map<String, List<File>> mediaByLocation) {
-    final isDesktop = MediaQuery.of(context).size.width > 700;
-
     return Stack(
       children: [
         FutureBuilder<List<String>>(
@@ -274,14 +279,13 @@ class _LocationScreenState extends State<LocationScreen> {
           builder: (context, folderSnapshot) {
             // Build a map from folder name -> full path for lookup
             final folderNameToPath = <String, String>{};
-            if (folderSnapshot.hasData) {
-              for (final path in folderSnapshot.data!) {
-                final name = path
-                    .replaceAll(RegExp(r'[/\\]+$'), '')
-                    .split(RegExp(r'[/\\]'))
-                    .last;
-                folderNameToPath[name] = path;
-              }
+            final folders = folderSnapshot.data ?? [];
+            for (final path in folders) {
+              final name = path
+                  .replaceAll(RegExp(r'[/\\]+$'), '')
+                  .split(RegExp(r'[/\\]'))
+                  .last;
+              folderNameToPath[name] = path;
             }
 
             return CustomScrollView(
@@ -289,15 +293,22 @@ class _LocationScreenState extends State<LocationScreen> {
                 _buildNavigationBar(),
                 SliverPadding(
                   padding: const EdgeInsets.all(12),
-                  sliver: isDesktop
-                      ? _buildDesktopLocationsList(
-                          mediaByLocation,
-                          folderNameToPath,
-                        )
-                      : _buildMobileLocationsList(
-                          mediaByLocation,
-                          folderNameToPath,
-                        ),
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 400,
+                      childAspectRatio: 2.5,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final entry = mediaByLocation.entries.elementAt(index);
+                      return _buildLocationCard(
+                        entry.key,
+                        entry.value,
+                        folderNameToPath,
+                      );
+                    }, childCount: mediaByLocation.length),
+                  ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 170)),
               ],
@@ -324,37 +335,6 @@ class _LocationScreenState extends State<LocationScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildDesktopLocationsList(
-    Map<String, List<File>> mediaByLocation,
-    Map<String, String> folderNameToPath,
-  ) {
-    return SliverGrid.extent(
-      maxCrossAxisExtent: 400,
-      childAspectRatio: 2.5,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      children: mediaByLocation.entries.map((entry) {
-        return _buildLocationCard(entry.key, entry.value, folderNameToPath);
-      }).toList(),
-    );
-  }
-
-  Widget _buildMobileLocationsList(
-    Map<String, List<File>> mediaByLocation,
-    Map<String, String> folderNameToPath,
-  ) {
-    return SliverList.builder(
-      itemCount: mediaByLocation.length,
-      itemBuilder: (context, index) {
-        final entry = mediaByLocation.entries.elementAt(index);
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _buildLocationCard(entry.key, entry.value, folderNameToPath),
-        );
-      },
     );
   }
 
@@ -446,11 +426,11 @@ class _LocationScreenState extends State<LocationScreen> {
 
   /// Builds the view showing files in a specific location
   Widget _buildLocationFilesView() {
-    final isDesktop = MediaQuery.of(context).size.width > 700;
+    final files = _selectedLocationFiles ?? [];
 
     return Stack(
       children: [
-        _selectedLocationFiles!.isEmpty
+        files.isEmpty
             ? CustomScrollView(
                 slivers: [
                   _buildNavigationBar(),
@@ -474,9 +454,20 @@ class _LocationScreenState extends State<LocationScreen> {
             : CustomScrollView(
                 slivers: [
                   _buildNavigationBar(),
-                  isDesktop
-                      ? _buildFilesDesktopGrid()
-                      : _buildFilesMobileList(),
+                  SliverPadding(
+                    padding: const EdgeInsets.all(5),
+                    sliver: SliverGrid(
+                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 400,
+                        childAspectRatio: 3,
+                        mainAxisSpacing: 5,
+                        crossAxisSpacing: 5,
+                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        return _buildFileItem(files[index], index);
+                      }, childCount: files.length),
+                    ),
+                  ),
                   const SliverToBoxAdapter(child: SizedBox(height: 170)),
                 ],
               ),
@@ -500,30 +491,6 @@ class _LocationScreenState extends State<LocationScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildFilesDesktopGrid() {
-    return SliverPadding(
-      padding: const EdgeInsets.all(5),
-      sliver: SliverGrid.extent(
-        maxCrossAxisExtent: 400,
-        childAspectRatio: 3,
-        mainAxisSpacing: 5,
-        crossAxisSpacing: 5,
-        children: List.generate(_selectedLocationFiles!.length, (index) {
-          return _buildFileItem(_selectedLocationFiles![index], index);
-        }),
-      ),
-    );
-  }
-
-  Widget _buildFilesMobileList() {
-    return SliverList.builder(
-      itemCount: _selectedLocationFiles!.length,
-      itemBuilder: (context, index) {
-        return _buildFileListTile(_selectedLocationFiles![index], index);
-      },
     );
   }
 

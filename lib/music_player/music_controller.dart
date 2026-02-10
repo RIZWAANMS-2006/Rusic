@@ -129,10 +129,11 @@ class BottomMusicControllerState extends State<BottomMusicController> {
         });
       }),
       onHorizontalDragEnd: (details) {
-        if (details.primaryVelocity! > 0) {
+        final velocity = details.primaryVelocity ?? 0;
+        if (velocity > 0) {
           print("Previous Song");
           // Swiped Right
-        } else if (details.primaryVelocity! < 0) {
+        } else if (velocity < 0) {
           print("Next Song");
           // Swiped Left
         }
