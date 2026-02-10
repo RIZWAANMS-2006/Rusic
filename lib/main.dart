@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:music_controller/music_player/music_controller.dart';
+import 'package:Rusic/music_player/music_controller.dart';
 import "package:window_size/window_size.dart";
 import 'music_player/music_player.dart';
 import 'settings/settings.dart';
@@ -9,7 +9,7 @@ import 'search/search_page.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:music_controller/managers/settings_manager.dart';
+import 'package:Rusic/managers/settings_manager.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 Future<void> main() async {

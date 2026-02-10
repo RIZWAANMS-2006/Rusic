@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/music_controller.iml" filepath="$PROJECT_DIR$/music_controller.iml" />
-      <module fileurl="file://$PROJECT_DIR$/android/music_controller_android.iml" filepath="$PROJECT_DIR$/android/music_controller_android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Rusic.iml" filepath="$PROJECT_DIR$/Rusic.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/Rusic_android.iml" filepath="$PROJECT_DIR$/android/Rusic_android.iml" />
     </modules>
   </component>
 </project>

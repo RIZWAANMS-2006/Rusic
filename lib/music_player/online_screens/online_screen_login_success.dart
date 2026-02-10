@@ -1,9 +1,9 @@
 // ignore_for_file: unused_field
 
 import 'package:flutter/material.dart';
-import 'package:music_controller/managers/credentials_manager.dart';
-import 'package:music_controller/managers/server_manager/supabase_manager.dart';
-import 'package:music_controller/ui/media_ui.dart';
+import 'package:Rusic/managers/credentials_manager.dart';
+import 'package:Rusic/managers/server_manager/supabase_manager.dart';
+import 'package:Rusic/ui/media_ui.dart';
 
 class OnlineScreenLoginSuccess extends StatefulWidget {
   final void Function() onLogout;

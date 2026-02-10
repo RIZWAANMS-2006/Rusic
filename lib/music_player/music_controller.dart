@@ -2,10 +2,10 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:music_controller/main.dart';
-import 'package:music_controller/music_player/dynamic_background.dart';
-import 'package:music_controller/managers/audio_manager.dart';
-import "package:music_controller/managers/ui_manager.dart";
+import 'package:Rusic/main.dart';
+import 'package:Rusic/music_player/dynamic_background.dart';
+import 'package:Rusic/managers/audio_manager.dart';
+import "package:Rusic/managers/ui_manager.dart";
 
 // play and pause button variable declaration
 int indicatorState = 0;
@@ -122,7 +122,7 @@ class BottomMusicControllerState extends State<BottomMusicController> {
             PageRouteBuilder(
               transitionDuration: Duration(milliseconds: 700),
               pageBuilder: (context, animation, secondaryanimation) {
-                return Full_Size_Music_Controller();
+                return Full_Size_Rusic();
               },
             ),
           );
@@ -350,16 +350,14 @@ class _CustomToggleSwitchState extends State<CustomToggleSwitch> {
 double i = 0;
 
 // Full Sized Music Controller
-class Full_Size_Music_Controller extends StatefulWidget {
-  const Full_Size_Music_Controller({super.key});
+class Full_Size_Rusic extends StatefulWidget {
+  const Full_Size_Rusic({super.key});
 
   @override
-  State<Full_Size_Music_Controller> createState() =>
-      Full_Size_Music_Controller_State();
+  State<Full_Size_Rusic> createState() => Full_Size_Rusic_State();
 }
 
-class Full_Size_Music_Controller_State
-    extends State<Full_Size_Music_Controller> {
+class Full_Size_Rusic_State extends State<Full_Size_Rusic> {
   late CurvedAnimation curved;
   @override
   void initState() {
@@ -630,16 +628,14 @@ class Full_Size_Music_Controller_State
   }
 }
 
-class Home_Page_Music_Controller extends StatefulWidget {
-  const Home_Page_Music_Controller({super.key});
+class Home_Page_Rusic extends StatefulWidget {
+  const Home_Page_Rusic({super.key});
 
   @override
-  State<Home_Page_Music_Controller> createState() =>
-      Home_Page_Music_Controller_State();
+  State<Home_Page_Rusic> createState() => Home_Page_Rusic_State();
 }
 
-class Home_Page_Music_Controller_State
-    extends State<Home_Page_Music_Controller> {
+class Home_Page_Rusic_State extends State<Home_Page_Rusic> {
   @override
   Widget build(BuildContext context) {
     return Padding(

@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:music_controller/music_player/online_screens/online_screen.dart';
-import 'package:music_controller/music_player/locations_screen/location_screen.dart';
+import 'package:Rusic/music_player/online_screens/online_screen.dart';
+import 'package:Rusic/music_player/locations_screen/location_screen.dart';
 
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;
@@ -30,7 +30,7 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-// Creating "Music_Controller"
+// Creating "Rusic"
 class Library extends StatefulWidget {
   const Library({super.key});
 

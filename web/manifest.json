@@ -1,6 +1,6 @@
 {
-    "name": "music_controller",
-    "short_name": "music_controller",
+    "name": "Rusic",
+    "short_name": "Rusic",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#hexcode",

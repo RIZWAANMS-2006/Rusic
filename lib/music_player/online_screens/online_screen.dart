@@ -1,10 +1,10 @@
 // ignore_for_file: unused_field
 
 import 'package:flutter/material.dart';
-import 'package:music_controller/music_player/online_screens/online_screen_login.dart';
-import 'package:music_controller/music_player/online_screens/online_screen_login_success.dart';
-import 'package:music_controller/managers/credentials_manager.dart';
-import 'package:music_controller/managers/server_manager/supabase_manager.dart';
+import 'package:Rusic/music_player/online_screens/online_screen_login.dart';
+import 'package:Rusic/music_player/online_screens/online_screen_login_success.dart';
+import 'package:Rusic/managers/credentials_manager.dart';
+import 'package:Rusic/managers/server_manager/supabase_manager.dart';
 
 class OnlineScreen extends StatefulWidget {
   const OnlineScreen({super.key});

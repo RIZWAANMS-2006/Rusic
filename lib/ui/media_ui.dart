@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:music_controller/music_player/music_controller.dart';
-import 'package:music_controller/managers/ui_manager.dart';
+import 'package:Rusic/music_player/music_controller.dart';
+import 'package:Rusic/managers/ui_manager.dart';
 import 'dart:io';
-import 'package:music_controller/search/search_page.dart';
+import 'package:Rusic/search/search_page.dart';
 
 /// A universal UI component for displaying media files across different tabs.
 ///

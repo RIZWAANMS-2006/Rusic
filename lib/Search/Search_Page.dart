@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
-import "package:music_controller/managers/path_manager.dart";
+import "package:Rusic/managers/path_manager.dart";
 import "dart:io";
-import 'package:music_controller/ui/media_ui.dart';
+import 'package:Rusic/ui/media_ui.dart';
 
 class MusicSearchBar extends StatelessWidget {
   const MusicSearchBar({super.key});

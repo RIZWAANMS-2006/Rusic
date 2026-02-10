@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:music_controller/ui/media_ui.dart';
+import 'package:Rusic/ui/media_ui.dart';
 
 class SupabaseConnection {
   final String supabaseUrl;

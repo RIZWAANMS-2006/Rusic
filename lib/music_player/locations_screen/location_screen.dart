@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:music_controller/managers/path_manager.dart';
+import 'package:Rusic/managers/path_manager.dart';
 import 'dart:io';
 
 class LocationScreen extends StatefulWidget {

@@ -1,2 +1,2 @@
-# music_controller
+# Rusic
 

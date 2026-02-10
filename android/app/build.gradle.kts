@@ -15,11 +15,11 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.example.music_controller"
+    namespace = "com.example.Rusic"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.music_controller"
+        applicationId = "com.example.Rusic"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = 1

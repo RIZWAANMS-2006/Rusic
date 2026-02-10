@@ -1,8 +1,9 @@
+import 'package:Rusic/managers/ui_manager.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:music_controller/managers/settings_manager.dart';
-import 'package:music_controller/managers/credentials_manager.dart';
+import 'package:Rusic/managers/settings_manager.dart';
+import 'package:Rusic/managers/credentials_manager.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -12,193 +13,80 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  late TextEditingController _crossfadeController;
-  bool _hasSupabaseCredentials = false;
-
   @override
-  void initState() {
-    super.initState();
-    _crossfadeController = TextEditingController(
-      text: SettingsManager.getCrossfadeDuration.toString(),
-    );
-    _checkSupabaseCredentials();
-  }
-
-  @override
-  void dispose() {
-    _crossfadeController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _checkSupabaseCredentials() async {
-    final has = await CredentialsManager().hasSupabaseCredentials();
-    if (mounted) {
-      setState(() => _hasSupabaseCredentials = has);
-    }
-  }
-
-  Future<void> _logoutSupabase() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color.fromRGBO(34, 34, 34, 1),
-        title: const Text(
-          'Log Out of Database?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'This will remove your saved Supabase credentials. You will need to re-enter them to access online music.',
-          style: TextStyle(color: Colors.grey),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          CupertinoSliverNavigationBar(
+            stretch: true,
+            alwaysShowMiddle: false,
+            border: null,
+            backgroundColor: setContainerColor(context),
+            largeTitle: const Text("Settings"),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Log Out', style: TextStyle(color: Colors.red)),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
+            sliver: SliverToBoxAdapter(child: CompactSettingsScreen()),
           ),
         ],
       ),
     );
-
-    if (confirmed == true) {
-      await CredentialsManager().clearSupabaseCredentials();
-      if (mounted) {
-        setState(() => _hasSupabaseCredentials = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Logged out of Supabase'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    }
   }
+}
+
+class CompactSettingsScreen extends StatefulWidget {
+  const CompactSettingsScreen({super.key});
+
+  @override
+  State<StatefulWidget> createState() => _CompactSettingsScreenState();
+}
+
+class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
+  Map<String, Widget> systemTheme = {
+    "System": const Text("System"),
+    "Light": const Text("Light"),
+    "Dark": const Text("Dark"),
+  };
+  String selectedSystemTheme = "System";
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> settingsItems = [
-      // Dark Mode Toggle
-      SwitchListTile(
-        value: SettingsManager.getDarkMode,
-        onChanged: (value) {
-          SettingsManager.setDarkMode(value);
-          setState(() {});
-        },
-        title: Text("System Mode", style: TextStyle(color: Colors.white)),
-      ),
-      // Crossfade Duration
-      ListTile(
-        title: const Text(
-          "Crossfade Duration",
-          style: TextStyle(color: Colors.white),
-        ),
-        subtitle: Text(
-          SettingsManager.getCrossfadeDuration == 0
-              ? "Off"
-              : "${SettingsManager.getCrossfadeDuration} seconds",
-          style: const TextStyle(color: Colors.grey, fontSize: 12),
-        ),
-        trailing: SizedBox(
-          width: 80,
-          child: TextField(
-            controller: _crossfadeController,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-            decoration: InputDecoration(
-              hintText: "0",
-              hintStyle: TextStyle(color: Colors.grey[600]),
-              suffixText: "s",
-              suffixStyle: const TextStyle(color: Colors.grey),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
-              ),
-              filled: true,
-              fillColor: const Color.fromRGBO(50, 50, 50, 1),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
-              ),
-            ),
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            onChanged: (value) {
-              final parsed = int.tryParse(value) ?? 0;
-              SettingsManager.setCrossfadeDuration(parsed);
-              setState(() {});
-            },
-          ),
-        ),
-      ),
-      // Database Logout
-      ListTile(
-        leading: Icon(
-          Icons.cloud_off,
-          color: _hasSupabaseCredentials ? Colors.red[300] : Colors.grey,
-        ),
-        title: const Text(
-          "Database Logout",
-          style: TextStyle(color: Colors.white),
-        ),
-        subtitle: Text(
-          _hasSupabaseCredentials ? "Connected to Supabase" : "Not connected",
-          style: const TextStyle(color: Colors.grey, fontSize: 12),
-        ),
-        trailing: ElevatedButton(
-          onPressed: _hasSupabaseCredentials ? _logoutSupabase : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red[700],
-            disabledBackgroundColor: Colors.grey[800],
-            foregroundColor: Colors.white,
-            disabledForegroundColor: Colors.grey,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: const Text("Log Out"),
-        ),
-      ),
-    ];
-    return Scaffold(
-      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
-      body: Stack(
+    return Container(
+      color: Colors.blue,
+      alignment: Alignment.topLeft,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          CustomScrollView(
-            slivers: [
-              CupertinoSliverNavigationBar(
-                backgroundColor: Color.fromRGBO(26, 26, 26, 1),
-                middle: Text("Settings", style: TextStyle(color: Colors.white)),
-                largeTitle: Text(
-                  "Settings",
-                  style: TextStyle(color: Colors.white),
+          // Container(
+          //   color: Colors.green,
+          //   child: ,
+          // ),
+          Container(
+            color: Colors.red,
+            child: Column(
+              spacing: 5,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "System Theme",
+                  style: TextStyle(backgroundColor: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                alwaysShowMiddle: false,
-              ),
-              SliverList(delegate: SliverChildListDelegate([...settingsItems])),
-              const SliverToBoxAdapter(child: SizedBox(height: 170)),
-            ],
-          ),
-          // Bottom gradient fade
-          Positioned(
-            bottom: 0,
-            child: Container(
-              height: 100,
-              width: MediaQuery.of(context).size.width,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withOpacity(0.0),
-                    Colors.black.withOpacity(0.9),
-                    Colors.black,
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+                Center(
+                  child: CupertinoSlidingSegmentedControl(
+                    children: systemTheme,
+                    groupValue: selectedSystemTheme,
+                    thumbColor: Theme.of(context).colorScheme.primary,
+                    onValueChanged: (value) {
+                      setState(() {
+                        selectedSystemTheme = value ?? 'System';
+                        print(selectedSystemTheme);
+                      });
+                    },
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
