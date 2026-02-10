@@ -58,10 +58,44 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // Container(
-          //   color: Colors.green,
-          //   child: ,
-          // ),
+          Container(
+            color: Colors.green,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Font"),
+                DropdownMenu(
+                  width: 150,
+                  hintText: "Select Font",
+                  textStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 14,
+                  ),
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  dropdownMenuEntries: <DropdownMenuEntry>[
+                    DropdownMenuEntry(value: 'Asimovian', label: 'Asimovian'),
+                    DropdownMenuEntry(value: 'Borel', label: 'Borel'),
+                    DropdownMenuEntry(
+                      value: 'Comic Relief',
+                      label: 'Comic Relief',
+                    ),
+                    DropdownMenuEntry(
+                      value: 'System Font',
+                      label: 'System Font',
+                    ),
+                  ],
+                  onSelected: (value) {
+                    print(value);
+                  },
+                ),
+              ],
+            ),
+          ),
           Container(
             color: Colors.red,
             child: Column(
@@ -71,7 +105,11 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
               children: [
                 Text(
                   "System Theme",
-                  style: TextStyle(backgroundColor: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    backgroundColor: Colors.amber,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Center(
                   child: CupertinoSlidingSegmentedControl(
