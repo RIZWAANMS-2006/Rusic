@@ -1,2 +1,2 @@
-# Rusic
+# Rusic - Music Player
 
