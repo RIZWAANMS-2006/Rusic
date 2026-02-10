@@ -53,17 +53,24 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.blue,
+      // color: Colors.blue,
       alignment: Alignment.topLeft,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
+        spacing: 7,
         children: [
           Container(
-            color: Colors.green,
+            // color: Colors.green,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Font"),
+                const Text(
+                  "Font",
+                  style: TextStyle(
+                    // backgroundColor: Colors.amber,
+                    fontSize: 16,
+                  ),
+                ),
                 DropdownMenu(
                   width: 150,
                   hintText: "Select Font",
@@ -97,7 +104,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
             ),
           ),
           Container(
-            color: Colors.red,
+            // color: Colors.red,
             child: Column(
               spacing: 5,
               mainAxisAlignment: MainAxisAlignment.start,
@@ -106,9 +113,8 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                 Text(
                   "System Theme",
                   style: TextStyle(
-                    backgroundColor: Colors.amber,
+                    // backgroundColor: Colors.amber,
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 Center(
