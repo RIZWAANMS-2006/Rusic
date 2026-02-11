@@ -1,9 +1,6 @@
 import 'package:Rusic/managers/ui_manager.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:Rusic/managers/settings_manager.dart';
-import 'package:Rusic/managers/credentials_manager.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
