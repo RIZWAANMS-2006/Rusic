@@ -159,18 +159,71 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text("Cross Fade", style: TextStyle(fontSize: 16)),
-                  Slider(
-                    value: crossFade,
-                    onChanged: (value) {
-                      setState(() {
-                        crossFade = value;
-                        print(crossFade);
-                      });
-                    },
-                    min: 0,
-                    max: 10,
-                    divisions: 10,
-                    label: crossFade.toInt().toString(),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      // A. The Track (The line)
+                      trackHeight: 6.0,
+                      activeTrackColor: Colors.purpleAccent, // Played part
+                      inactiveTrackColor: Colors.purple.withOpacity(
+                        0.2,
+                      ), // Remaining part
+                      // B. The Thumb (The draggable circle)
+                      thumbColor: Colors.purple,
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 10.0,
+                      ), // Bigger thumb
+                      // C. The Overlay (The glow when dragging)
+                      overlayColor: Colors.purple.withOpacity(0.3),
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 24.0,
+                      ),
+
+                      // D. The Value Indicator (The popup bubble)
+                      valueIndicatorColor: Colors.purple,
+                      valueIndicatorTextStyle: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      showValueIndicator: ShowValueIndicator.always,
+                    ),
+                    child: Slider(
+                      padding: null,
+                      value: crossFade,
+                      onChanged: (value) {
+                        setState(() {
+                          crossFade = value;
+                          print(crossFade);
+                        });
+                      },
+                      min: 0,
+                      max: 10,
+                      divisions: 10,
+                      label: crossFade.toInt().toString(),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Low Possible Value
+                        Text(
+                          "0s",
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                        // Highest Possible Value
+                        Text(
+                          "10s",
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
