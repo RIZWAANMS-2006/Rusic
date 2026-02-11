@@ -47,27 +47,31 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
   };
   String selectedSystemTheme = "System";
   double crossFade = 0;
+  String videoPreference = "Landscape Contain";
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 7,
       children: [
+        Text(
+          "System Settings",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        SizedBox(height: 5),
         Container(
-          alignment: Alignment.topLeft,
+          color: Colors.amber,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: 7,
             children: [
-              Text(
-                "System Settings",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -140,51 +144,41 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
           ),
         ),
         SizedBox(height: 10),
+        Text(
+          "Audio Settings",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+          textAlign: TextAlign.start,
+        ),
+        SizedBox(height: 5),
         Container(
+          color: Colors.red,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: 7,
             children: [
-              Text(
-                "Audio Settings",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                textAlign: TextAlign.start,
-              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text("Cross Fade", style: TextStyle(fontSize: 16)),
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
-                      // A. The Track (The line)
-                      trackHeight: 6.0,
-                      activeTrackColor: Colors.purpleAccent, // Played part
-                      inactiveTrackColor: Colors.purple.withOpacity(
-                        0.2,
-                      ), // Remaining part
-                      // B. The Thumb (The draggable circle)
-                      thumbColor: Colors.purple,
                       thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 10.0,
-                      ), // Bigger thumb
-                      // C. The Overlay (The glow when dragging)
-                      overlayColor: Colors.purple.withOpacity(0.3),
-                      overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 24.0,
+                        enabledThumbRadius: 8.0,
                       ),
-
-                      // D. The Value Indicator (The popup bubble)
-                      valueIndicatorColor: Colors.purple,
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 16.0,
+                      ),
+                      valueIndicatorShape: SliderComponentShape.noThumb,
                       valueIndicatorTextStyle: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
-                      showValueIndicator: ShowValueIndicator.always,
+                      showValueIndicator: ShowValueIndicator.onDrag,
                     ),
                     child: Slider(
                       padding: null,
@@ -221,6 +215,79 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                             color: Colors.grey,
                             fontSize: 12,
                           ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 10),
+        Text(
+          "Video Settings",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+          textAlign: TextAlign.start,
+        ),
+        SizedBox(height: 5),
+        Container(
+          color: Colors.greenAccent,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 7,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 7,
+                children: [
+                  Text("Video Preference", style: TextStyle(fontSize: 16)),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10.0, top: 5.0),
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 5,
+                      children: [
+                        ChoiceChip(
+                          label: Text("Landscape Contain"),
+                          selected: videoPreference == "Landscape Contain",
+                          onSelected: (selected) {
+                            setState(() {
+                              videoPreference = "Landscape Contain";
+                            });
+                          },
+                        ),
+                        ChoiceChip(
+                          label: Text("Landscape Cover"),
+                          selected: videoPreference == "Landscape Cover",
+                          onSelected: (selected) {
+                            setState(() {
+                              videoPreference = "Landscape Cover";
+                            });
+                          },
+                        ),
+                        ChoiceChip(
+                          label: Text("Portrait Contain"),
+                          selected: videoPreference == "Portrait Contain",
+                          onSelected: (selected) {
+                            setState(() {
+                              videoPreference = "Portrait Contain";
+                            });
+                          },
+                        ),
+                        ChoiceChip(
+                          label: Text("Portrait Cover"),
+                          selected: videoPreference == "Portrait Cover",
+                          onSelected: (selected) {
+                            setState(() {
+                              videoPreference = "Portrait Cover";
+                            });
+                          },
                         ),
                       ],
                     ),
