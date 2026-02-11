@@ -49,92 +49,138 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
     "Dark": const Text("Dark"),
   };
   String selectedSystemTheme = "System";
+  double crossFade = 0;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      // color: Colors.blue,
-      alignment: Alignment.topLeft,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        spacing: 7,
-        children: [
-          Container(
-            // color: Colors.green,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Font",
-                  style: TextStyle(
-                    // backgroundColor: Colors.amber,
-                    fontSize: 16,
-                  ),
+    return Column(
+      spacing: 7,
+      children: [
+        Container(
+          alignment: Alignment.topLeft,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 7,
+            children: [
+              Text(
+                "System Settings",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
-                DropdownMenu(
-                  width: 150,
-                  hintText: "Select Font",
-                  textStyle: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: 14,
-                  ),
-                  inputDecorationTheme: InputDecorationTheme(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Font",
+                    style: TextStyle(
+                      // backgroundColor: Colors.amber,
+                      fontSize: 16,
                     ),
                   ),
-                  dropdownMenuEntries: <DropdownMenuEntry>[
-                    DropdownMenuEntry(value: 'Asimovian', label: 'Asimovian'),
-                    DropdownMenuEntry(value: 'Borel', label: 'Borel'),
-                    DropdownMenuEntry(
-                      value: 'Comic Relief',
-                      label: 'Comic Relief',
+                  DropdownMenu(
+                    width: 150,
+                    hintText: "Select Font",
+                    textStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 14,
                     ),
-                    DropdownMenuEntry(
-                      value: 'System Font',
-                      label: 'System Font',
+                    inputDecorationTheme: InputDecorationTheme(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
-                  ],
-                  onSelected: (value) {
-                    print(value);
-                  },
-                ),
-              ],
-            ),
-          ),
-          Container(
-            // color: Colors.red,
-            child: Column(
-              spacing: 5,
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "System Theme",
-                  style: TextStyle(
-                    // backgroundColor: Colors.amber,
-                    fontSize: 16,
-                  ),
-                ),
-                Center(
-                  child: CupertinoSlidingSegmentedControl(
-                    children: systemTheme,
-                    groupValue: selectedSystemTheme,
-                    thumbColor: Theme.of(context).colorScheme.primary,
-                    onValueChanged: (value) {
-                      setState(() {
-                        selectedSystemTheme = value ?? 'System';
-                        print(selectedSystemTheme);
-                      });
+                    dropdownMenuEntries: <DropdownMenuEntry>[
+                      DropdownMenuEntry(value: 'Asimovian', label: 'Asimovian'),
+                      DropdownMenuEntry(value: 'Borel', label: 'Borel'),
+                      DropdownMenuEntry(
+                        value: 'Comic Relief',
+                        label: 'Comic Relief',
+                      ),
+                      DropdownMenuEntry(
+                        value: 'System Font',
+                        label: 'System Font',
+                      ),
+                    ],
+                    onSelected: (value) {
+                      print(value);
                     },
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+              Column(
+                spacing: 5,
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "System Theme",
+                    style: TextStyle(
+                      // backgroundColor: Colors.amber,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Center(
+                    child: CupertinoSlidingSegmentedControl(
+                      children: systemTheme,
+                      groupValue: selectedSystemTheme,
+                      thumbColor: Theme.of(context).colorScheme.primary,
+                      onValueChanged: (value) {
+                        setState(() {
+                          selectedSystemTheme = value ?? 'System';
+                          print(selectedSystemTheme);
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        SizedBox(height: 10),
+        Container(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 7,
+            children: [
+              Text(
+                "Audio Settings",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                textAlign: TextAlign.start,
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Cross Fade", style: TextStyle(fontSize: 16)),
+                  Slider(
+                    value: crossFade,
+                    onChanged: (value) {
+                      setState(() {
+                        crossFade = value;
+                        print(crossFade);
+                      });
+                    },
+                    min: 0,
+                    max: 10,
+                    divisions: 10,
+                    label: crossFade.toInt().toString(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
