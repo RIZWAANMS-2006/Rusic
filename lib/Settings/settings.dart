@@ -331,7 +331,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("highlights Duration", style: TextStyle(fontSize: 16),),
+                      Text("Highlights Duration", style: TextStyle(fontSize: 16),),
                       SizedBox(
                         width: 70,
                         height: 40,
