@@ -48,6 +48,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
   String selectedSystemTheme = "System";
   double crossFade = 0;
   String videoPreference = "Landscape Contain";
+  bool playHighlights = true;
 
   @override
   Widget build(BuildContext context) {
@@ -291,6 +292,23 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                         ),
                       ],
                     ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Play Highlights (Default)",
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      Switch(
+                        value: playHighlights,
+                        onChanged: (value) {
+                          setState(() {
+                            playHighlights = value;
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
