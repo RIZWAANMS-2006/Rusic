@@ -49,13 +49,31 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
   double crossFade = 0;
   String videoPreference = "Landscape Contain";
   bool playHighlights = true;
+  TextEditingController highlightsDurationController = TextEditingController();
+  FocusNode highlightsDurationFocusNode = FocusNode();
+  @override
+  void initState() {
+    super.initState();
+    highlightsDurationController.text = "30";
+    highlightsDurationFocusNode.addListener(() {
+      if (!highlightsDurationFocusNode.hasFocus) {
+        if (highlightsDurationController.text.isEmpty) {
+          return;
+        } else {
+          int value = int.tryParse(highlightsDurationController.text) ?? 0;
+          if (value < 10) value = 10;
+          if (value > 60) value = 60;
+          highlightsDurationController.text = value.toString();
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: 7,
       children: [
         Text(
           "System Settings",
@@ -65,13 +83,12 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-        SizedBox(height: 5),
+        SizedBox(height: 12),
         Container(
           color: Colors.amber,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 7,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,6 +131,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                   ),
                 ],
               ),
+              SizedBox(height: 7),
               Column(
                 spacing: 5,
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -160,7 +178,6 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 7,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,17 +254,16 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
         ),
         SizedBox(height: 5),
         Container(
-          color: Colors.greenAccent,
+          // color: Colors.greenAccent,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 7,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 7,
                 children: [
                   Text("Video Preference", style: TextStyle(fontSize: 16)),
+                  SizedBox(height: 7),
                   Padding(
                     padding: const EdgeInsets.only(left: 10.0, top: 5.0),
                     child: Wrap(
@@ -293,6 +309,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                       ],
                     ),
                   ),
+                  SizedBox(height: 7),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -307,6 +324,32 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                             playHighlights = value;
                           });
                         },
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 7),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("highlights Duration", style: TextStyle(fontSize: 16),),
+                      SizedBox(
+                        width: 70,
+                        height: 40,
+                        child: TextField(
+                          controller: highlightsDurationController,
+                          focusNode: highlightsDurationFocusNode,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            // border: OutlineInputBorder(
+                            //   borderRadius: BorderRadius.circular(8),
+                            //   borderSide: BorderSide(
+                            //     color: Colors.white.withOpacity(0.5),
+                            //   )
+                            // ),
+                            suffixText: "s",
+                            
+                          ),
+                        ),
                       ),
                     ],
                   ),
