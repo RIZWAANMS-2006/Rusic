@@ -10,7 +10,6 @@ import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:Rusic/managers/settings_manager.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 Future<void> main() async {
   // Initialize JustAudioMediaKit And Flutter Bindings

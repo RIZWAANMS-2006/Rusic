@@ -112,6 +112,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
             children: systemTheme,
             groupValue: selectedSystemTheme,
             thumbColor: Theme.of(context).colorScheme.primary,
+            
             onValueChanged: (value) {
               setState(() {
                 selectedSystemTheme = value ?? 'System';
