@@ -35,6 +35,107 @@ Future<void> audioPlayAndPauseFunction() async {
   }
 }
 
+class MusicQueueScreen extends StatefulWidget {
+  const MusicQueueScreen({super.key});
+
+  @override
+  State<MusicQueueScreen> createState() => _MusicQueueScreenState();
+}
+
+class _MusicQueueScreenState extends State<MusicQueueScreen> {
+  // Mock Data: The current queue
+  List<String> upNext = [
+    "Blinding Lights - The Weeknd",
+    "Shape of You - Ed Sheeran",
+    "Levitating - Dua Lipa",
+    "As It Was - Harry Styles",
+    "Bad Guy - Billie Eilish",
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF121212), // Dark theme
+      appBar: AppBar(
+        title: const Text("Playing Queue"),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. The "Now Playing" Section (Fixed at top)
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              "Now Playing",
+              style: TextStyle(
+                color: Colors.purpleAccent,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.music_note, color: Colors.purpleAccent),
+            title: const Text(
+              "Starboy - The Weeknd",
+              style: TextStyle(color: Colors.white),
+            ),
+            trailing: const Icon(
+              Icons.equalizer,
+              color: Colors.purpleAccent,
+            ), // Animated equalizer icon usually goes here
+          ),
+
+          const Divider(color: Colors.white24, indent: 16, endIndent: 16),
+
+          // 2. The "Up Next" Section
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              "Up Next",
+              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+            ),
+          ),
+
+          // 3. The Reorderable List
+          Expanded(
+            child: ReorderableListView.builder(
+              itemCount: upNext.length,
+              // This is the magic function that swaps the items
+              onReorder: (int oldIndex, int newIndex) {
+                setState(() {
+                  if (oldIndex < newIndex) {
+                    newIndex -= 1;
+                  }
+                  final String item = upNext.removeAt(oldIndex);
+                  upNext.insert(newIndex, item);
+                });
+              },
+              itemBuilder: (context, index) {
+                // VERY IMPORTANT: Every item in a ReorderableListView needs a unique Key
+                return ListTile(
+                  key: ValueKey(upNext[index]),
+                  leading: Text(
+                    "${index + 1}", // Queue number
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  title: Text(
+                    upNext[index],
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  // The drag handle icon shows the user they can move it
+                  trailing: const Icon(Icons.drag_handle, color: Colors.grey),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class MusicProgressBar extends StatefulWidget {
   const MusicProgressBar({super.key});
 
@@ -418,6 +519,7 @@ class Full_Size_Rusic_State extends State<Full_Size_Rusic> {
                         child: Scaffold(
                           key: ValueKey('displaySize<700'),
                           backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+                          extendBodyBehindAppBar: true,
                           appBar: AppBar(
                             backgroundColor: Colors.transparent,
                             leading: IconButton(
@@ -435,7 +537,7 @@ class Full_Size_Rusic_State extends State<Full_Size_Rusic> {
                                 children: [
                                   Padding(
                                     padding: EdgeInsets.only(
-                                      top: constraints.maxHeight * 0.10,
+                                      top: constraints.maxHeight * 0.14,
                                     ),
                                     child: Column(
                                       children: [
@@ -541,114 +643,177 @@ class Full_Size_Rusic_State extends State<Full_Size_Rusic> {
                                       ],
                                     ),
                                   ),
+                                  Container(color: Colors.redAccent),
                                 ],
                               ),
                               Positioned(
                                 left: 0,
                                 right: 0,
                                 bottom: 70,
-                                child: Container(
-                                  padding: const EdgeInsets.only(top: 10),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      TabBar(
-                                        tabs: [
-                                          Tab(text: "Audio"),
-                                          Tab(text: "Video"),
-                                        ],
-                                      ),
-                                      MusicProgressBar(),
-                                      Container(
-                                        alignment: Alignment.center,
-                                        padding: const EdgeInsets.only(top: 5),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          spacing: 10,
-                                          children: [
-                                            IconButton(
-                                              icon: SvgPicture.asset(
-                                                "assets/MusicIcons/Shuffle.svg",
-                                                width: 20,
-                                                height: 20,
-                                              ),
-                                              onPressed: () {},
-                                            ),
-                                            IconButton(
-                                              icon: SvgPicture.asset(
-                                                "assets/MusicIcons/PreviousButton.svg",
-                                                width: 20,
-                                                height: 20,
-                                              ),
-                                              onPressed: () {},
-                                            ),
-                                            Stack(
-                                              alignment: Alignment.center,
-                                              children: [
-                                                Container(
-                                                  width: 50,
-                                                  height: 50,
-                                                  decoration: BoxDecoration(
-                                                    color: Color.fromRGBO(
-                                                      255,
-                                                      0,
-                                                      0,
-                                                      1,
-                                                    ),
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                ),
-                                                IconButton(
-                                                  icon: [
-                                                    SvgPicture.asset(
-                                                      "assets/MusicIcons/Play.svg",
-                                                      width: 20,
-                                                      height: 20,
-                                                    ),
-                                                    SvgPicture.asset(
-                                                      "assets/MusicIcons/Pause.svg",
-                                                      width: 20,
-                                                      height: 20,
-                                                    ),
-                                                  ][indicatorState],
-                                                  onPressed: () {
-                                                    if (indicatorState == 0) {
-                                                      setState(() {
-                                                        audioPlayAndPauseFunction();
-                                                        indicatorState = 1;
-                                                      });
-                                                    } else {
-                                                      setState(() {
-                                                        audioPlayAndPauseFunction();
-                                                        indicatorState = 0;
-                                                      });
-                                                    }
-                                                  },
-                                                ),
-                                              ],
-                                            ),
-                                            IconButton(
-                                              icon: SvgPicture.asset(
-                                                "assets/MusicIcons/NextButton.svg",
-                                                width: 20,
-                                                height: 20,
-                                              ),
-                                              onPressed: () {},
-                                            ),
-                                            IconButton(
-                                              icon: SvgPicture.asset(
-                                                "assets/MusicIcons/Loop.svg",
-                                                width: 20,
-                                                height: 20,
-                                              ),
-                                              onPressed: () {},
-                                            ),
-                                          ],
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: 130,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        color: Color.fromRGBO(225, 225, 225, 1),
+                                        borderRadius: BorderRadius.circular(
+                                          25.0,
                                         ),
                                       ),
-                                    ],
-                                  ),
+                                      child: TabBar(
+                                        indicatorSize: TabBarIndicatorSize.tab,
+                                        indicator: BoxDecoration(
+                                          color: const Color.fromRGBO(
+                                            34,
+                                            34,
+                                            34,
+                                            1,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            25.0,
+                                          ),
+                                        ),
+                                        dividerColor: Colors.transparent,
+                                        labelColor: Colors.white,
+                                        unselectedLabelColor: Colors.black,
+                                        splashBorderRadius:
+                                            BorderRadius.circular(25.0),
+                                        tabs: [
+                                          Text(
+                                            "Audio",
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                          Text(
+                                            "Video",
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    MusicProgressBar(),
+                                    Container(
+                                      alignment: Alignment.center,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        spacing: 10,
+                                        children: [
+                                          IconButton(
+                                            icon: SvgPicture.asset(
+                                              "assets/MusicIcons/Shuffle.svg",
+                                              width: 20,
+                                              height: 20,
+                                            ),
+                                            onPressed: () {},
+                                          ),
+                                          IconButton(
+                                            icon: SvgPicture.asset(
+                                              "assets/MusicIcons/PreviousButton.svg",
+                                              width: 20,
+                                              height: 20,
+                                            ),
+                                            onPressed: () {},
+                                          ),
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              Container(
+                                                width: 50,
+                                                height: 50,
+                                                decoration: BoxDecoration(
+                                                  color: Color.fromRGBO(
+                                                    255,
+                                                    0,
+                                                    0,
+                                                    1,
+                                                  ),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+                                              IconButton(
+                                                icon: [
+                                                  SvgPicture.asset(
+                                                    "assets/MusicIcons/Play.svg",
+                                                    width: 20,
+                                                    height: 20,
+                                                  ),
+                                                  SvgPicture.asset(
+                                                    "assets/MusicIcons/Pause.svg",
+                                                    width: 20,
+                                                    height: 20,
+                                                  ),
+                                                ][indicatorState],
+                                                onPressed: () {
+                                                  if (indicatorState == 0) {
+                                                    setState(() {
+                                                      audioPlayAndPauseFunction();
+                                                      indicatorState = 1;
+                                                    });
+                                                  } else {
+                                                    setState(() {
+                                                      audioPlayAndPauseFunction();
+                                                      indicatorState = 0;
+                                                    });
+                                                  }
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                          IconButton(
+                                            icon: SvgPicture.asset(
+                                              "assets/MusicIcons/NextButton.svg",
+                                              width: 20,
+                                              height: 20,
+                                            ),
+                                            onPressed: () {},
+                                          ),
+                                          IconButton(
+                                            icon: SvgPicture.asset(
+                                              "assets/MusicIcons/Loop.svg",
+                                              width: 20,
+                                              height: 20,
+                                            ),
+                                            onPressed: () {},
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 15),
+                                      child: FilledButton.icon(
+                                        icon: Icon(Icons.queue_music, size: 15),
+                                        onPressed: () {
+                                          showModalBottomSheet(
+                                            context: context,
+                                            isScrollControlled: true,
+                                            backgroundColor: Colors.transparent,
+                                            builder: (context) {
+                                              return ClipRRect(
+                                                borderRadius:
+                                                    const BorderRadius.vertical(
+                                                      top: Radius.circular(20),
+                                                    ),
+                                                child: SizedBox(
+                                                  height:
+                                                      MediaQuery.of(
+                                                        context,
+                                                      ).size.height *
+                                                      0.85, // Takes 85% of screen
+                                                  child: MusicQueueScreen(),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                        label: Text(
+                                          "Queue",
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
