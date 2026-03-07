@@ -75,289 +75,194 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "System Settings",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
+        // ── System Settings ──────────────────────────────────────────────
+        _SectionHeader("System Settings"),
+        const SizedBox(height: 16),
+        _SettingsRow(
+          label: "Font",
+          child: DropdownMenu(
+            width: 150,
+            hintText: "Select Font",
+            textStyle: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 14,
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            dropdownMenuEntries: const [
+              DropdownMenuEntry(value: 'Asimovian', label: 'Asimovian'),
+              DropdownMenuEntry(value: 'Borel', label: 'Borel'),
+              DropdownMenuEntry(value: 'Comic Relief', label: 'Comic Relief'),
+              DropdownMenuEntry(value: 'System Font', label: 'System Font'),
+            ],
+            onSelected: (value) {
+              print(value);
+            },
           ),
         ),
-        SizedBox(height: 12),
-        Container(
-          color: Colors.amber,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
+        const SizedBox(height: 16),
+        Text("System Theme", style: const TextStyle(fontSize: 16)),
+        const SizedBox(height: 10),
+        Center(
+          child: CupertinoSlidingSegmentedControl(
+            children: systemTheme,
+            groupValue: selectedSystemTheme,
+            thumbColor: Theme.of(context).colorScheme.primary,
+            onValueChanged: (value) {
+              setState(() {
+                selectedSystemTheme = value ?? 'System';
+              });
+            },
+          ),
+        ),
+
+        // ── Audio Settings ────────────────────────────────────────────────
+        const SizedBox(height: 30),
+        _SectionHeader("Audio Settings"),
+        const SizedBox(height: 16),
+        Text("Cross Fade", style: const TextStyle(fontSize: 16)),
+        const SizedBox(height: 4),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8.0),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16.0),
+            valueIndicatorShape: SliderComponentShape.noThumb,
+            valueIndicatorTextStyle: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            showValueIndicator: ShowValueIndicator.onDrag,
+          ),
+          child: Slider(
+            padding: null,
+            value: crossFade,
+            onChanged: (value) {
+              setState(() {
+                crossFade = value;
+              });
+            },
+            min: 0,
+            max: 10,
+            divisions: 10,
+            label: crossFade.toInt().toString(),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              Text("0s", style: TextStyle(color: Colors.grey, fontSize: 12)),
+              Text("10s", style: TextStyle(color: Colors.grey, fontSize: 12)),
+            ],
+          ),
+        ),
+
+        // ── Video Settings ────────────────────────────────────────────────
+        const SizedBox(height: 30),
+        _SectionHeader("Video Settings"),
+        const SizedBox(height: 16),
+        Text("Video Preference", style: const TextStyle(fontSize: 16)),
+        const SizedBox(height: 12),
+        Center(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 10,
+            runSpacing: 8,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Font",
-                    style: TextStyle(
-                      // backgroundColor: Colors.amber,
-                      fontSize: 16,
-                    ),
-                  ),
-                  DropdownMenu(
-                    width: 150,
-                    hintText: "Select Font",
-                    textStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 14,
-                    ),
-                    inputDecorationTheme: InputDecorationTheme(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    dropdownMenuEntries: <DropdownMenuEntry>[
-                      DropdownMenuEntry(value: 'Asimovian', label: 'Asimovian'),
-                      DropdownMenuEntry(value: 'Borel', label: 'Borel'),
-                      DropdownMenuEntry(
-                        value: 'Comic Relief',
-                        label: 'Comic Relief',
-                      ),
-                      DropdownMenuEntry(
-                        value: 'System Font',
-                        label: 'System Font',
-                      ),
-                    ],
-                    onSelected: (value) {
-                      print(value);
-                    },
-                  ),
-                ],
+              ChoiceChip(
+                label: const Text("Landscape Contain"),
+                selected: videoPreference == "Landscape Contain",
+                onSelected: (_) =>
+                    setState(() => videoPreference = "Landscape Contain"),
               ),
-              SizedBox(height: 7),
-              Column(
-                spacing: 5,
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "System Theme",
-                    style: TextStyle(
-                      // backgroundColor: Colors.amber,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Center(
-                    child: CupertinoSlidingSegmentedControl(
-                      children: systemTheme,
-                      groupValue: selectedSystemTheme,
-                      thumbColor: Theme.of(context).colorScheme.primary,
-                      onValueChanged: (value) {
-                        setState(() {
-                          selectedSystemTheme = value ?? 'System';
-                          print(selectedSystemTheme);
-                        });
-                      },
-                    ),
-                  ),
-                ],
+              ChoiceChip(
+                label: const Text("Landscape Cover"),
+                selected: videoPreference == "Landscape Cover",
+                onSelected: (_) =>
+                    setState(() => videoPreference = "Landscape Cover"),
+              ),
+              ChoiceChip(
+                label: const Text("Portrait Contain"),
+                selected: videoPreference == "Portrait Contain",
+                onSelected: (_) =>
+                    setState(() => videoPreference = "Portrait Contain"),
+              ),
+              ChoiceChip(
+                label: const Text("Portrait Cover"),
+                selected: videoPreference == "Portrait Cover",
+                onSelected: (_) =>
+                    setState(() => videoPreference = "Portrait Cover"),
               ),
             ],
           ),
         ),
-        SizedBox(height: 10),
-        Text(
-          "Audio Settings",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
+        const SizedBox(height: 16),
+        _SettingsRow(
+          label: "Play Highlights (Default)",
+          child: Switch(
+            value: playHighlights,
+            onChanged: (value) => setState(() => playHighlights = value),
           ),
-          textAlign: TextAlign.start,
         ),
-        SizedBox(height: 5),
-        Container(
-          color: Colors.red,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Cross Fade", style: TextStyle(fontSize: 16)),
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 8.0,
-                      ),
-                      overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 16.0,
-                      ),
-                      valueIndicatorShape: SliderComponentShape.noThumb,
-                      valueIndicatorTextStyle: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      showValueIndicator: ShowValueIndicator.onDrag,
-                    ),
-                    child: Slider(
-                      padding: null,
-                      value: crossFade,
-                      onChanged: (value) {
-                        setState(() {
-                          crossFade = value;
-                          print(crossFade);
-                        });
-                      },
-                      min: 0,
-                      max: 10,
-                      divisions: 10,
-                      label: crossFade.toInt().toString(),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Low Possible Value
-                        Text(
-                          "0s",
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
-                        ),
-                        // Highest Possible Value
-                        Text(
-                          "10s",
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+        const SizedBox(height: 16),
+        _SettingsRow(
+          label: "Highlights Duration",
+          child: SizedBox(
+            width: 70,
+            height: 40,
+            child: TextField(
+              controller: highlightsDurationController,
+              focusNode: highlightsDurationFocusNode,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                enabledBorder: null,
+                suffixText: "s",
               ),
-            ],
+            ),
           ),
         ),
-        SizedBox(height: 10),
-        Text(
-          "Video Settings",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-          textAlign: TextAlign.start,
-        ),
-        SizedBox(height: 5),
-        Container(
-          // color: Colors.greenAccent,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Video Preference", style: TextStyle(fontSize: 16)),
-                  SizedBox(height: 7),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10.0, top: 5.0),
-                    child: Wrap(
-                      spacing: 10,
-                      runSpacing: 5,
-                      children: [
-                        ChoiceChip(
-                          label: Text("Landscape Contain"),
-                          selected: videoPreference == "Landscape Contain",
-                          onSelected: (selected) {
-                            setState(() {
-                              videoPreference = "Landscape Contain";
-                            });
-                          },
-                        ),
-                        ChoiceChip(
-                          label: Text("Landscape Cover"),
-                          selected: videoPreference == "Landscape Cover",
-                          onSelected: (selected) {
-                            setState(() {
-                              videoPreference = "Landscape Cover";
-                            });
-                          },
-                        ),
-                        ChoiceChip(
-                          label: Text("Portrait Contain"),
-                          selected: videoPreference == "Portrait Contain",
-                          onSelected: (selected) {
-                            setState(() {
-                              videoPreference = "Portrait Contain";
-                            });
-                          },
-                        ),
-                        ChoiceChip(
-                          label: Text("Portrait Cover"),
-                          selected: videoPreference == "Portrait Cover",
-                          onSelected: (selected) {
-                            setState(() {
-                              videoPreference = "Portrait Cover";
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 7),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Play Highlights (Default)",
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      Switch(
-                        value: playHighlights,
-                        onChanged: (value) {
-                          setState(() {
-                            playHighlights = value;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 7),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Highlights Duration", style: TextStyle(fontSize: 16),),
-                      SizedBox(
-                        width: 70,
-                        height: 40,
-                        child: TextField(
-                          controller: highlightsDurationController,
-                          focusNode: highlightsDurationFocusNode,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            // border: OutlineInputBorder(
-                            //   borderRadius: BorderRadius.circular(8),
-                            //   borderSide: BorderSide(
-                            //     color: Colors.white.withOpacity(0.5),
-                            //   )
-                            // ),
-                            suffixText: "s",
-                            
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader(this.title);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).colorScheme.onSurface,
+      ),
+    );
+  }
+}
+
+class _SettingsRow extends StatelessWidget {
+  final String label;
+  final Widget child;
+  const _SettingsRow({required this.label, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 16)),
+        child,
       ],
     );
   }

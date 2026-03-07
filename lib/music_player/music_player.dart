@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:Rusic/music_player/online_screens/online_screen.dart';
 import 'package:Rusic/music_player/locations_screen/location_screen.dart';
-import 'package:Rusic/ui/media_ui.dart';
 
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;
@@ -45,26 +44,17 @@ class LibraryState extends State<Library>
   @override
   bool get wantKeepAlive => true;
 
-  final AlphabetScrollerController _alphabetController =
-      AlphabetScrollerController();
   late final TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _tabController.addListener(_onTabChanged);
-  }
-
-  void _onTabChanged() {
-    _alphabetController.setActiveTab(_tabController.index);
   }
 
   @override
   void dispose() {
-    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
-    _alphabetController.dispose();
     super.dispose();
   }
 
@@ -109,11 +99,7 @@ class LibraryState extends State<Library>
             body: TabBarView(
               controller: _tabController,
               children: [
-                AlphabetScrollerScope(
-                  controller: _alphabetController,
-                  tabIndex: 0,
-                  child: OnlineScreen(),
-                ),
+                OnlineScreen(),
                 Scaffold(
                   backgroundColor: Colors.transparent,
                   body: Center(child: Text("No Favorite Yet...")),
@@ -122,28 +108,9 @@ class LibraryState extends State<Library>
                   backgroundColor: Colors.transparent,
                   body: Center(child: Text("No Playlist Yet...")),
                 ),
-                AlphabetScrollerScope(
-                  controller: _alphabetController,
-                  tabIndex: 3,
-                  child: LocationScreen(),
-                ),
+                LocationScreen(),
               ],
             ),
-          ),
-          // Library-level AlphabetScroller overlay
-          ListenableBuilder(
-            listenable: _alphabetController,
-            builder: (context, child) {
-              if (!_alphabetController.hasData) {
-                return const SizedBox.shrink();
-              }
-              return AlphabetScroller(
-                letterToIndex: _alphabetController.letterToIndex,
-                onLetterSelected: _alphabetController.onLetterSelected!,
-                topPadding: 100,
-                bottomPadding: 120,
-              );
-            },
           ),
         ],
       ),

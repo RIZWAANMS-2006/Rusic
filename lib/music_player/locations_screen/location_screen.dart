@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:Rusic/managers/path_manager.dart';
+import 'package:Rusic/ui/media_ui.dart';
 import 'dart:io';
 
 class LocationScreen extends StatefulWidget {
@@ -18,6 +19,9 @@ class _LocationScreenState extends State<LocationScreen> {
   String? _selectedLocationName;
   List<File>? _selectedLocationFiles;
   int _hoverIndex = -1;
+  final ScrollController _filesScrollController = ScrollController();
+  Map<String, int> _letterToIndex = {};
+  List<File> _sortedLocationFiles = [];
 
   @override
   void initState() {
@@ -37,11 +41,19 @@ class _LocationScreenState extends State<LocationScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    _filesScrollController.dispose();
+    super.dispose();
+  }
+
   /// Go back to locations list view
   void _backToLocationsList() {
     setState(() {
       _selectedLocationName = null;
       _selectedLocationFiles = null;
+      _sortedLocationFiles = [];
+      _letterToIndex = {};
       _hoverIndex = -1;
     });
   }
@@ -424,53 +436,113 @@ class _LocationScreenState extends State<LocationScreen> {
     return file.parent.path;
   }
 
+  /// Sort files alphabetically and build letter-to-index map
+  List<File> _sortAndMapLocationFiles(List<File> files) {
+    final sorted = List<File>.from(files);
+    sorted.sort((a, b) {
+      final aName = a.path.split(Platform.pathSeparator).last.toUpperCase();
+      final bName = b.path.split(Platform.pathSeparator).last.toUpperCase();
+      return aName.compareTo(bName);
+    });
+    _letterToIndex.clear();
+    for (int i = 0; i < sorted.length; i++) {
+      final fileName = sorted[i].path.split(Platform.pathSeparator).last;
+      final firstChar = fileName.isNotEmpty ? fileName[0].toUpperCase() : '#';
+      if (!_letterToIndex.containsKey(firstChar)) {
+        _letterToIndex[firstChar] = i;
+      }
+    }
+    return sorted;
+  }
+
+  /// Group files by their starting letter
+  Map<String, List<File>> _groupFilesByLetter(List<File> files) {
+    final Map<String, List<File>> grouped = {};
+    for (final file in files) {
+      final fileName = file.path.split(Platform.pathSeparator).last;
+      final firstChar = fileName.isNotEmpty ? fileName[0].toUpperCase() : '#';
+      grouped.putIfAbsent(firstChar, () => []).add(file);
+    }
+    return grouped;
+  }
+
+  /// Scroll to the section starting with the given letter
+  void _scrollToLetter(String letter) {
+    final index = _letterToIndex[letter];
+    if (index != null && _filesScrollController.hasClients) {
+      final isDesktop = MediaQuery.of(context).size.width > 700;
+      if (isDesktop) {
+        final itemsPerRow = (MediaQuery.of(context).size.width / 400).floor();
+        final rowIndex = (index / itemsPerRow).floor();
+        final offset = rowIndex * (400 / 3 + 5) + 80;
+        _filesScrollController.animateTo(
+          offset.clamp(0.0, _filesScrollController.position.maxScrollExtent),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      } else {
+        final offset = index * 50.0 + 80;
+        _filesScrollController.animateTo(
+          offset.clamp(0.0, _filesScrollController.position.maxScrollExtent),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
+  }
+
+  /// Show the letter picker overlay
+  void _showLetterPicker() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.72),
+      builder: (ctx) => LetterPickerDialog(
+        letterToIndex: _letterToIndex,
+        onLetterSelected: (letter) {
+          Navigator.of(ctx).pop();
+          _scrollToLetter(letter);
+        },
+      ),
+    );
+  }
+
   /// Builds the view showing files in a specific location
   Widget _buildLocationFilesView() {
     final files = _selectedLocationFiles ?? [];
+    _sortedLocationFiles = _sortAndMapLocationFiles(files);
+    final isDesktop = MediaQuery.of(context).size.width > 700;
+
+    if (files.isEmpty) {
+      return CustomScrollView(
+        slivers: [
+          _buildNavigationBar(),
+          SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.music_note, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No files found',
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final groupedFiles = _groupFilesByLetter(_sortedLocationFiles);
+    final sortedLetters = groupedFiles.keys.toList()..sort();
 
     return Stack(
       children: [
-        files.isEmpty
-            ? CustomScrollView(
-                slivers: [
-                  _buildNavigationBar(),
-                  SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.music_note, size: 64, color: Colors.grey),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No files found',
-                            style: TextStyle(color: Colors.white, fontSize: 18),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : CustomScrollView(
-                slivers: [
-                  _buildNavigationBar(),
-                  SliverPadding(
-                    padding: const EdgeInsets.all(5),
-                    sliver: SliverGrid(
-                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 400,
-                        childAspectRatio: 3,
-                        mainAxisSpacing: 5,
-                        crossAxisSpacing: 5,
-                      ),
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        return _buildFileItem(files[index], index);
-                      }, childCount: files.length),
-                    ),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 170)),
-                ],
-              ),
+        isDesktop
+            ? _buildLocationFilesDesktop(sortedLetters, groupedFiles)
+            : _buildLocationFilesMobile(),
         // Bottom gradient fade
         Positioned(
           bottom: 0,
@@ -490,6 +562,109 @@ class _LocationScreenState extends State<LocationScreen> {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildLocationFilesDesktop(
+    List<String> sortedLetters,
+    Map<String, List<File>> groupedFiles,
+  ) {
+    return CustomScrollView(
+      controller: _filesScrollController,
+      slivers: [
+        _buildNavigationBar(),
+        ...sortedLetters.expand((letter) {
+          final filesInSection = groupedFiles[letter]!;
+          return [
+            // Section header – tap to open letter picker
+            SliverToBoxAdapter(
+              child: GestureDetector(
+                onTap: _showLetterPicker,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                  child: Text(
+                    letter,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Grid for this letter's files
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              sliver: SliverGrid.extent(
+                maxCrossAxisExtent: 400,
+                childAspectRatio: 3,
+                mainAxisSpacing: 5,
+                crossAxisSpacing: 5,
+                children: filesInSection.map((file) {
+                  final index = _sortedLocationFiles.indexOf(file);
+                  return _buildFileItem(file, index);
+                }).toList(),
+              ),
+            ),
+          ];
+        }).toList(),
+        const SliverToBoxAdapter(child: SizedBox(height: 170)),
+      ],
+    );
+  }
+
+  Widget _buildLocationFilesMobile() {
+    return CustomScrollView(
+      controller: _filesScrollController,
+      slivers: [
+        _buildNavigationBar(),
+        SliverList.builder(
+          itemCount: _sortedLocationFiles.length,
+          itemBuilder: (context, index) {
+            final file = _sortedLocationFiles[index];
+            final fileName = file.path.split(Platform.pathSeparator).last;
+            final currentLetter = fileName.isNotEmpty
+                ? fileName[0].toUpperCase()
+                : '#';
+
+            bool showHeader = false;
+            if (index == 0) {
+              showHeader = true;
+            } else {
+              final prevFile = _sortedLocationFiles[index - 1];
+              final prevName = prevFile.path.split(Platform.pathSeparator).last;
+              final prevLetter = prevName.isNotEmpty
+                  ? prevName[0].toUpperCase()
+                  : '#';
+              showHeader = currentLetter != prevLetter;
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (showHeader)
+                  GestureDetector(
+                    onTap: _showLetterPicker,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Text(
+                        currentLetter,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                _buildFileItem(file, index),
+              ],
+            );
+          },
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 170)),
       ],
     );
   }
@@ -526,30 +701,6 @@ class _LocationScreenState extends State<LocationScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildFileListTile(File file, int index) {
-    final fileName = file.path.split(Platform.pathSeparator).last;
-
-    return ListTile(
-      leading: Container(
-        width: 35,
-        height: 35,
-        padding: const EdgeInsets.all(5),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(Radius.circular(5)),
-        ),
-        child: Icon(Icons.music_note, size: 20),
-      ),
-      tileColor: Color.fromRGBO(50, 50, 50, 1),
-      title: Text(
-        fileName,
-        textAlign: TextAlign.left,
-        style: const TextStyle(fontSize: 14),
-        overflow: TextOverflow.ellipsis,
       ),
     );
   }

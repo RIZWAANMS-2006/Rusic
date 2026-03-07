@@ -61,10 +61,10 @@ Future<void> main() async {
 int navigationIndex = 1;
 
 // Bottom Navigation Bar Items
-List<Widget> bottomNavigationBarItems = [
-  Padding(padding: const EdgeInsets.all(7.0), child: Icon(Icons.search)),
-  Padding(padding: const EdgeInsets.all(7.0), child: Icon(Icons.library_music)),
-  Padding(padding: const EdgeInsets.all(7.0), child: Icon(Icons.settings)),
+List<Widget> navigationBarDestinationsItems = [
+  NavigationDestination(icon: Icon(Icons.search), label: "Search"),
+  NavigationDestination(icon: Icon(Icons.library_music), label: "Home"),
+  NavigationDestination(icon: Icon(Icons.settings), label: "Settings"),
 ];
 
 // Navigation Rail Destinations
@@ -104,6 +104,9 @@ class MxMusicConsoleState extends State<MxMusicConsole> {
         fontFamily: 'Asimovian',
         brightness: Brightness.light,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
+        navigationBarTheme: NavigationBarThemeData(
+          backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+        ),
         textTheme: TextTheme(
           bodyMedium: TextStyle(color: Colors.black),
           bodyLarge: TextStyle(color: Colors.black),
@@ -121,11 +124,14 @@ class MxMusicConsoleState extends State<MxMusicConsole> {
       ),
       darkTheme: ThemeData(
         fontFamily: 'Asimovian',
+        brightness: Brightness.dark,
         colorScheme: ColorScheme.fromSeed(
           brightness: Brightness.dark,
           seedColor: Colors.redAccent,
         ),
-        brightness: Brightness.dark,
+        navigationBarTheme: NavigationBarThemeData(
+          backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+        ),
         textTheme: TextTheme(
           bodyMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
           bodyLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
@@ -219,19 +225,16 @@ class CompactScreenState extends State<CompactScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      bottomNavigationBar: CurvedNavigationBar(
-        color: Color.fromRGBO(34, 34, 34, 0.85),
-        backgroundColor: Colors.transparent,
-        buttonBackgroundColor: Theme.of(context).colorScheme.primary,
-        height: 70,
-        animationDuration: Duration(milliseconds: 300),
-        animationCurve: Curves.linearToEaseOut,
-        index: 1,
-        items: bottomNavigationBarItems,
-        onTap: (index) {
-          setState(() {
-            navigationIndex = index;
-          });
+      bottomNavigationBar: NavigationBar(
+        destinations: navigationBarDestinationsItems,
+        selectedIndex: navigationIndex,
+        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        onDestinationSelected: (value) {
+          navigationIndex = value;
+          setState(() {});
         },
       ),
       body: IndexedStack(

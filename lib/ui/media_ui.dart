@@ -6,93 +6,6 @@ import 'package:Rusic/managers/ui_manager.dart';
 import 'dart:io';
 import 'package:Rusic/search/search_page.dart';
 
-// ---------------------------------------------------------------------------
-// AlphabetScroller controller & scope (library-level scroller support)
-// ---------------------------------------------------------------------------
-
-/// Holds a tab's scroller data.
-class _AlphabetScrollerTabData {
-  final Map<String, int> letterToIndex;
-  final void Function(String) onLetterSelected;
-  _AlphabetScrollerTabData(this.letterToIndex, this.onLetterSelected);
-}
-
-/// Controller for the library-level AlphabetScroller.
-///
-/// Each tab that displays file names registers its [letterToIndex] map and
-/// [onLetterSelected] callback.  The Library page reads the active tab's data
-/// and shows/hides the scroller accordingly.
-class AlphabetScrollerController extends ChangeNotifier {
-  int _activeTab = 0;
-  final Map<int, _AlphabetScrollerTabData> _tabData = {};
-
-  /// Called by the Library page when the selected tab changes.
-  void setActiveTab(int index) {
-    if (_activeTab != index) {
-      _activeTab = index;
-      notifyListeners();
-    }
-  }
-
-  /// Register (or update) a tab's scroller data.
-  void registerTab(
-    int index,
-    Map<String, int> letterToIndex,
-    void Function(String) onLetterSelected,
-  ) {
-    _tabData[index] = _AlphabetScrollerTabData(letterToIndex, onLetterSelected);
-    if (index == _activeTab) notifyListeners();
-  }
-
-  /// Remove a tab's scroller data (e.g. on dispose).
-  void unregisterTab(int index) {
-    _tabData.remove(index);
-    if (index == _activeTab) notifyListeners();
-  }
-
-  /// Whether the active tab has any scroller data.
-  bool get hasData {
-    final data = _tabData[_activeTab];
-    return data != null && data.letterToIndex.isNotEmpty;
-  }
-
-  Map<String, int> get letterToIndex =>
-      _tabData[_activeTab]?.letterToIndex ?? {};
-
-  void Function(String)? get onLetterSelected =>
-      _tabData[_activeTab]?.onLetterSelected;
-
-  @override
-  void dispose() {
-    _tabData.clear();
-    super.dispose();
-  }
-}
-
-/// Provides an [AlphabetScrollerController] and the current [tabIndex] to
-/// descendants so that child pages can register their scroller data without
-/// explicit parameter drilling.
-class AlphabetScrollerScope extends InheritedWidget {
-  final AlphabetScrollerController controller;
-  final int tabIndex;
-
-  const AlphabetScrollerScope({
-    super.key,
-    required this.controller,
-    required this.tabIndex,
-    required super.child,
-  });
-
-  static AlphabetScrollerScope? of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<AlphabetScrollerScope>();
-  }
-
-  @override
-  bool updateShouldNotify(AlphabetScrollerScope oldWidget) {
-    return controller != oldWidget.controller || tabIndex != oldWidget.tabIndex;
-  }
-}
-
 /// A universal UI component for displaying media files across different tabs.
 ///
 /// Supports both grid view (desktop) and list view (mobile) layouts.
@@ -339,16 +252,19 @@ class _MediaUIState extends State<MediaUI> {
                 ...sortedLetters.expand((letter) {
                   final filesInSection = groupedFiles[letter]!;
                   return [
-                    // Section header
+                    // Section header – tap to open letter picker
                     SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                        child: Text(
-                          letter,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
+                      child: GestureDetector(
+                        onTap: _showLetterPicker,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                          child: Text(
+                            letter,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
                         ),
                       ),
@@ -373,10 +289,6 @@ class _MediaUIState extends State<MediaUI> {
               ],
             ),
           ),
-          AlphabetScroller(
-            letterToIndex: _letterToIndex,
-            onLetterSelected: _scrollToLetter,
-          ),
           // Bottom gradient fade
           Positioned(
             bottom: 0,
@@ -396,6 +308,12 @@ class _MediaUIState extends State<MediaUI> {
               ),
             ),
           ),
+          // Alphabetical scroller – only on the Search page
+          if (widget.showSearchBar)
+            AlphabetScroller(
+              letterToIndex: _letterToIndex,
+              onLetterSelected: _scrollToLetter,
+            ),
         ],
       ),
     );
@@ -443,14 +361,17 @@ class _MediaUIState extends State<MediaUI> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (showHeader)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                          child: Text(
-                            currentLetter,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
+                        GestureDetector(
+                          onTap: _showLetterPicker,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                            child: Text(
+                              currentLetter,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                             ),
                           ),
                         ),
@@ -462,10 +383,6 @@ class _MediaUIState extends State<MediaUI> {
               const SliverToBoxAdapter(child: SizedBox(height: 170)),
             ],
           ),
-        ),
-        AlphabetScroller(
-          letterToIndex: _letterToIndex,
-          onLetterSelected: _scrollToLetter,
         ),
         // Bottom gradient fade
         Positioned(
@@ -486,6 +403,12 @@ class _MediaUIState extends State<MediaUI> {
             ),
           ),
         ),
+        // Alphabetical scroller – only on the Search page
+        if (widget.showSearchBar)
+          AlphabetScroller(
+            letterToIndex: _letterToIndex,
+            onLetterSelected: _scrollToLetter,
+          ),
       ],
     );
   }
@@ -544,7 +467,7 @@ class _MediaUIState extends State<MediaUI> {
           ),
           child: SvgPicture.asset("assets/MusicIcons/MusicLogo.svg"),
         ),
-        tileColor: setContainerColor(context),
+        tileColor: Color.fromRGBO(26, 26, 26, 1),
         title: Text(
           fileName,
           textAlign: TextAlign.left,
@@ -631,6 +554,21 @@ class _MediaUIState extends State<MediaUI> {
       }
     }
   }
+
+  /// Show the letter picker overlay
+  void _showLetterPicker() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.72),
+      builder: (ctx) => LetterPickerDialog(
+        letterToIndex: _letterToIndex,
+        onLetterSelected: (letter) {
+          Navigator.of(ctx).pop();
+          _scrollToLetter(letter);
+        },
+      ),
+    );
+  }
 }
 
 /// A model class representing an online song from Supabase
@@ -711,33 +649,8 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
   Map<String, int> _letterToIndex = {};
   List<OnlineSong> _sortedSongs = [];
 
-  // Library-level AlphabetScroller scope (null when used outside Library)
-  AlphabetScrollerScope? _scope;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _scope = AlphabetScrollerScope.of(context);
-  }
-
-  /// Register this tab's scroller data with the library-level controller.
-  void _registerScrollerData() {
-    if (_scope != null && _letterToIndex.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _scope != null) {
-          _scope!.controller.registerTab(
-            _scope!.tabIndex,
-            Map<String, int>.from(_letterToIndex),
-            _scrollToLetter,
-          );
-        }
-      });
-    }
-  }
-
   @override
   void dispose() {
-    _scope?.controller.unregisterTab(_scope!.tabIndex);
     _scrollController.dispose();
     super.dispose();
   }
@@ -844,53 +757,32 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
       ),
       backgroundColor: Colors.transparent,
       actions: [
-        if (widget.onLogout != null)
+        if (isDesktop && widget.onLogout != null)
           Padding(
-            padding: EdgeInsets.only(right: isDesktop ? 8.0 : 10.0),
-            child: isDesktop
-                ? Transform.scale(
-                    scale: 0.9,
-                    child: FilledButton(
-                      onPressed: widget.onLogout,
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 15,
-                          vertical: 15,
-                        ),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      child: Row(
-                        spacing: 5,
-                        children: [
-                          Icon(Icons.power_settings_new_rounded),
-                          Text("Logout"),
-                        ],
-                      ),
-                    ),
-                  )
-                : FilledButton(
-                    onPressed: widget.onLogout,
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 15,
-                      ),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                    child: Row(
-                      spacing: 5,
-                      children: [
-                        Icon(Icons.power_settings_new_rounded),
-                        Text("Logout"),
-                      ],
-                    ),
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Transform.scale(
+              scale: 0.9,
+              child: FilledButton(
+                onPressed: widget.onLogout,
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 15,
                   ),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: Row(
+                  spacing: 5,
+                  children: [
+                    Icon(Icons.power_settings_new_rounded),
+                    Text("Logout"),
+                  ],
+                ),
+              ),
+            ),
           ),
       ],
     );
@@ -898,7 +790,6 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
 
   Widget _buildContent(List<OnlineSong> songs) {
     _sortedSongs = _sortAndMapSongs(songs);
-    _registerScrollerData(); // notify library-level AlphabetScroller
     final isDesktop = MediaQuery.of(context).size.width > 700;
 
     return Scaffold(
@@ -977,16 +868,19 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
                   return sortedLetters.expand((letter) {
                     final songsInSection = groupedSongs[letter]!;
                     return [
-                      // Section header
+                      // Section header – tap to open letter picker
                       SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                          child: Text(
-                            letter,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
+                        child: GestureDetector(
+                          onTap: _showLetterPicker,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                            child: Text(
+                              letter,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                             ),
                           ),
                         ),
@@ -1049,32 +943,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        actions: [
-          if (widget.onLogout != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 10.0),
-              child: FilledButton(
-                onPressed: widget.onLogout,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 15,
-                    vertical: 15,
-                  ),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-                child: Row(
-                  spacing: 5,
-                  children: [
-                    Icon(Icons.power_settings_new_rounded),
-                    Text("Logout"),
-                  ],
-                ),
-              ),
-            ),
-        ],
+        actions: const [],
       ),
       body: Stack(
         children: [
@@ -1107,14 +976,17 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (showHeader)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                        child: Text(
-                          currentLetter,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
+                      GestureDetector(
+                        onTap: _showLetterPicker,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                          child: Text(
+                            currentLetter,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
                         ),
                       ),
@@ -1198,7 +1070,8 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
           ),
           child: SvgPicture.asset("assets/MusicIcons/MusicLogo.svg"),
         ),
-        tileColor: setContainerColor(context),
+        tileColor: Color.fromRGBO(26, 26, 26, 1),
+
         title: Text(
           song.title,
           textAlign: TextAlign.left,
@@ -1291,9 +1164,142 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
       }
     }
   }
+
+  /// Show the letter picker overlay
+  void _showLetterPicker() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.72),
+      builder: (ctx) => LetterPickerDialog(
+        letterToIndex: _letterToIndex,
+        onLetterSelected: (letter) {
+          Navigator.of(ctx).pop();
+          _scrollToLetter(letter);
+        },
+      ),
+    );
+  }
 }
 
-/// Custom alphabetical scroller widget
+/// A full-screen letter picker dialog.
+///
+/// Shows a grid of alphabetical characters (matching the screenshot).
+/// Available letters (those that have songs) are bright white; unavailable
+/// ones are dimmed.  Tapping a letter dismisses the dialog and jumps to
+/// that section in the list.
+class LetterPickerDialog extends StatelessWidget {
+  final Map<String, int> letterToIndex;
+  final void Function(String) onLetterSelected;
+
+  const LetterPickerDialog({
+    super.key,
+    required this.letterToIndex,
+    required this.onLetterSelected,
+  });
+
+  // All selectable entries in display order (matches screenshot layout)
+  static const List<String> _letters = [
+    '&',
+    '#',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          decoration: BoxDecoration(
+            color: const Color.fromRGBO(36, 36, 36, 0.97),
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Letter grid
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    childAspectRatio: 1.15,
+                    mainAxisSpacing: 2,
+                    crossAxisSpacing: 2,
+                  ),
+                  itemCount: _letters.length,
+                  itemBuilder: (context, index) {
+                    final letter = _letters[index];
+                    final isAvailable = letterToIndex.containsKey(letter);
+                    return GestureDetector(
+                      onTap: isAvailable
+                          ? () => onLetterSelected(letter)
+                          : null,
+                      behavior: HitTestBehavior.opaque,
+                      child: Center(
+                        child: Text(
+                          letter,
+                          style: TextStyle(
+                            color: isAvailable
+                                ? Colors.white
+                                : Colors.white.withOpacity(0.22),
+                            fontSize: 22,
+                            fontWeight: isAvailable
+                                ? FontWeight.w400
+                                : FontWeight.w300,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                // Globe / language icon row (decorative, as in the screenshot)
+                Icon(
+                  Icons.language_rounded,
+                  color: Colors.white.withOpacity(0.55),
+                  size: 26,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Side-rail alphabetical scroller widget (used on Search page).
 class AlphabetScroller extends StatefulWidget {
   final Map<String, int> letterToIndex;
   final Function(String) onLetterSelected;
@@ -1320,8 +1326,6 @@ class _AlphabetScrollerState extends State<AlphabetScroller> {
     if (widget.letterToIndex.containsKey(letter)) {
       setState(() => _selectedLetter = letter);
       widget.onLetterSelected(letter);
-
-      // Clear selection after animation
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) setState(() => _selectedLetter = null);
       });
@@ -1337,7 +1341,6 @@ class _AlphabetScrollerState extends State<AlphabetScroller> {
     final index = (localPosition.dy / constraints.maxHeight * _alphabet.length)
         .clamp(0, _alphabet.length - 1)
         .floor();
-
     final letter = _alphabet[index];
     if (widget.letterToIndex.containsKey(letter) && _selectedLetter != letter) {
       setState(() => _selectedLetter = letter);
@@ -1353,10 +1356,7 @@ class _AlphabetScrollerState extends State<AlphabetScroller> {
       bottom: widget.bottomPadding,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // Hide scroller if not enough vertical space
-          if (constraints.maxHeight < 200) {
-            return const SizedBox.shrink();
-          }
+          if (constraints.maxHeight < 200) return const SizedBox.shrink();
           return GestureDetector(
             onVerticalDragUpdate: (details) =>
                 _onVerticalDragUpdate(details, constraints),
@@ -1371,7 +1371,6 @@ class _AlphabetScrollerState extends State<AlphabetScroller> {
                 children: _alphabet.split('').map((letter) {
                   final isAvailable = widget.letterToIndex.containsKey(letter);
                   final isSelected = _selectedLetter == letter;
-
                   return GestureDetector(
                     onTap: () => _onLetterTap(letter),
                     child: Container(

@@ -428,7 +428,7 @@ class Full_Size_Rusic_State extends State<Full_Size_Rusic> {
                           ),
                         ),
                         bottomSheet: NavigationBar(
-                          destinations: bottomNavigationBarItems,
+                          destinations: navigationBarDestinationsItems,
                           selectedIndex: navigationIndex,
                           onDestinationSelected: (value) {
                             Navigator.pop(context);
