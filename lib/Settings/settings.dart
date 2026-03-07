@@ -13,20 +13,23 @@ class _SettingsState extends State<Settings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          CupertinoSliverNavigationBar(
-            stretch: true,
-            alwaysShowMiddle: false,
-            border: null,
-            backgroundColor: setContainerColor(context),
-            largeTitle: const Text("Settings"),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
-            sliver: SliverToBoxAdapter(child: CompactSettingsScreen()),
-          ),
-        ],
+      body: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+        child: CustomScrollView(
+          slivers: [
+            CupertinoSliverNavigationBar(
+              stretch: true,
+              alwaysShowMiddle: false,
+              border: null,
+              backgroundColor: setContainerColor(context),
+              largeTitle: const Text("Settings"),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
+              sliver: SliverToBoxAdapter(child: CompactSettingsScreen()),
+            ),
+          ],
+        ),
       ),
     );
   }
