@@ -181,8 +181,8 @@ class WideScreenState extends State<WideScreen> {
             groupAlignment: 0,
             backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
             labelType: NavigationRailLabelType.selected,
-            indicatorShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+            indicatorShape: ContinuousRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
             ),
             selectedIndex: navigationIndex,
             onDestinationSelected: (value) => setState(() {
@@ -229,8 +229,8 @@ class CompactScreenState extends State<CompactScreen> {
         destinations: navigationBarDestinationsItems,
         selectedIndex: navigationIndex,
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-        indicatorShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+        indicatorShape: ContinuousRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
         ),
         onDestinationSelected: (value) {
           navigationIndex = value;
