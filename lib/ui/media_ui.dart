@@ -204,13 +204,13 @@ class _MediaUIState extends State<MediaUI> {
 
     return Scaffold(
       backgroundColor: Color.fromRGBO(26, 26, 26, 1),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: widget.showMusicController && !isDesktop
-          ? Padding(
-              padding: const EdgeInsets.only(bottom: 10, left: 5, right: 5),
-              child: BottomMusicController(),
-            )
-          : null,
+      // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      // floatingActionButton: widget.showMusicController && !isDesktop
+      //     ? Padding(
+      //         padding: const EdgeInsets.only(bottom: 0, left: 0, right: 0),
+      //         child: BottomMusicController(),
+      //       )
+      //     : null,
       body: isDesktop
           ? _buildDesktopLayout(allFiles)
           : _buildMobileLayout(allFiles),
@@ -380,7 +380,7 @@ class _MediaUIState extends State<MediaUI> {
                   );
                 },
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: 170)),
+              const SliverToBoxAdapter(child: SizedBox(height: 150)),
             ],
           ),
         ),
@@ -794,13 +794,13 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
 
     return Scaffold(
       backgroundColor: Color.fromRGBO(26, 26, 26, 1),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: widget.showMusicController && !isDesktop
-          ? Padding(
-              padding: const EdgeInsets.only(bottom: 10, left: 5, right: 5),
-              child: BottomMusicController(),
-            )
-          : null,
+      // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      // floatingActionButton: widget.showMusicController && !isDesktop
+      //     ? Padding(
+      //         padding: const EdgeInsets.only(bottom: 10, left: 5, right: 5),
+      //         child: BottomMusicController(),
+      //       )
+      //     : null,
       body: isDesktop ? _buildDesktopLayout(songs) : _buildMobileLayout(songs),
     );
   }
@@ -1199,8 +1199,6 @@ class LetterPickerDialog extends StatelessWidget {
 
   // All selectable entries in display order (matches screenshot layout)
   static const List<String> _letters = [
-    '&',
-    '#',
     'A',
     'B',
     'C',
@@ -1227,6 +1225,7 @@ class LetterPickerDialog extends StatelessWidget {
     'X',
     'Y',
     'Z',
+    '#',
   ];
 
   @override
@@ -1251,7 +1250,7 @@ class LetterPickerDialog extends StatelessWidget {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
+                    crossAxisCount: 3,
                     childAspectRatio: 1.15,
                     mainAxisSpacing: 2,
                     crossAxisSpacing: 2,

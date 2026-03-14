@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "dot_curved_bottom_nav Docs": {
+            "command": "npx",
+            "args": [
+                "mcp-remote",
+                "https://gitmcp.io/Muzammil-Bit/dot_curved_bottom_nav"
+            ]
+        }
+    }
+}

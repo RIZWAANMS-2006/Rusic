@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../Managers/weather_manager.dart';
+import '../managers/weather_manager.dart';
 
 class WeatherBackground extends StatefulWidget {
   const WeatherBackground({super.key});
@@ -18,7 +18,7 @@ class WeatherBackgroundState extends State<WeatherBackground> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
+    return StreamBuilder<Widget?>(
       stream: WeatherBackgroundFunction(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {

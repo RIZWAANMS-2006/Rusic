@@ -70,6 +70,9 @@ set_target_properties(${BINARY_NAME}
 )
 
 
+# Use system mimalloc instead of building from source (avoids build issues).
+set(MIMALLOC_USE_STATIC_LIBS OFF CACHE BOOL "" FORCE)
+
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)

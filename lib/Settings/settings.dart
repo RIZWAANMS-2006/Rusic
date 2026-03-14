@@ -1,4 +1,6 @@
 import 'package:Rusic/managers/ui_manager.dart';
+import 'package:Rusic/managers/credentials_manager.dart';
+import 'package:Rusic/managers/server_manager/supabase_manager.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +15,7 @@ class _SettingsState extends State<Settings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
       body: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
         child: CustomScrollView(
@@ -28,6 +31,7 @@ class _SettingsState extends State<Settings> {
               padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
               sliver: SliverToBoxAdapter(child: CompactSettingsScreen()),
             ),
+            SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
         ),
       ),
@@ -51,12 +55,26 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
   String selectedSystemTheme = "System";
   double crossFade = 0;
   String videoPreference = "Landscape Contain";
+  String appUI = "Minimalistic";
+  bool isSupabaseConfigured = false;
+  bool isServerConfigured = false;
   bool playHighlights = true;
   TextEditingController highlightsDurationController = TextEditingController();
   FocusNode highlightsDurationFocusNode = FocusNode();
+
+  final _formKey = GlobalKey<FormState>();
+  final _serverFormKey = GlobalKey<FormState>();
+  TextEditingController urlController = TextEditingController();
+  TextEditingController apiKeyController = TextEditingController();
+  TextEditingController tableNameController = TextEditingController();
+  TextEditingController serverAddressController = TextEditingController();
+
+  final _credentialsManager = CredentialsManager();
+
   @override
   void initState() {
     super.initState();
+    _loadConfigurations();
     highlightsDurationController.text = "30";
     highlightsDurationFocusNode.addListener(() {
       if (!highlightsDurationFocusNode.hasFocus) {
@@ -70,6 +88,41 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
         }
       }
     });
+  }
+
+  Future<void> _loadConfigurations() async {
+    final supabaseCredentials = await _credentialsManager
+        .getSupabaseCredentials();
+    final serverAddress = await _credentialsManager.getServerAddress();
+
+    if (mounted) {
+      setState(() {
+        if (supabaseCredentials['url'] != null &&
+            supabaseCredentials['apiKey'] != null &&
+            supabaseCredentials['tableName'] != null) {
+          isSupabaseConfigured = true;
+          urlController.text = supabaseCredentials['url']!;
+          apiKeyController.text = supabaseCredentials['apiKey']!;
+          tableNameController.text = supabaseCredentials['tableName']!;
+        }
+
+        if (serverAddress != null && serverAddress.isNotEmpty) {
+          isServerConfigured = true;
+          serverAddressController.text = serverAddress;
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    highlightsDurationController.dispose();
+    highlightsDurationFocusNode.dispose();
+    urlController.dispose();
+    apiKeyController.dispose();
+    tableNameController.dispose();
+    serverAddressController.dispose();
+    super.dispose();
   }
 
   @override
@@ -115,7 +168,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
             children: systemTheme,
             groupValue: selectedSystemTheme,
             thumbColor: Theme.of(context).colorScheme.primary,
-            
+            isMomentary: false,
             onValueChanged: (value) {
               setState(() {
                 selectedSystemTheme = value ?? 'System';
@@ -123,10 +176,81 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
             },
           ),
         ),
+        const SizedBox(height: 16),
+        Text("App UI", style: const TextStyle(fontSize: 16)),
+        const SizedBox(height: 10),
+        Center(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 10,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                label: const Text("Minimalistic"),
+                selected: appUI == "Minimalistic",
+                onSelected: (_) {
+                  setState(() => appUI = "Minimalistic");
+                },
+              ),
+              ChoiceChip(
+                label: const Text("Graphic"),
+                selected: appUI == "Graphic",
+                onSelected: (_) {
+                  setState(() {
+                    appUI = "Graphic";
+                  });
+                },
+              ),
+              ChoiceChip(
+                label: Text("Weather Theme"),
+                selected: appUI == "Weather Theme",
+                onSelected: (_) {
+                  setState(() {
+                    appUI = "Weather Theme";
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
 
         // ── Audio Settings ────────────────────────────────────────────────
         const SizedBox(height: 30),
         _SectionHeader("Audio Settings"),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("Skip at Beginning", style: const TextStyle(fontSize: 16)),
+            SizedBox(
+              width: 70,
+              child: TextField(
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  suffixText: "s",
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("Skip at End", style: const TextStyle(fontSize: 16)),
+            SizedBox(
+              width: 70,
+              child: TextField(
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  suffixText: "s",
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 16),
         Text("Cross Fade", style: const TextStyle(fontSize: 16)),
         const SizedBox(height: 4),
@@ -231,6 +355,236 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
           ),
         ),
         const SizedBox(height: 20),
+        Text("Server Configuration", style: const TextStyle(fontSize: 20)),
+        const SizedBox(height: 16),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Supabase Configuration"),
+                Switch(
+                  value: isSupabaseConfigured,
+                  onChanged: (value) async {
+                    setState(() {
+                      isSupabaseConfigured = value;
+                    });
+                    if (!value) {
+                      await _credentialsManager.clearSupabaseCredentials();
+                      urlController.clear();
+                      apiKeyController.clear();
+                      tableNameController.clear();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Supabase configuration cleared'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ],
+            ),
+            AnimatedSize(
+              duration: Duration(milliseconds: 200),
+              child: isSupabaseConfigured
+                  ? Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 10),
+                          const Text("Enter Table Name"),
+                          TextFormField(
+                            controller: tableNameController,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Enter Valid Table Name';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          const Text("Enter URL"),
+                          TextFormField(
+                            controller: urlController,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Enter Valid URL';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          const Text("Enter Anon-API Key"),
+                          TextFormField(
+                            controller: apiKeyController,
+                            obscureText: true,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Enter Valid Anon-API Key';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.bottomRight,
+                            child: FilledButton(
+                              onPressed: () async {
+                                if (_formKey.currentState?.validate() ??
+                                    false) {
+                                  // Verify connection before saving
+                                  final connection = SupabaseConnection(
+                                    supabaseUrl: urlController.text.trim(),
+                                    supabaseAnonKey: apiKeyController.text
+                                        .trim(),
+                                    tableName: tableNameController.text.trim(),
+                                  );
+
+                                  final isConnected = await connection
+                                      .isConnected();
+
+                                  if (mounted) {
+                                    if (isConnected) {
+                                      await _credentialsManager
+                                          .saveSupabaseCredentials(
+                                            url: urlController.text.trim(),
+                                            apiKey: apiKeyController.text
+                                                .trim(),
+                                            tableName: tableNameController.text
+                                                .trim(),
+                                          );
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Supabase connected and saved successfully!',
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Failed to connect to Supabase. Check your credentials.',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                }
+                              },
+                              style: ButtonStyle(
+                                shape: WidgetStatePropertyAll(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                              ),
+                              child: const Text("Save"),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                      ),
+                    )
+                  : SizedBox.shrink(),
+            ),
+          ],
+        ),
+        SizedBox(height: 10),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Server Configuration"),
+                Switch(
+                  value: isServerConfigured,
+                  onChanged: (value) async {
+                    setState(() {
+                      isServerConfigured = value;
+                    });
+                    if (!value) {
+                      await _credentialsManager.clearServerAddress();
+                      serverAddressController.clear();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Server configuration cleared'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ],
+            ),
+            AnimatedSize(
+              duration: Duration(milliseconds: 200),
+              child: isServerConfigured
+                  ? Form(
+                      key: _serverFormKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 10),
+                          const Text("Server Address"),
+                          TextFormField(
+                            controller: serverAddressController,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Enter Valid Server Address';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.bottomRight,
+                            child: FilledButton(
+                              onPressed: () async {
+                                if (_serverFormKey.currentState?.validate() ??
+                                    false) {
+                                  await _credentialsManager.saveServerAddress(
+                                    serverAddressController.text.trim(),
+                                  );
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Server configuration saved successfully!',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                              style: ButtonStyle(
+                                shape: WidgetStatePropertyAll(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                              ),
+                              child: const Text("Save"),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                      ),
+                    )
+                  : SizedBox.shrink(),
+            ),
+          ],
+        ),
       ],
     );
   }

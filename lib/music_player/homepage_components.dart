@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../Managers/weather_manager.dart';
+import '../managers/weather_manager.dart';
 
 late dynamic controller_darkmode;
 late dynamic controller_lightmode;
@@ -21,7 +21,7 @@ class WeatherBackgroundState extends State<WeatherBackground> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
+    return StreamBuilder<Widget?>(
       stream: WeatherBackgroundFunction(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {

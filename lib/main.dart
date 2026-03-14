@@ -224,17 +224,35 @@ class CompactScreenState extends State<CompactScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      bottomNavigationBar: NavigationBar(
-        destinations: navigationBarDestinationsItems,
-        selectedIndex: navigationIndex,
-        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-        indicatorShape: ContinuousRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-        ),
-        onDestinationSelected: (value) {
-          navigationIndex = value;
-          setState(() {});
-        },
+      extendBody: true,
+      bottomNavigationBar: Stack(
+        alignment: AlignmentGeometry.bottomCenter,
+        children: [
+          AnimatedSlide(
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            offset: navigationIndex != 2 ? Offset.zero : const Offset(0, 1),
+            child: BottomMusicController(),
+          ),
+          ClipRRect(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+            child: NavigationBar(
+              height: 80,
+              destinations: navigationBarDestinationsItems,
+              selectedIndex: navigationIndex,
+              labelBehavior:
+                  NavigationDestinationLabelBehavior.onlyShowSelected,
+              indicatorShape: null,
+              onDestinationSelected: (value) {
+                navigationIndex = value;
+                setState(() {});
+              },
+            ),
+          ),
+        ],
       ),
       body: IndexedStack(
         index: navigationIndex,

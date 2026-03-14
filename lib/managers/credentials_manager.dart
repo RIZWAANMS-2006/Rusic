@@ -21,6 +21,23 @@ class CredentialsManager {
   static const String _keySupabaseAnonKey = 'secure_supabase_anon_key';
   static const String _keySupabaseTableName = 'secure_supabase_table_name';
 
+  static const String _keyServerAddress = 'secure_server_address';
+
+  /// Save Server Address securely
+  Future<void> saveServerAddress(String address) async {
+    await _storage.write(key: _keyServerAddress, value: address);
+  }
+
+  /// Get Server Address
+  Future<String?> getServerAddress() async {
+    return await _storage.read(key: _keyServerAddress);
+  }
+
+  /// Remove Server Address
+  Future<void> clearServerAddress() async {
+    await _storage.delete(key: _keyServerAddress);
+  }
+
   /// Save Supabase URL securely
   Future<void> saveSupabaseUrl(String url) async {
     await _storage.write(key: _keySupabaseUrl, value: url);

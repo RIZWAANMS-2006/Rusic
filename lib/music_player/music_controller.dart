@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:Rusic/main.dart';
 import 'package:Rusic/music_player/dynamic_background.dart';
 import 'package:Rusic/managers/audio_manager.dart';
 import "package:Rusic/managers/ui_manager.dart";
@@ -242,12 +241,16 @@ class BottomMusicControllerState extends State<BottomMusicController> {
       child: Container(
         alignment: Alignment.topCenter,
         width: double.infinity,
-        height: 65,
+        height: 145,
         decoration: BoxDecoration(
           color: setContainerContrastColor(context),
-          borderRadius: const BorderRadius.all(Radius.circular(20)),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
         ),
-        child: Center(
+        child: Padding(
+          padding: EdgeInsets.only(top: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -822,9 +825,15 @@ class Full_Size_Rusic_State extends State<Full_Size_Rusic> {
                       );
                     },
                   )
-                : Scaffold(
-                    key: ValueKey('displaySize>700'),
-                    backgroundColor: Colors.amberAccent,
+                : Builder(
+                    builder: (context) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        }
+                      });
+                      return const SizedBox.shrink();
+                    },
                   ),
           );
         },
