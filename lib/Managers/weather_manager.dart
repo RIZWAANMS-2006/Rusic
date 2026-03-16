@@ -22,7 +22,7 @@ Stream<Widget?> weatherDetailsFunction() async* {
             padding: const EdgeInsets.only(left: 7),
             child: Text(
               temp,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.black87,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
@@ -45,7 +45,7 @@ Stream<Widget?> weatherDetailsFunction() async* {
             padding: const EdgeInsets.only(left: 7),
             child: Text(
               temp,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.black87,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
@@ -69,7 +69,7 @@ Stream<Widget?> weatherDetailsFunction() async* {
             padding: const EdgeInsets.only(left: 7),
             child: Text(
               temp,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.black87,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
@@ -84,12 +84,12 @@ Stream<Widget?> weatherDetailsFunction() async* {
       yield Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Icon(Icons.cloud, color: Colors.white24, size: 30),
+          const Icon(Icons.cloud, color: Colors.white24, size: 30),
           Padding(
             padding: const EdgeInsets.only(left: 7),
             child: Text(
               temp,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.black87,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
@@ -104,12 +104,12 @@ Stream<Widget?> weatherDetailsFunction() async* {
       yield Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Icon(Icons.snowing, color: Colors.white12, size: 30),
+          const Icon(Icons.snowing, color: Colors.white12, size: 30),
           Padding(
             padding: const EdgeInsets.only(left: 7),
             child: Text(
               temp,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.black87,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
@@ -123,12 +123,12 @@ Stream<Widget?> weatherDetailsFunction() async* {
       yield Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Icon(Icons.air, color: Colors.white, size: 30),
+          const Icon(Icons.air, color: Colors.white, size: 30),
           Padding(
             padding: const EdgeInsets.only(left: 7),
             child: Text(
               temp,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.black87,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
@@ -142,12 +142,12 @@ Stream<Widget?> weatherDetailsFunction() async* {
       yield Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Icon(Icons.air, color: Colors.white, size: 30),
+          const Icon(Icons.air, color: Colors.white, size: 30),
           Padding(
             padding: const EdgeInsets.only(left: 7),
             child: Text(
               temp,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.black87,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
@@ -165,7 +165,7 @@ Stream<Widget?> weatherDetailsFunction() async* {
             padding: const EdgeInsets.only(left: 7),
             child: Text(
               temp,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.black87,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
@@ -175,7 +175,7 @@ Stream<Widget?> weatherDetailsFunction() async* {
         ],
       );
     }
-    await Future.delayed(Duration(minutes: 1));
+    await Future.delayed(const Duration(minutes: 1));
   }
 }
 
@@ -193,11 +193,11 @@ Stream<Widget?> WeatherBackgroundFunction() async* {
         yield Transform.flip(
           flipX: true,
           child: WrapperScene(
-            sizeCanvas: Size(350, 540),
+            sizeCanvas: const Size(350, 540),
             isLeftCornerGradient: true,
-            colors: [Color(0xff000000), Color(0xff283593)],
+            colors: const [Color(0xff000000), Color(0xff283593)],
             children: [
-              SunWidget(
+              const SunWidget(
                 sunConfig: SunConfig(
                   width: 480,
                   blurSigma: 10,
@@ -210,7 +210,7 @@ Stream<Widget?> WeatherBackgroundFunction() async* {
                   animOutMill: 2000,
                 ),
               ),
-              WindWidget(
+              const WindWidget(
                 windConfig: WindConfig(
                   width: 5,
                   y: 208,
@@ -226,12 +226,12 @@ Stream<Widget?> WeatherBackgroundFunction() async* {
                 ),
               ),
               WrapperScene(
-                colors: [],
+                colors: const [],
                 isLeftCornerGradient: true,
                 children: [
                   Transform.flip(
                     flipX: true,
-                    child: CloudWidget(
+                    child: const CloudWidget(
                       cloudConfig: CloudConfig(
                         size: 250,
                         color: Color(0x779e9e9e),
@@ -252,12 +252,12 @@ Stream<Widget?> WeatherBackgroundFunction() async* {
                 ],
               ),
               WrapperScene(
-                colors: [],
+                colors: const [],
                 isLeftCornerGradient: true,
                 children: [
                   Transform.flip(
                     flipX: true,
-                    child: CloudWidget(
+                    child: const CloudWidget(
                       cloudConfig: CloudConfig(
                         size: 160,
                         color: Color(0x779e9e9e),
@@ -277,7 +277,7 @@ Stream<Widget?> WeatherBackgroundFunction() async* {
                   ),
                 ],
               ),
-              WindWidget(
+              const WindWidget(
                 windConfig: WindConfig(
                   width: 7,
                   y: 300,
@@ -306,7 +306,7 @@ Stream<Widget?> WeatherBackgroundFunction() async* {
     } else if (temp.toLowerCase() == 'partly cloudy' ||
         temp.toLowerCase().contains('cloudy') ||
         temp.toLowerCase().contains('overcast')) {
-      yield WrapperScene(
+      yield const WrapperScene(
         sizeCanvas: Size(350, 540),
         isLeftCornerGradient: true,
         colors: [Color(0xff607d8b), Color(0xff9e9e9e), Color(0xffbdbdbd)],
@@ -449,7 +449,6 @@ Stream<Widget?> WeatherBackgroundFunction() async* {
           ),
         ],
       );
-      ;
     } else if (temp.toLowerCase() == 'snow' ||
         temp.toLowerCase().contains('ice') ||
         temp.toLowerCase().contains('freez')) {
@@ -463,7 +462,7 @@ Stream<Widget?> WeatherBackgroundFunction() async* {
     } else {
       yield WeatherScene.weatherEvery.sceneWidget;
     }
-    await Future.delayed(Duration(minutes: 1));
+    await Future.delayed(const Duration(minutes: 1));
   }
 }
 

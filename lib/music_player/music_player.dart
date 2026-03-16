@@ -1,8 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:Rusic/music_player/online_screens/online_screen.dart';
-import 'package:Rusic/music_player/locations_screen/location_screen.dart';
+import 'package:Rusic/music_player/location_screens/location_screen.dart';
 
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;
@@ -21,7 +20,7 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(color: Color.fromRGBO(34, 34, 34, 1), child: tabBar);
+    return Container(color: const Color.fromRGBO(34, 34, 34, 1), child: tabBar);
   }
 
   @override
@@ -62,13 +61,13 @@ class LibraryState extends State<Library>
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
       body: Stack(
         children: [
           NestedScrollView(
             headerSliverBuilder: (context, innerbox) {
               return [
-                CupertinoSliverNavigationBar(
+                const CupertinoSliverNavigationBar(
                   largeTitle: Text("Library"),
                   middle: Text("Library"),
                   alwaysShowMiddle: false,
@@ -85,7 +84,7 @@ class LibraryState extends State<Library>
                       tabAlignment: TabAlignment.start,
                       isScrollable: true,
                       indicatorColor: Colors.red,
-                      tabs: [
+                      tabs: const [
                         SizedBox(width: 100, child: Tab(text: "Online")),
                         SizedBox(width: 100, child: Tab(text: "Favourites")),
                         SizedBox(width: 100, child: Tab(text: "Playlists")),
@@ -98,7 +97,7 @@ class LibraryState extends State<Library>
             },
             body: TabBarView(
               controller: _tabController,
-              children: [
+              children: const [
                 OnlineScreen(),
                 Scaffold(
                   backgroundColor: Colors.transparent,
@@ -108,7 +107,7 @@ class LibraryState extends State<Library>
                   backgroundColor: Colors.transparent,
                   body: Center(child: Text("No Playlist Yet...")),
                 ),
-                LocationScreen(),
+                LocationsTab(),
               ],
             ),
           ),

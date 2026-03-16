@@ -24,7 +24,7 @@ class WeatherBackgroundState extends State<WeatherBackground> {
         if (snapshot.hasData) {
           return SizedBox.expand(child: snapshot.data);
         } else {
-          return Align(
+          return const Align(
             alignment: AlignmentGeometry.xy(10, 1),
             child: CircularProgressIndicator(color: Colors.red),
           );

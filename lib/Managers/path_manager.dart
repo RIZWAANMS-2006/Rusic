@@ -48,19 +48,26 @@ class Pathmanager {
   Future<bool> _isDirectoryAccessible(Directory directory) async {
     try {
       final exists = await directory.exists();
-      print('[PathManager] Directory check ${directory.path}: $exists');
+
       return exists;
     } catch (e) {
-      print('[PathManager] Error accessing ${directory.path}: $e');
       return false;
     }
   }
 
+  static const Set<String> _mediaExtensions = {
+    ..._audioExtensions,
+    ..._videoExtensions,
+  };
+
   /// Checks if a file path has a supported media extension.
   bool _isMediaFile(String filePath) {
-    final lowercasePath = filePath.toLowerCase();
-    final allExtensions = [..._audioExtensions, ..._videoExtensions];
-    return allExtensions.any((ext) => lowercasePath.endsWith(ext));
+    if (filePath.isEmpty) return false;
+    final lastDotIndex = filePath.lastIndexOf('.');
+    if (lastDotIndex == -1) return false;
+
+    final ext = filePath.substring(lastDotIndex).toLowerCase();
+    return _mediaExtensions.contains(ext);
   }
 
   /// Extracts a readable directory name from a full path.
@@ -89,9 +96,6 @@ class Pathmanager {
     final manageStorageStatus = await Permission.manageExternalStorage
         .request();
 
-    print('[PathManager] Storage permission: $storageStatus');
-    print('[PathManager] Manage storage permission: $manageStorageStatus');
-
     return storageStatus.isGranted || manageStorageStatus.isGranted;
   }
 
@@ -110,7 +114,7 @@ class Pathmanager {
     try {
       if (Platform.isAndroid) {
         // Skip for Android - uses different storage model
-        print('[PathManager] Skipping default directories for Android');
+
         return defaultDirs;
       }
 
@@ -119,11 +123,8 @@ class Pathmanager {
           Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
 
       if (home == null) {
-        print('[PathManager] Could not determine home directory');
         return defaultDirs;
       }
-
-      print('[PathManager] Home directory: $home');
 
       // Standard directory names based on platform
       final List<String> dirNames = Platform.isMacOS
@@ -143,14 +144,9 @@ class Pathmanager {
         final dir = Directory(dirPath);
         if (await dir.exists()) {
           defaultDirs.add(dirPath);
-          print('[PathManager] Found default directory: $dirPath');
-        } else {
-          print('[PathManager] Directory does not exist: $dirPath');
-        }
+        } else {}
       }
-    } catch (e) {
-      print('[PathManager] Error getting default directories: $e');
-    }
+    } catch (e) {}
 
     return defaultDirs;
   }
@@ -170,11 +166,8 @@ class Pathmanager {
           prefs.getBool(_defaultFoldersInitializedKey) ?? false;
 
       if (alreadyInitialized) {
-        print('[PathManager] Default folders already initialized');
         return 0;
       }
-
-      print('[PathManager] Starting default folder initialization...');
 
       // Get default system directories
       final defaultDirs = await getDefaultSystemDirectories();
@@ -184,7 +177,6 @@ class Pathmanager {
       );
 
       if (defaultDirs.isEmpty) {
-        print('[PathManager] No default directories found');
         // Mark as initialized even if no directories found
         await prefs.setBool(_defaultFoldersInitializedKey, true);
         return 0;
@@ -193,23 +185,17 @@ class Pathmanager {
       // Add each directory to library
       int addedCount = 0;
       for (final dirPath in defaultDirs) {
-        print('[PathManager] Attempting to add: $dirPath');
         final success = await addLibraryFolderPath(dirPath);
         if (success) {
           addedCount++;
-          print('[PathManager] Successfully added: $dirPath');
-        } else {
-          print('[PathManager] Failed to add: $dirPath');
-        }
+        } else {}
       }
 
       // Mark as initialized
       await prefs.setBool(_defaultFoldersInitializedKey, true);
-      print('[PathManager] Initialized $addedCount default directories');
 
       return addedCount;
     } catch (e) {
-      print('[PathManager] Error initializing default folders: $e');
       return 0;
     }
   }
@@ -219,8 +205,6 @@ class Pathmanager {
   /// Useful when user has no folders and wants to reset to defaults.
   Future<int> forceInitializeDefaultFolders() async {
     try {
-      print('[PathManager] Force initializing default folders...');
-
       // Get default system directories
       final defaultDirs = await getDefaultSystemDirectories();
 
@@ -229,31 +213,24 @@ class Pathmanager {
       );
 
       if (defaultDirs.isEmpty) {
-        print('[PathManager] No default directories found to add');
         return 0;
       }
 
       // Add each directory to library
       int addedCount = 0;
       for (final dirPath in defaultDirs) {
-        print('[PathManager] Force adding: $dirPath');
         final success = await addLibraryFolderPath(dirPath);
         if (success) {
           addedCount++;
-          print('[PathManager] Successfully added: $dirPath');
-        } else {
-          print('[PathManager] Already exists or failed: $dirPath');
-        }
+        } else {}
       }
 
       // Mark as initialized
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_defaultFoldersInitializedKey, true);
-      print('[PathManager] Force initialized $addedCount new directories');
 
       return addedCount;
     } catch (e) {
-      print('[PathManager] Error force initializing default folders: $e');
       return 0;
     }
   }
@@ -262,7 +239,7 @@ class Pathmanager {
   Future<bool> areDefaultFoldersInitialized() async {
     final prefs = await SharedPreferences.getInstance();
     final initialized = prefs.getBool(_defaultFoldersInitializedKey) ?? false;
-    print('[PathManager] areDefaultFoldersInitialized: $initialized');
+
     return initialized;
   }
 
@@ -273,7 +250,6 @@ class Pathmanager {
   Future<void> resetDefaultFoldersInitialization() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_defaultFoldersInitializedKey);
-    print('[PathManager] Reset default folders initialization flag');
   }
 
   /// Gets all user-selected library folders from persistent storage.
@@ -307,17 +283,11 @@ class Pathmanager {
         if (!currentFolders.contains(selectedDirectory)) {
           currentFolders.add(selectedDirectory);
           await prefs.setStringList(_libraryFoldersKey, currentFolders);
-          print('[PathManager] Added library folder: $selectedDirectory');
+
           return true;
-        } else {
-          print('[PathManager] Folder already exists: $selectedDirectory');
-        }
-      } else {
-        print('[PathManager] Folder picker canceled');
-      }
-    } catch (e) {
-      print('[PathManager] Error adding folder: $e');
-    }
+        } else {}
+      } else {}
+    } catch (e) {}
     return false;
   }
 
@@ -329,7 +299,6 @@ class Pathmanager {
     try {
       final dir = Directory(folderPath);
       if (!await dir.exists()) {
-        print('[PathManager] Folder does not exist: $folderPath');
         return false;
       }
 
@@ -340,12 +309,10 @@ class Pathmanager {
       if (!currentFolders.contains(folderPath)) {
         currentFolders.add(folderPath);
         await prefs.setStringList(_libraryFoldersKey, currentFolders);
-        print('[PathManager] Added library folder: $folderPath');
+
         return true;
       }
-    } catch (e) {
-      print('[PathManager] Error adding folder path: $e');
-    }
+    } catch (e) {}
     return false;
   }
 
@@ -360,10 +327,7 @@ class Pathmanager {
 
       currentFolders.remove(folderPath);
       await prefs.setStringList(_libraryFoldersKey, currentFolders);
-      print('[PathManager] Removed library folder: $folderPath');
-    } catch (e) {
-      print('[PathManager] Error removing folder: $e');
-    }
+    } catch (e) {}
   }
 
   /// Clears all user-selected library folders.
@@ -371,10 +335,7 @@ class Pathmanager {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_libraryFoldersKey);
-      print('[PathManager] Cleared all library folders');
-    } catch (e) {
-      print('[PathManager] Error clearing folders: $e');
-    }
+    } catch (e) {}
   }
 
   /// Checks if the user has any library folders selected.
@@ -404,25 +365,20 @@ class Pathmanager {
   Future<List<File>> scanMediaFiles(String directoryPath) async {
     try {
       final targetDir = Directory(directoryPath);
-      print('[PathManager] Scanning: $directoryPath');
 
       if (!await targetDir.exists()) {
-        print('[PathManager] Directory does not exist: $directoryPath');
         return [];
       }
 
-      final allEntries = targetDir.listSync(recursive: true);
-      print('[PathManager] Total entries found: ${allEntries.length}');
+      final allEntries = await targetDir.list(recursive: true).toList();
 
       final mediaFiles = allEntries
           .whereType<File>()
           .where((file) => _isMediaFile(file.path))
           .toList();
 
-      print('[PathManager] Media files found: ${mediaFiles.length}');
       return mediaFiles;
     } catch (e) {
-      print('[PathManager] Error scanning directory: $e');
       rethrow;
     }
   }
@@ -445,7 +401,6 @@ class Pathmanager {
     final mediaFilesByLocation = <String, List<File>>{};
 
     if (libraryFolders.isEmpty) {
-      print('[PathManager] No library folders selected');
       return mediaFilesByLocation;
     }
 
@@ -461,10 +416,7 @@ class Pathmanager {
         final dirName = _extractDirectoryName(folderPath);
         // Always include saved folders, even if they have no media files yet
         mediaFilesByLocation[dirName] = filesInDirectory;
-        print('[PathManager] $dirName: ${filesInDirectory.length} files');
-      } else {
-        print('[PathManager] Folder no longer accessible: $folderPath');
-      }
+      } else {}
     }
 
     final totalFiles = mediaFilesByLocation.values.fold<int>(
@@ -490,7 +442,6 @@ class Pathmanager {
     final allMediaFiles = <File>[];
 
     if (libraryFolders.isEmpty) {
-      print('[PathManager] No library folders selected');
       return allMediaFiles;
     }
 
@@ -499,20 +450,17 @@ class Pathmanager {
 
       if (await dir.exists()) {
         try {
-          final files = dir.listSync(recursive: true);
+          final files = await dir.list(recursive: true).toList();
 
           for (final file in files) {
             if (file is File && _isMediaFile(file.path)) {
               allMediaFiles.add(file);
             }
           }
-        } catch (e) {
-          print('[PathManager] Error scanning $folderPath: $e');
-        }
+        } catch (e) {}
       }
     }
 
-    print('[PathManager] Found ${allMediaFiles.length} media files in library');
     return allMediaFiles;
   }
 
@@ -533,23 +481,24 @@ class Pathmanager {
 
       if (await dir.exists()) {
         try {
-          final files = dir.listSync(recursive: true);
+          final files = await dir.list(recursive: true).toList();
 
           for (final file in files) {
             if (file is File) {
-              final lowercasePath = file.path.toLowerCase();
-              if (_audioExtensions.any((ext) => lowercasePath.endsWith(ext))) {
+              if (file.path.isEmpty) continue;
+              final lastDotIndex = file.path.lastIndexOf('.');
+              if (lastDotIndex == -1) continue;
+
+              final extension = file.path.substring(lastDotIndex).toLowerCase();
+              if (_audioExtensions.contains(extension)) {
                 audioFiles.add(file);
               }
             }
           }
-        } catch (e) {
-          print('[PathManager] Error scanning $folderPath: $e');
-        }
+        } catch (e) {}
       }
     }
 
-    print('[PathManager] Found ${audioFiles.length} audio files in library');
     return audioFiles;
   }
 
@@ -570,23 +519,24 @@ class Pathmanager {
 
       if (await dir.exists()) {
         try {
-          final files = dir.listSync(recursive: true);
+          final files = await dir.list(recursive: true).toList();
 
           for (final file in files) {
             if (file is File) {
-              final lowercasePath = file.path.toLowerCase();
-              if (_videoExtensions.any((ext) => lowercasePath.endsWith(ext))) {
+              if (file.path.isEmpty) continue;
+              final lastDotIndex = file.path.lastIndexOf('.');
+              if (lastDotIndex == -1) continue;
+
+              final extension = file.path.substring(lastDotIndex).toLowerCase();
+              if (_videoExtensions.contains(extension)) {
                 videoFiles.add(file);
               }
             }
           }
-        } catch (e) {
-          print('[PathManager] Error scanning $folderPath: $e');
-        }
+        } catch (e) {}
       }
     }
 
-    print('[PathManager] Found ${videoFiles.length} video files in library');
     return videoFiles;
   }
 }

@@ -5,6 +5,7 @@ import 'package:Rusic/music_player/music_controller.dart';
 import 'package:Rusic/managers/ui_manager.dart';
 import 'dart:io';
 import 'package:Rusic/search/search_page.dart';
+import 'package:shimmer/shimmer.dart';
 
 /// A universal UI component for displaying media files across different tabs.
 ///
@@ -35,6 +36,9 @@ class MediaUI extends StatefulWidget {
   /// Whether to show the floating music controller
   final bool showMusicController;
 
+  /// Whether to show the navigation bar
+  final bool showNavigationBar;
+
   const MediaUI({
     super.key,
     this.title = "Media",
@@ -45,6 +49,7 @@ class MediaUI extends StatefulWidget {
     this.emptyMessage = "No media files found",
     this.showSearchBar = false,
     this.showMusicController = true,
+    this.showNavigationBar = true,
   });
 
   @override
@@ -54,7 +59,7 @@ class MediaUI extends StatefulWidget {
 class _MediaUIState extends State<MediaUI> {
   int hoverIndex = -1;
   final ScrollController _scrollController = ScrollController();
-  Map<String, int> _letterToIndex = {};
+  final Map<String, int> _letterToIndex = {};
   List<File> _sortedFiles = [];
 
   @override
@@ -94,15 +99,23 @@ class _MediaUIState extends State<MediaUI> {
   }
 
   Widget _buildLoadingState() {
+    final isDesktop = MediaQuery.of(context).size.width > 700;
+
     return Scaffold(
-      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
       body: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
         child: CustomScrollView(
           slivers: [
-            _buildNavigationBar(),
-            const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
+            if (widget.showNavigationBar) _buildNavigationBar(),
+            SliverFillRemaining(
+              child: Shimmer.fromColors(
+                baseColor: Colors.grey[850]!,
+                highlightColor: Colors.grey[700]!,
+                child: isDesktop
+                    ? const _DesktopShimmer()
+                    : const _MobileShimmer(),
+              ),
             ),
           ],
         ),
@@ -112,12 +125,12 @@ class _MediaUIState extends State<MediaUI> {
 
   Widget _buildErrorState(String error) {
     return Scaffold(
-      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
       body: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
         child: CustomScrollView(
           slivers: [
-            _buildNavigationBar(),
+            if (widget.showNavigationBar) _buildNavigationBar(),
             SliverFillRemaining(
               child: Center(
                 child: Column(
@@ -125,14 +138,14 @@ class _MediaUIState extends State<MediaUI> {
                   children: [
                     Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
                     const SizedBox(height: 16),
-                    Text(
+                    const Text(
                       'Error loading files',
                       style: TextStyle(color: Colors.white, fontSize: 18),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       error,
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -147,25 +160,25 @@ class _MediaUIState extends State<MediaUI> {
 
   Widget _buildEmptyState() {
     return Scaffold(
-      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
       body: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
         child: CustomScrollView(
           slivers: [
-            _buildNavigationBar(),
+            if (widget.showNavigationBar) _buildNavigationBar(),
             SliverFillRemaining(
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.folder_open, size: 64, color: Colors.grey),
+                    const Icon(Icons.folder_open, size: 64, color: Colors.grey),
                     const SizedBox(height: 16),
                     Text(
                       widget.emptyMessage,
-                      style: TextStyle(color: Colors.white, fontSize: 18),
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
                     ),
                     const SizedBox(height: 8),
-                    Text(
+                    const Text(
                       'Add folders to your library to see media',
                       style: TextStyle(color: Colors.grey, fontSize: 14),
                     ),
@@ -197,23 +210,20 @@ class _MediaUIState extends State<MediaUI> {
     );
   }
 
+  Map<String, List<File>>? _lastMediaByLocation;
+
   Widget _buildContent(Map<String, List<File>> mediaByLocation) {
-    final allFiles = mediaByLocation.values.expand((files) => files).toList();
-    _sortedFiles = _sortAndMapFiles(allFiles);
+    if (_lastMediaByLocation != mediaByLocation) {
+      final allFiles = mediaByLocation.values.expand((files) => files).toList();
+      _sortedFiles = _sortAndMapFiles(allFiles);
+      _lastMediaByLocation = mediaByLocation;
+    }
+
     final isDesktop = MediaQuery.of(context).size.width > 700;
 
     return Scaffold(
-      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      // floatingActionButton: widget.showMusicController && !isDesktop
-      //     ? Padding(
-      //         padding: const EdgeInsets.only(bottom: 0, left: 0, right: 0),
-      //         child: BottomMusicController(),
-      //       )
-      //     : null,
-      body: isDesktop
-          ? _buildDesktopLayout(allFiles)
-          : _buildMobileLayout(allFiles),
+      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      body: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
     );
   }
 
@@ -228,12 +238,14 @@ class _MediaUIState extends State<MediaUI> {
     );
   }
 
-  Widget _buildDesktopLayout(List<File> allFiles) {
+  Widget _buildDesktopLayout() {
     final groupedFiles = _groupFilesByLetter(_sortedFiles);
     final sortedLetters = groupedFiles.keys.toList()..sort();
 
     return Scaffold(
-      floatingActionButton: widget.showSearchBar ? MusicSearchBar() : null,
+      floatingActionButton: widget.showSearchBar
+          ? const MusicSearchBar()
+          : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: Stack(
         children: [
@@ -247,7 +259,7 @@ class _MediaUIState extends State<MediaUI> {
                 parent: AlwaysScrollableScrollPhysics(),
               ),
               slivers: [
-                _buildNavigationBar(),
+                if (widget.showNavigationBar) _buildNavigationBar(),
                 // Build sections for each letter
                 ...sortedLetters.expand((letter) {
                   final filesInSection = groupedFiles[letter]!;
@@ -284,7 +296,7 @@ class _MediaUIState extends State<MediaUI> {
                       ),
                     ),
                   ];
-                }).toList(),
+                }),
                 const SliverToBoxAdapter(child: SizedBox(height: 170)),
               ],
             ),
@@ -319,7 +331,7 @@ class _MediaUIState extends State<MediaUI> {
     );
   }
 
-  Widget _buildMobileLayout(List<File> allFiles) {
+  Widget _buildMobileLayout() {
     return Stack(
       children: [
         ScrollConfiguration(
@@ -327,17 +339,20 @@ class _MediaUIState extends State<MediaUI> {
           child: CustomScrollView(
             controller: _scrollController,
             slivers: [
-              CupertinoSliverNavigationBar(
-                backgroundColor: setContainerColor(context),
-                largeTitle: Text(widget.title),
-                middle: Text(widget.title),
-                alwaysShowMiddle: false,
-              ),
+              if (widget.showNavigationBar)
+                CupertinoSliverNavigationBar(
+                  backgroundColor: setContainerColor(context),
+                  largeTitle: Text(widget.title),
+                  middle: Text(widget.title),
+                  alwaysShowMiddle: false,
+                ),
               SliverList.builder(
                 itemCount: _sortedFiles.length,
                 itemBuilder: (context, index) {
                   final file = _sortedFiles[index];
-                  final fileName = file.path.split(Platform.pathSeparator).last;
+                  final fileName = file.path.substring(
+                    file.path.lastIndexOf(Platform.pathSeparator) + 1,
+                  );
                   final currentLetter = fileName.isNotEmpty
                       ? fileName[0].toUpperCase()
                       : '#';
@@ -348,9 +363,9 @@ class _MediaUIState extends State<MediaUI> {
                     showHeader = true;
                   } else {
                     final prevFile = _sortedFiles[index - 1];
-                    final prevFileName = prevFile.path
-                        .split(Platform.pathSeparator)
-                        .last;
+                    final prevFileName = prevFile.path.substring(
+                      prevFile.path.lastIndexOf(Platform.pathSeparator) + 1,
+                    );
                     final prevLetter = prevFileName.isNotEmpty
                         ? prevFileName[0].toUpperCase()
                         : '#';
@@ -414,7 +429,9 @@ class _MediaUIState extends State<MediaUI> {
   }
 
   Widget _buildGridItem(File file, int index) {
-    final fileName = file.path.split(Platform.pathSeparator).last;
+    final fileName = file.path.substring(
+      file.path.lastIndexOf(Platform.pathSeparator) + 1,
+    );
 
     return GestureDetector(
       onTap: () => _onFileTap(file),
@@ -448,7 +465,9 @@ class _MediaUIState extends State<MediaUI> {
   }
 
   Widget _buildListItem(File file, int index) {
-    final fileName = file.path.split(Platform.pathSeparator).last;
+    final fileName = file.path.substring(
+      file.path.lastIndexOf(Platform.pathSeparator) + 1,
+    );
 
     return ConstrainedBox(
       constraints: const BoxConstraints(
@@ -467,7 +486,7 @@ class _MediaUIState extends State<MediaUI> {
           ),
           child: SvgPicture.asset("assets/MusicIcons/MusicLogo.svg"),
         ),
-        tileColor: Color.fromRGBO(26, 26, 26, 1),
+        tileColor: const Color.fromRGBO(26, 26, 26, 1),
         title: Text(
           fileName,
           textAlign: TextAlign.left,
@@ -491,17 +510,27 @@ class _MediaUIState extends State<MediaUI> {
 
   /// Sort files alphabetically and create letter-to-index mapping
   List<File> _sortAndMapFiles(List<File> files) {
+    if (files.isEmpty) return [];
+
+    // Cache uppercase names to avoid O(N log N) string splitting inside sort
+    final Map<File, String> nameCache = {};
+    for (final file in files) {
+      final lastSeparator = file.path.lastIndexOf(Platform.pathSeparator);
+      final fileName = lastSeparator != -1
+          ? file.path.substring(lastSeparator + 1)
+          : file.path;
+      nameCache[file] = fileName.toUpperCase();
+    }
+
     final sorted = List<File>.from(files);
-    sorted.sort((a, b) {
-      final aName = a.path.split(Platform.pathSeparator).last.toUpperCase();
-      final bName = b.path.split(Platform.pathSeparator).last.toUpperCase();
-      return aName.compareTo(bName);
-    });
+    sorted.sort((a, b) => nameCache[a]!.compareTo(nameCache[b]!));
 
     // Create letter-to-index mapping
     _letterToIndex.clear();
     for (int i = 0; i < sorted.length; i++) {
-      final fileName = sorted[i].path.split(Platform.pathSeparator).last;
+      final fileName = sorted[i].path.substring(
+        sorted[i].path.lastIndexOf(Platform.pathSeparator) + 1,
+      );
       final firstChar = fileName.isNotEmpty ? fileName[0].toUpperCase() : '#';
       if (!_letterToIndex.containsKey(firstChar)) {
         _letterToIndex[firstChar] = i;
@@ -515,7 +544,9 @@ class _MediaUIState extends State<MediaUI> {
   Map<String, List<File>> _groupFilesByLetter(List<File> files) {
     final Map<String, List<File>> grouped = {};
     for (final file in files) {
-      final fileName = file.path.split(Platform.pathSeparator).last;
+      final fileName = file.path.substring(
+        file.path.lastIndexOf(Platform.pathSeparator) + 1,
+      );
       final firstChar = fileName.isNotEmpty ? fileName[0].toUpperCase() : '#';
       grouped.putIfAbsent(firstChar, () => []).add(file);
     }
@@ -646,7 +677,7 @@ class OnlineMediaUI extends StatefulWidget {
 class _OnlineMediaUIState extends State<OnlineMediaUI> {
   int hoverIndex = -1;
   final ScrollController _scrollController = ScrollController();
-  Map<String, int> _letterToIndex = {};
+  final Map<String, int> _letterToIndex = {};
   List<OnlineSong> _sortedSongs = [];
 
   @override
@@ -686,16 +717,22 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
   }
 
   Widget _buildLoadingState() {
+    final isDesktop = MediaQuery.of(context).size.width > 700;
+
     return Scaffold(
-      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
       appBar: _buildAppBar(),
-      body: const Center(child: CircularProgressIndicator()),
+      body: Shimmer.fromColors(
+        baseColor: Colors.grey[850]!,
+        highlightColor: Colors.grey[700]!,
+        child: isDesktop ? const _DesktopShimmer() : const _MobileShimmer(),
+      ),
     );
   }
 
   Widget _buildErrorState(String error) {
     return Scaffold(
-      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
       appBar: _buildAppBar(),
       body: Center(
         child: Column(
@@ -703,14 +740,14 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
           children: [
             Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'Error loading songs',
               style: TextStyle(color: Colors.white, fontSize: 18),
             ),
             const SizedBox(height: 8),
             Text(
               error,
-              style: TextStyle(color: Colors.grey, fontSize: 14),
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ],
@@ -721,20 +758,20 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
 
   Widget _buildEmptyState() {
     return Scaffold(
-      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
       appBar: _buildAppBar(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off, size: 64, color: Colors.grey),
+            const Icon(Icons.cloud_off, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
             Text(
               widget.emptyMessage,
-              style: TextStyle(color: Colors.white, fontSize: 18),
+              style: const TextStyle(color: Colors.white, fontSize: 18),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'No songs available in this table',
               style: TextStyle(color: Colors.grey, fontSize: 14),
             ),
@@ -774,7 +811,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                child: Row(
+                child: const Row(
                   spacing: 5,
                   children: [
                     Icon(Icons.power_settings_new_rounded),
@@ -788,12 +825,17 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
     );
   }
 
+  List<OnlineSong>? _lastOnlineSongs;
+
   Widget _buildContent(List<OnlineSong> songs) {
-    _sortedSongs = _sortAndMapSongs(songs);
+    if (_lastOnlineSongs != songs) {
+      _sortedSongs = _sortAndMapSongs(songs);
+      _lastOnlineSongs = songs;
+    }
     final isDesktop = MediaQuery.of(context).size.width > 700;
 
     return Scaffold(
-      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
       // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       // floatingActionButton: widget.showMusicController && !isDesktop
       //     ? Padding(
@@ -810,7 +852,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
       appBar: AppBar(
         title: Text(
           widget.title,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 22,
             fontFamily: "Normal",
             fontWeight: FontWeight.w500,
@@ -835,7 +877,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: Row(
+                  child: const Row(
                     spacing: 5,
                     children: [
                       Icon(Icons.power_settings_new_rounded),
@@ -937,7 +979,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
         backgroundColor: Colors.transparent,
         title: Text(
           widget.title,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 18,
             fontFamily: "Normal",
             fontWeight: FontWeight.w500,
@@ -1070,7 +1112,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
           ),
           child: SvgPicture.asset("assets/MusicIcons/MusicLogo.svg"),
         ),
-        tileColor: Color.fromRGBO(26, 26, 26, 1),
+        tileColor: const Color.fromRGBO(26, 26, 26, 1),
 
         title: Text(
           song.title,
@@ -1081,7 +1123,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
         subtitle: song.artist != null
             ? Text(
                 song.artist!,
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
                 overflow: TextOverflow.ellipsis,
               )
             : null,
@@ -1104,10 +1146,15 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
 
   /// Sort songs alphabetically and create letter-to-index mapping
   List<OnlineSong> _sortAndMapSongs(List<OnlineSong> songs) {
+    if (songs.isEmpty) return [];
+
+    final Map<OnlineSong, String> nameCache = {};
+    for (final song in songs) {
+      nameCache[song] = song.title.toUpperCase();
+    }
+
     final sorted = List<OnlineSong>.from(songs);
-    sorted.sort(
-      (a, b) => a.title.toUpperCase().compareTo(b.title.toUpperCase()),
-    );
+    sorted.sort((a, b) => nameCache[a]!.compareTo(nameCache[b]!));
 
     // Create letter-to-index mapping
     _letterToIndex.clear();
@@ -1408,6 +1455,108 @@ class _AlphabetScrollerState extends State<AlphabetScroller> {
           );
         },
       ),
+    );
+  }
+}
+
+class _DesktopShimmer extends StatelessWidget {
+  const _DesktopShimmer({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.extent(
+      maxCrossAxisExtent: 400,
+      childAspectRatio: 3,
+      mainAxisSpacing: 5,
+      crossAxisSpacing: 5,
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+      children: List.generate(15, (index) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: const EdgeInsets.all(4),
+          child: Row(
+            children: [
+              Container(
+                width: 60,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    bottomLeft: Radius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 16,
+                      width: double.infinity,
+                      color: Colors.white,
+                      margin: const EdgeInsets.only(right: 20),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(height: 12, width: 100, color: Colors.white),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+}
+
+class _MobileShimmer extends StatelessWidget {
+  const _MobileShimmer({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: 15,
+      padding: const EdgeInsets.all(8),
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 16,
+                      width: double.infinity,
+                      color: Colors.white,
+                      margin: const EdgeInsets.only(right: 40),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(height: 12, width: 150, color: Colors.white),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Icon(Icons.more_vert, color: Colors.white),
+            ],
+          ),
+        );
+      },
     );
   }
 }

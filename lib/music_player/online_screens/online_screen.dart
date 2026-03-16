@@ -75,7 +75,6 @@ class OnlineScreenState extends State<OnlineScreen> {
     );
     supabaseConnection = connection;
     final ok = await connection.isConnected();
-    print('[OnlineScreen] Connection status: $ok');
 
     if (ok) {
       final credentials = CredentialsManager();
@@ -84,7 +83,6 @@ class OnlineScreenState extends State<OnlineScreen> {
         apiKey: apiKey,
         tableName: tableName,
       );
-      print('[OnlineScreen] Credentials saved successfully');
     }
 
     if (!mounted) return;

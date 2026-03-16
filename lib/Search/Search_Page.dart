@@ -22,7 +22,7 @@ class MusicSearchBar extends StatelessWidget {
         );
       },
       suggestionsBuilder: (context, controller) {
-        return [ListTile(title: Text("Search is not available yet"))];
+        return [const ListTile(title: Text("Search is not available yet"))];
       },
     );
   }
@@ -35,8 +35,11 @@ class Search extends StatefulWidget {
   State<Search> createState() => _SearchState();
 }
 
-class _SearchState extends State<Search> {
+class _SearchState extends State<Search> with AutomaticKeepAliveClientMixin {
   late Future<Map<String, List<File>>> mediaFileFuture;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -52,6 +55,7 @@ class _SearchState extends State<Search> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return MediaUI(
       title: "Search",
       mediaFilesFuture: mediaFileFuture,

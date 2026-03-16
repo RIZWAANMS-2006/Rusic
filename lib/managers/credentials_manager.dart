@@ -59,44 +59,19 @@ class CredentialsManager {
     required String apiKey,
     required String tableName,
   }) async {
-    print('[CredentialsManager] Saving credentials...');
-    print(
-      '[CredentialsManager] URL: ${url.substring(0, 20)}... (length: ${url.length})',
-    );
-    print('[CredentialsManager] API Key length: ${apiKey.length}');
-    print('[CredentialsManager] Table name: $tableName');
-
     try {
       // Save sequentially instead of parallel to avoid race conditions
       await _storage.write(key: _keySupabaseUrl, value: url);
-      print('[CredentialsManager] URL saved');
 
       await _storage.write(key: _keySupabaseAnonKey, value: apiKey);
-      print('[CredentialsManager] API Key saved');
 
       await _storage.write(key: _keySupabaseTableName, value: tableName);
-      print('[CredentialsManager] Table name saved');
 
       // Verify the save by reading back
       final verifyUrl = await _storage.read(key: _keySupabaseUrl);
       final verifyKey = await _storage.read(key: _keySupabaseAnonKey);
       final verifyTable = await _storage.read(key: _keySupabaseTableName);
-
-      print(
-        '[CredentialsManager] Verification - URL: ${verifyUrl != null ? "✓" : "✗"}',
-      );
-      print(
-        '[CredentialsManager] Verification - API Key: ${verifyKey != null ? "✓" : "✗"}',
-      );
-      print(
-        '[CredentialsManager] Verification - Table: ${verifyTable != null ? "✓" : "✗"}',
-      );
-
-      print(
-        '[CredentialsManager] All credentials saved and verified successfully',
-      );
     } catch (e) {
-      print('[CredentialsManager] ERROR saving credentials: $e');
       rethrow;
     }
   }
@@ -118,32 +93,19 @@ class CredentialsManager {
 
   /// Get all Supabase credentials at once
   Future<Map<String, String?>> getSupabaseCredentials() async {
-    print('[CredentialsManager] Reading credentials from secure storage...');
-
     try {
       // Read sequentially with individual logging
       final url = await _storage.read(key: _keySupabaseUrl);
-      print(
-        '[CredentialsManager] Read URL: ${url != null ? "exists (${url.length} chars)" : "NULL"}',
-      );
 
       final apiKey = await _storage.read(key: _keySupabaseAnonKey);
-      print(
-        '[CredentialsManager] Read API Key: ${apiKey != null ? "exists (${apiKey.length} chars)" : "NULL"}',
-      );
 
       final tableName = await _storage.read(key: _keySupabaseTableName);
-      print('[CredentialsManager] Read Table: ${tableName ?? "NULL"}');
 
       // Debug: List all keys in storage
       final allKeys = await _storage.readAll();
-      print(
-        '[CredentialsManager] All keys in storage: ${allKeys.keys.toList()}',
-      );
 
       return {'url': url, 'apiKey': apiKey, 'tableName': tableName};
     } catch (e) {
-      print('[CredentialsManager] ERROR reading credentials: $e');
       rethrow;
     }
   }

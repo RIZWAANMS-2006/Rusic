@@ -26,9 +26,7 @@ class AudioManager {
         await _player.setAudioSource(AudioSource.uri(Uri.file(path))); // Local
       }
       _player.play();
-    } catch (e) {
-      print("Audio Error: $e");
-    }
+    } catch (e) {}
   }
 
   // Simple Controls

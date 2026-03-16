@@ -35,7 +35,8 @@ Future<void> audioPlayAndPauseFunction() async {
 }
 
 class MusicQueueScreen extends StatefulWidget {
-  const MusicQueueScreen({super.key});
+  late BuildContext context;
+  MusicQueueScreen({super.key, context});
 
   @override
   State<MusicQueueScreen> createState() => _MusicQueueScreenState();
@@ -54,35 +55,39 @@ class _MusicQueueScreenState extends State<MusicQueueScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212), // Dark theme
+      backgroundColor: const Color.fromRGBO(26, 26, 26, 1), // Dark theme
       appBar: AppBar(
         title: const Text("Playing Queue"),
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 1. The "Now Playing" Section (Fixed at top)
-          const Padding(
-            padding: EdgeInsets.all(16.0),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Text(
               "Now Playing",
               style: TextStyle(
-                color: Colors.purpleAccent,
+                color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.music_note, color: Colors.purpleAccent),
+            leading: Icon(
+              Icons.music_note,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             title: const Text(
               "Starboy - The Weeknd",
               style: TextStyle(color: Colors.white),
             ),
-            trailing: const Icon(
+            trailing: Icon(
               Icons.equalizer,
-              color: Colors.purpleAccent,
+              color: Theme.of(context).colorScheme.primary,
             ), // Animated equalizer icon usually goes here
           ),
 
@@ -90,7 +95,7 @@ class _MusicQueueScreenState extends State<MusicQueueScreen> {
 
           // 2. The "Up Next" Section
           const Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(10.0),
             child: Text(
               "Up Next",
               style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
@@ -220,9 +225,9 @@ class BottomMusicControllerState extends State<BottomMusicController> {
           Navigator.push(
             context,
             PageRouteBuilder(
-              transitionDuration: Duration(milliseconds: 700),
+              transitionDuration: const Duration(milliseconds: 700),
               pageBuilder: (context, animation, secondaryanimation) {
-                return Full_Size_Rusic();
+                return const Full_Size_Rusic();
               },
             ),
           );
@@ -231,10 +236,8 @@ class BottomMusicControllerState extends State<BottomMusicController> {
       onHorizontalDragEnd: (details) {
         final velocity = details.primaryVelocity ?? 0;
         if (velocity > 0) {
-          print("Previous Song");
           // Swiped Right
         } else if (velocity < 0) {
-          print("Next Song");
           // Swiped Left
         }
       },
@@ -250,7 +253,7 @@ class BottomMusicControllerState extends State<BottomMusicController> {
           ),
         ),
         child: Padding(
-          padding: EdgeInsets.only(top: 10),
+          padding: const EdgeInsets.only(top: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -264,7 +267,7 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                       height: 45,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Color.fromRGBO(34, 34, 34, 1),
+                        color: const Color.fromRGBO(34, 34, 34, 1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: SvgPicture.asset("assets/MusicIcons/Vector-3.svg"),
@@ -278,7 +281,9 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                           : audio_path.split(Platform.pathSeparator).last,
                       // maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Color.fromRGBO(34, 34, 34, 1)),
+                      style: const TextStyle(
+                        color: Color.fromRGBO(34, 34, 34, 1),
+                      ),
                     ),
                   ),
                 ],
@@ -292,13 +297,13 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                       icon: [
                         SvgPicture.asset(
                           "assets/MusicIcons/Play.svg",
-                          color: Color.fromRGBO(34, 34, 34, 1),
+                          color: const Color.fromRGBO(34, 34, 34, 1),
                           width: 25,
                           height: 25,
                         ),
                         SvgPicture.asset(
                           "assets/MusicIcons/Pause.svg",
-                          color: Color.fromRGBO(34, 34, 34, 1),
+                          color: const Color.fromRGBO(34, 34, 34, 1),
                           width: 25,
                           height: 25,
                         ),
@@ -321,14 +326,14 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                       onPressed: () {},
                       icon: SvgPicture.asset(
                         "assets/MusicIcons/Loop.svg",
-                        color: Color.fromRGBO(34, 34, 34, 1),
+                        color: const Color.fromRGBO(34, 34, 34, 1),
                       ),
                     ),
                     IconButton(
                       onPressed: () {},
                       icon: SvgPicture.asset(
                         "assets/MusicIcons/Shuffle.svg",
-                        color: Color.fromRGBO(34, 34, 34, 1),
+                        color: const Color.fromRGBO(34, 34, 34, 1),
                       ),
                     ),
                   ],
@@ -464,6 +469,8 @@ class Full_Size_Rusic extends StatefulWidget {
 
 class Full_Size_Rusic_State extends State<Full_Size_Rusic> {
   late CurvedAnimation curved;
+  bool isQueueOpen = false;
+
   @override
   void initState() {
     super.initState();
@@ -477,367 +484,351 @@ class Full_Size_Rusic_State extends State<Full_Size_Rusic> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return AnimatedSwitcher(
-            duration: Duration(milliseconds: 250),
-            reverseDuration: Duration(milliseconds: 250),
-            transitionBuilder: (child, animation) {
-              curved = CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInQuad,
-                reverseCurve: Curves.easeOutQuad,
-              );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return (constraints.maxWidth < 700)
+            ? LayoutBuilder(
+                builder: (context, constraints) {
+                  return DefaultTabController(
+                    length: 2,
+                    child: Scaffold(
+                      key: const ValueKey('displaySize<700'),
+                      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+                      extendBodyBehindAppBar: true,
+                      extendBody: true,
 
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: Offset(0, 1),
-                    end: Offset.zero,
-                  ).animate(curved),
-                  child: ScaleTransition(
-                    scale: Tween(begin: 0.3, end: 1.0).animate(curved),
-                    child: child,
-                  ),
-                ),
-              );
-            },
-            layoutBuilder: (currentChild, previousChildren) {
-              return Stack(
-                alignment: Alignment.center,
-                children: [
-                  ...previousChildren,
-                  if (currentChild != null) currentChild,
-                ],
-              );
-            },
-            child: (constraints.maxWidth < 700)
-                ? LayoutBuilder(
-                    builder: (context, constraints) {
-                      return DefaultTabController(
-                        length: 2,
-                        child: Scaffold(
-                          key: ValueKey('displaySize<700'),
-                          backgroundColor: Color.fromRGBO(26, 26, 26, 1),
-                          extendBodyBehindAppBar: true,
-                          appBar: AppBar(
-                            backgroundColor: Colors.transparent,
-                            leading: IconButton(
-                              icon: SvgPicture.asset(
-                                "assets/MusicIcons/DownArrow.svg",
-                              ),
-                              onPressed: () {
-                                Navigator.pop(context);
+                      bottomNavigationBar: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const MusicProgressBar(),
+                          Container(
+                            alignment: Alignment.center,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              spacing: 10,
+                              children: [
+                                IconButton(
+                                  icon: SvgPicture.asset(
+                                    "assets/MusicIcons/Shuffle.svg",
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                  onPressed: () {},
+                                ),
+                                IconButton(
+                                  icon: SvgPicture.asset(
+                                    "assets/MusicIcons/PreviousButton.svg",
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                  onPressed: () {},
+                                ),
+                                Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: const BoxDecoration(
+                                        color: Color.fromRGBO(255, 0, 0, 1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: [
+                                        SvgPicture.asset(
+                                          "assets/MusicIcons/Play.svg",
+                                          width: 20,
+                                          height: 20,
+                                        ),
+                                        SvgPicture.asset(
+                                          "assets/MusicIcons/Pause.svg",
+                                          width: 20,
+                                          height: 20,
+                                        ),
+                                      ][indicatorState],
+                                      onPressed: () {
+                                        if (indicatorState == 0) {
+                                          setState(() {
+                                            audioPlayAndPauseFunction();
+                                            indicatorState = 1;
+                                          });
+                                        } else {
+                                          setState(() {
+                                            audioPlayAndPauseFunction();
+                                            indicatorState = 0;
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                IconButton(
+                                  icon: SvgPicture.asset(
+                                    "assets/MusicIcons/NextButton.svg",
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                  onPressed: () {},
+                                ),
+                                IconButton(
+                                  icon: SvgPicture.asset(
+                                    "assets/MusicIcons/Loop.svg",
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                  onPressed: () {},
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 15, bottom: 30),
+                            child: Builder(
+                              builder: (context) {
+                                return FilledButton.icon(
+                                  icon: Icon(
+                                    isQueueOpen
+                                        ? Icons.close
+                                        : Icons.queue_music,
+                                    size: 15,
+                                  ),
+                                  onPressed: () {
+                                    if (isQueueOpen) {
+                                      Navigator.pop(context);
+                                    } else {
+                                      setState(() {
+                                        isQueueOpen = true;
+                                      });
+                                      Scaffold.of(context)
+                                          .showBottomSheet((context) {
+                                            return ClipRRect(
+                                              borderRadius:
+                                                  const BorderRadius.vertical(
+                                                    top: Radius.circular(20),
+                                                  ),
+                                              child: SizedBox(
+                                                height:
+                                                    MediaQuery.of(
+                                                      context,
+                                                    ).size.height *
+                                                    0.65, // Takes 85% of screen
+                                                child: MusicQueueScreen(
+                                                  context: context,
+                                                ),
+                                              ),
+                                            );
+                                          })
+                                          .closed
+                                          .then((_) {
+                                            if (mounted) {
+                                              setState(() {
+                                                isQueueOpen = false;
+                                              });
+                                            }
+                                          });
+                                    }
+                                  },
+                                  label: Text(
+                                    isQueueOpen ? "Close" : "Queue",
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                );
                               },
                             ),
                           ),
-                          body: Stack(
+                        ],
+                      ),
+                      appBar: AppBar(
+                        surfaceTintColor: Colors.transparent,
+                        backgroundColor: Colors.transparent,
+                        leading: IconButton(
+                          icon: SvgPicture.asset(
+                            "assets/MusicIcons/DownArrow.svg",
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                      body: Stack(
+                        children: [
+                          TabBarView(
                             children: [
-                              TabBarView(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(
-                                      top: constraints.maxHeight * 0.14,
-                                    ),
-                                    child: Column(
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  top: constraints.maxHeight * 0.14,
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
                                       children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                bottom: 5,
-                                              ),
-                                              child: IconButton(
-                                                icon: SvgPicture.asset(
-                                                  "assets/MusicIcons/Like.svg",
-                                                ),
-                                                onPressed: () {},
-                                              ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 5,
+                                          ),
+                                          child: IconButton(
+                                            icon: SvgPicture.asset(
+                                              "assets/MusicIcons/Like.svg",
                                             ),
-                                            Container(
-                                              height:
-                                                  constraints.maxWidth * 0.35,
-                                              width:
-                                                  constraints.maxWidth * 0.35,
-                                              constraints: BoxConstraints(
-                                                minHeight: 210,
-                                                minWidth: 210,
-                                                maxHeight: 300,
-                                                maxWidth: 300,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Color.fromRGBO(
-                                                  255,
-                                                  245,
-                                                  245,
-                                                  1,
-                                                ),
-                                                shape: BoxShape.circle,
-                                              ),
-                                              alignment: Alignment.center,
-                                              child: SvgPicture.asset(
-                                                "assets/MusicIcons/MusicLogo.svg",
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                bottom: 5,
-                                              ),
-                                              child: IconButton(
-                                                icon: SvgPicture.asset(
-                                                  "assets/MusicIcons/AddPlaylist.svg",
-                                                ),
-                                                onPressed: () {},
-                                              ),
-                                            ),
-                                          ],
+                                            onPressed: () {},
+                                          ),
                                         ),
                                         Container(
-                                          padding: const EdgeInsets.only(
-                                            top: 20,
+                                          height: constraints.maxWidth * 0.35,
+                                          width: constraints.maxWidth * 0.35,
+                                          constraints: const BoxConstraints(
+                                            minHeight: 210,
+                                            minWidth: 210,
+                                            maxHeight: 300,
+                                            maxWidth: 300,
                                           ),
-                                          child: Column(
-                                            spacing: 3,
-                                            children: [
-                                              Text(
-                                                "Song:",
-                                                style: TextStyle(
-                                                  color: Color.fromRGBO(
-                                                    255,
-                                                    245,
-                                                    245,
-                                                    1,
-                                                  ),
-                                                  fontSize: 14,
-                                                  fontFamily: "Borel",
-                                                ),
-                                              ),
-                                              Text(
-                                                audio_path == ''
-                                                    ? "No Song is Playing..."
-                                                    : audio_path
-                                                          .split(
-                                                            Platform
-                                                                .pathSeparator,
-                                                          )
-                                                          .last,
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  color: Color.fromRGBO(
-                                                    255,
-                                                    245,
-                                                    245,
-                                                    1,
-                                                  ),
-                                                  fontSize: 16,
-                                                  fontFamily: "Borel",
-                                                ),
-                                              ),
-                                            ],
+                                          decoration: const BoxDecoration(
+                                            color: Color.fromRGBO(
+                                              255,
+                                              245,
+                                              245,
+                                              1,
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: SvgPicture.asset(
+                                            "assets/MusicIcons/MusicLogo.svg",
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 5,
+                                          ),
+                                          child: IconButton(
+                                            icon: SvgPicture.asset(
+                                              "assets/MusicIcons/AddPlaylist.svg",
+                                            ),
+                                            onPressed: () {},
                                           ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                  Container(color: Colors.redAccent),
-                                ],
-                              ),
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                bottom: 70,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
                                     Container(
-                                      width: 130,
-                                      height: 30,
-                                      decoration: BoxDecoration(
-                                        color: Color.fromRGBO(225, 225, 225, 1),
-                                        borderRadius: BorderRadius.circular(
-                                          25.0,
-                                        ),
-                                      ),
-                                      child: TabBar(
-                                        indicatorSize: TabBarIndicatorSize.tab,
-                                        indicator: BoxDecoration(
-                                          color: const Color.fromRGBO(
-                                            34,
-                                            34,
-                                            34,
-                                            1,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            25.0,
-                                          ),
-                                        ),
-                                        dividerColor: Colors.transparent,
-                                        labelColor: Colors.white,
-                                        unselectedLabelColor: Colors.black,
-                                        splashBorderRadius:
-                                            BorderRadius.circular(25.0),
-                                        tabs: [
-                                          Text(
-                                            "Audio",
-                                            style: TextStyle(fontSize: 12),
-                                          ),
-                                          Text(
-                                            "Video",
-                                            style: TextStyle(fontSize: 12),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    MusicProgressBar(),
-                                    Container(
-                                      alignment: Alignment.center,
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        spacing: 10,
+                                      padding: const EdgeInsets.only(top: 20),
+                                      child: Column(
+                                        spacing: 3,
                                         children: [
-                                          IconButton(
-                                            icon: SvgPicture.asset(
-                                              "assets/MusicIcons/Shuffle.svg",
-                                              width: 20,
-                                              height: 20,
-                                            ),
-                                            onPressed: () {},
-                                          ),
-                                          IconButton(
-                                            icon: SvgPicture.asset(
-                                              "assets/MusicIcons/PreviousButton.svg",
-                                              width: 20,
-                                              height: 20,
-                                            ),
-                                            onPressed: () {},
-                                          ),
-                                          Stack(
-                                            alignment: Alignment.center,
-                                            children: [
-                                              Container(
-                                                width: 50,
-                                                height: 50,
-                                                decoration: BoxDecoration(
-                                                  color: Color.fromRGBO(
-                                                    255,
-                                                    0,
-                                                    0,
-                                                    1,
-                                                  ),
-                                                  shape: BoxShape.circle,
-                                                ),
+                                          const Text(
+                                            "Song:",
+                                            style: TextStyle(
+                                              color: Color.fromRGBO(
+                                                255,
+                                                245,
+                                                245,
+                                                1,
                                               ),
-                                              IconButton(
-                                                icon: [
-                                                  SvgPicture.asset(
-                                                    "assets/MusicIcons/Play.svg",
-                                                    width: 20,
-                                                    height: 20,
-                                                  ),
-                                                  SvgPicture.asset(
-                                                    "assets/MusicIcons/Pause.svg",
-                                                    width: 20,
-                                                    height: 20,
-                                                  ),
-                                                ][indicatorState],
-                                                onPressed: () {
-                                                  if (indicatorState == 0) {
-                                                    setState(() {
-                                                      audioPlayAndPauseFunction();
-                                                      indicatorState = 1;
-                                                    });
-                                                  } else {
-                                                    setState(() {
-                                                      audioPlayAndPauseFunction();
-                                                      indicatorState = 0;
-                                                    });
-                                                  }
-                                                },
+                                              fontSize: 14,
+                                              fontFamily: "Borel",
+                                            ),
+                                          ),
+                                          Text(
+                                            audio_path == ''
+                                                ? "No Song is Playing..."
+                                                : audio_path
+                                                      .split(
+                                                        Platform.pathSeparator,
+                                                      )
+                                                      .last,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              color: Color.fromRGBO(
+                                                255,
+                                                245,
+                                                245,
+                                                1,
                                               ),
-                                            ],
-                                          ),
-                                          IconButton(
-                                            icon: SvgPicture.asset(
-                                              "assets/MusicIcons/NextButton.svg",
-                                              width: 20,
-                                              height: 20,
+                                              fontSize: 16,
+                                              fontFamily: "Borel",
                                             ),
-                                            onPressed: () {},
-                                          ),
-                                          IconButton(
-                                            icon: SvgPicture.asset(
-                                              "assets/MusicIcons/Loop.svg",
-                                              width: 20,
-                                              height: 20,
-                                            ),
-                                            onPressed: () {},
                                           ),
                                         ],
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 15),
-                                      child: FilledButton.icon(
-                                        icon: Icon(Icons.queue_music, size: 15),
-                                        onPressed: () {
-                                          showModalBottomSheet(
-                                            context: context,
-                                            isScrollControlled: true,
-                                            backgroundColor: Colors.transparent,
-                                            builder: (context) {
-                                              return ClipRRect(
-                                                borderRadius:
-                                                    const BorderRadius.vertical(
-                                                      top: Radius.circular(20),
-                                                    ),
-                                                child: SizedBox(
-                                                  height:
-                                                      MediaQuery.of(
-                                                        context,
-                                                      ).size.height *
-                                                      0.85, // Takes 85% of screen
-                                                  child: MusicQueueScreen(),
-                                                ),
-                                              );
-                                            },
-                                          );
-                                        },
-                                        label: Text(
-                                          "Queue",
-                                          style: TextStyle(fontSize: 12),
-                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
+                              Container(color: Colors.redAccent),
                             ],
                           ),
-                        ),
-                      );
-                    },
-                  )
-                : Builder(
-                    builder: (context) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (Navigator.canPop(context)) {
-                          Navigator.pop(context);
-                        }
-                      });
-                      return const SizedBox.shrink();
-                    },
-                  ),
-          );
-        },
-      ),
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 180,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 130,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: const Color.fromRGBO(
+                                      225,
+                                      225,
+                                      225,
+                                      1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(25.0),
+                                  ),
+                                  child: TabBar(
+                                    indicatorSize: TabBarIndicatorSize.tab,
+                                    indicator: BoxDecoration(
+                                      color: const Color.fromRGBO(
+                                        34,
+                                        34,
+                                        34,
+                                        1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(25.0),
+                                    ),
+                                    dividerColor: Colors.transparent,
+                                    labelColor: Colors.white,
+                                    unselectedLabelColor: Colors.black,
+                                    splashBorderRadius: BorderRadius.circular(
+                                      25.0,
+                                    ),
+                                    tabs: const [
+                                      Text(
+                                        "Audio",
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      Text(
+                                        "Video",
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              )
+            : Builder(
+                builder: (context) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    }
+                  });
+                  return const SizedBox.shrink();
+                },
+              );
+      },
     );
   }
 }
@@ -857,13 +848,13 @@ class Home_Page_Rusic_State extends State<Home_Page_Rusic> {
       child: Container(
         width: double.infinity,
         height: MediaQuery.of(context).size.height * 0.35 + 40,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.black45,
           borderRadius: BorderRadius.all(Radius.circular(20)),
           backgroundBlendMode: BlendMode.darken,
         ),
         child: (MediaQuery.of(context).size.width > 700)
-            ? Container(
+            ? SizedBox(
                 width: double.infinity,
                 height: double.infinity,
                 child: Row(
@@ -873,11 +864,11 @@ class Home_Page_Rusic_State extends State<Home_Page_Rusic> {
                       child: Container(
                         width: 250,
                         height: 200,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white,
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.music_note,
                           size: 80,
                           color: Colors.black,
@@ -890,7 +881,7 @@ class Home_Page_Rusic_State extends State<Home_Page_Rusic> {
                         padding: const EdgeInsets.only(right: 40),
                         child: Container(
                           height: 200,
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Colors.black45,
                             backgroundBlendMode: BlendMode.darken,
                             borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -898,15 +889,15 @@ class Home_Page_Rusic_State extends State<Home_Page_Rusic> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              MusicProgressBar(),
-                              Container(
+                              const MusicProgressBar(),
+                              SizedBox(
                                 width: 180,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     IconButton(
-                                      icon: Icon(
+                                      icon: const Icon(
                                         Icons.skip_previous,
                                         color: Colors.white,
                                         size: 40,
@@ -915,12 +906,12 @@ class Home_Page_Rusic_State extends State<Home_Page_Rusic> {
                                     ),
                                     IconButton(
                                       icon: [
-                                        Icon(
+                                        const Icon(
                                           Icons.play_circle_fill,
                                           size: 50,
                                           color: Colors.white,
                                         ),
-                                        Icon(
+                                        const Icon(
                                           Icons.pause_circle_filled,
                                           size: 50,
                                           color: Colors.white,
@@ -941,7 +932,7 @@ class Home_Page_Rusic_State extends State<Home_Page_Rusic> {
                                       },
                                     ),
                                     IconButton(
-                                      icon: Icon(
+                                      icon: const Icon(
                                         Icons.skip_next,
                                         color: Colors.white,
                                         size: 40,
@@ -975,7 +966,7 @@ class Home_Page_Rusic_State extends State<Home_Page_Rusic> {
                           Container(
                             width: 100,
                             height: 100,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: Colors.white,
                               shape: BoxShape.rectangle,
                               backgroundBlendMode: BlendMode.hardLight,
@@ -983,21 +974,21 @@ class Home_Page_Rusic_State extends State<Home_Page_Rusic> {
                                 Radius.circular(20),
                               ),
                             ),
-                            child: Icon(
+                            child: const Icon(
                               Icons.music_note,
                               size: 40,
                               color: Colors.black,
                             ),
                           ),
-                          Expanded(child: MusicProgressBar()),
-                          Container(
+                          const Expanded(child: MusicProgressBar()),
+                          SizedBox(
                             height: 50,
                             width: double.infinity,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 IconButton(
-                                  icon: Icon(
+                                  icon: const Icon(
                                     Icons.skip_previous,
                                     color: Colors.white,
                                     size: 35,
@@ -1007,12 +998,12 @@ class Home_Page_Rusic_State extends State<Home_Page_Rusic> {
                                 IconButton(
                                   alignment: Alignment.center,
                                   icon: [
-                                    Icon(
+                                    const Icon(
                                       Icons.play_circle_fill,
                                       color: Colors.white,
                                       size: 40,
                                     ),
-                                    Icon(
+                                    const Icon(
                                       Icons.pause_circle_filled,
                                       color: Colors.white,
                                       size: 40,
@@ -1035,7 +1026,7 @@ class Home_Page_Rusic_State extends State<Home_Page_Rusic> {
                                   },
                                 ),
                                 IconButton(
-                                  icon: Icon(
+                                  icon: const Icon(
                                     Icons.skip_next,
                                     color: Colors.white,
                                     size: 35,
@@ -1076,7 +1067,7 @@ class SideMusicControllerState extends State<SideMusicController> {
       children: [
         ImageFiltered(
           imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-          child: WeatherBackground(),
+          child: const WeatherBackground(),
         ),
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1086,22 +1077,26 @@ class SideMusicControllerState extends State<SideMusicController> {
             Container(
               width: 170,
               height: 170,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
                 color: Colors.white,
               ),
-              child: Icon(Icons.music_note, size: 60, color: Colors.black),
+              child: const Icon(
+                Icons.music_note,
+                size: 60,
+                color: Colors.black,
+              ),
             ),
             Text(
               audio_path == ''
                   ? "No Song is Playing..."
                   : audio_path.split(Platform.pathSeparator).last,
-              style: TextStyle(color: Colors.white, fontSize: 16),
+              style: const TextStyle(color: Colors.white, fontSize: 16),
             ),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                MusicProgressBar(),
+                const MusicProgressBar(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -1119,11 +1114,15 @@ class SideMusicControllerState extends State<SideMusicController> {
                           });
                         }
                       },
-                      icon: Icon(Icons.repeat, size: 35, color: Colors.white),
+                      icon: const Icon(
+                        Icons.repeat,
+                        size: 35,
+                        color: Colors.white,
+                      ),
                     ),
                     IconButton(
                       onPressed: () {},
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.skip_previous,
                         size: 35,
                         color: Colors.white,
@@ -1144,12 +1143,12 @@ class SideMusicControllerState extends State<SideMusicController> {
                         }
                       },
                       icon: [
-                        Icon(
+                        const Icon(
                           Icons.play_circle_fill,
                           color: Colors.white,
                           size: 40,
                         ),
-                        Icon(
+                        const Icon(
                           Icons.pause_circle_filled,
                           color: Colors.white,
                           size: 40,
@@ -1159,7 +1158,7 @@ class SideMusicControllerState extends State<SideMusicController> {
                     ),
                     IconButton(
                       onPressed: () {},
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.skip_next,
                         size: 35,
                         color: Colors.white,
@@ -1167,7 +1166,11 @@ class SideMusicControllerState extends State<SideMusicController> {
                     ),
                     IconButton(
                       onPressed: () {},
-                      icon: Icon(Icons.shuffle, size: 35, color: Colors.white),
+                      icon: const Icon(
+                        Icons.shuffle,
+                        size: 35,
+                        color: Colors.white,
+                      ),
                     ),
                   ],
                 ),

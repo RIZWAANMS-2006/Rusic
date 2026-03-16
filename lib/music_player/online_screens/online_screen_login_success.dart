@@ -21,7 +21,7 @@ class OnlineScreenLoginSuccessState extends State<OnlineScreenLoginSuccess> {
   @override
   void initState() {
     super.initState();
-    print('[OnlineScreenLoginSuccess] initState called');
+
     _loadAndFetchSongs();
   }
 
@@ -33,10 +33,6 @@ class OnlineScreenLoginSuccessState extends State<OnlineScreenLoginSuccess> {
       final url = credentialsData['url'];
       final apiKey = credentialsData['apiKey'];
 
-      print('Loading songs from table: $tableName');
-      print('URL exists: ${url != null}');
-      print('API Key exists: ${apiKey != null}');
-
       if (!mounted) return;
 
       setState(() {
@@ -44,7 +40,6 @@ class OnlineScreenLoginSuccessState extends State<OnlineScreenLoginSuccess> {
       });
 
       if (url != null && apiKey != null) {
-        print('Creating Supabase connection...');
         final connection = SupabaseConnection(
           supabaseUrl: url,
           supabaseAnonKey: apiKey,
@@ -56,13 +51,8 @@ class OnlineScreenLoginSuccessState extends State<OnlineScreenLoginSuccess> {
         setState(() {
           _songsFuture = connection.fetchOnlineSongs();
         });
-        print('Songs future set');
-      } else {
-        print('ERROR: Missing Supabase credentials');
-      }
-    } catch (e) {
-      print('ERROR in _loadAndFetchSongs: $e');
-    }
+      } else {}
+    } catch (e) {}
   }
 
   @override

@@ -43,7 +43,7 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
       backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: true,
       body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(20, 30, 20, 20),
+        padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
         child: Column(
           children: [
             Center(
@@ -72,13 +72,13 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(7),
-                color: Color.fromRGBO(39, 39, 39, 1),
+                color: const Color.fromRGBO(39, 39, 39, 1),
               ),
               child: Form(
                 key: _formKey,
@@ -86,16 +86,16 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     // Indexed list with AnimatedSize for dynamic height
                     AnimatedSize(
-                      duration: Duration(milliseconds: 200),
+                      duration: const Duration(milliseconds: 200),
                       child: [
                         // Supabase Tab
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Align(
+                            const Align(
                               alignment: Alignment.topCenter,
                               child: Text(
                                 "Supabase Configuration",
@@ -105,8 +105,8 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                                 ),
                               ),
                             ),
-                            SizedBox(height: 20),
-                            Text("Enter Table Name"),
+                            const SizedBox(height: 20),
+                            const Text("Enter Table Name"),
                             TextFormField(
                               controller: tableNameController,
                               validator: (value) {
@@ -119,8 +119,8 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                                 return null;
                               },
                             ),
-                            SizedBox(height: 20),
-                            Text("Enter URL"),
+                            const SizedBox(height: 20),
+                            const Text("Enter URL"),
                             TextFormField(
                               controller: urlController,
                               validator: (value) {
@@ -133,8 +133,8 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                                 return null;
                               },
                             ),
-                            SizedBox(height: 20),
-                            Text("Enter Anon-API Key"),
+                            const SizedBox(height: 20),
+                            const Text("Enter Anon-API Key"),
                             TextFormField(
                               controller: apiKeyController,
                               obscureText: true,
@@ -154,7 +154,7 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Align(
+                            const Align(
                               alignment: Alignment.topCenter,
                               child: Text(
                                 "Server Configuration",
@@ -164,8 +164,8 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                                 ),
                               ),
                             ),
-                            SizedBox(height: 20),
-                            Text("Server Address"),
+                            const SizedBox(height: 20),
+                            const Text("Server Address"),
                             TextFormField(
                               controller: serverAddressController,
                               validator: (value) {
@@ -182,27 +182,19 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                         ),
                       ][_tabController.index],
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Align(
                       alignment: Alignment.bottomRight,
                       child: FilledButton(
                         onPressed: () {
-                          print(
-                            'Validating form on tab: ${_tabController.index}',
-                          );
-                          print('URL: ${urlController.text}');
-                          print('API Key: ${apiKeyController.text}');
                           final formState = _formKey.currentState;
                           if (formState != null && formState.validate()) {
-                            print('Form validated successfully');
                             widget.onSubmit(
                               urlController.text.trim(),
                               apiKeyController.text.trim(),
                               tableNameController.text.trim(),
                             );
-                          } else {
-                            print('Form validation failed');
-                          }
+                          } else {}
                         },
                         style: ButtonStyle(
                           shape: WidgetStatePropertyAll(
@@ -211,7 +203,7 @@ class OnlineScreenLoginState extends State<OnlineScreenLogin>
                             ),
                           ),
                         ),
-                        child: Text("Connect"),
+                        child: const Text("Connect"),
                       ),
                     ),
                   ],
