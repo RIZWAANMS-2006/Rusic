@@ -4,8 +4,9 @@ import 'package:Rusic/ui/media_ui.dart';
 
 class HTTPServerManager {
   final String serverAddress;
+  final String? serverName;
 
-  HTTPServerManager({required this.serverAddress});
+  HTTPServerManager({required this.serverAddress, this.serverName});
 
   Future<List<OnlineSong>> fetchSongs() async {
     try {
@@ -32,7 +33,12 @@ class HTTPServerManager {
             }
 
             songs.add(
-              OnlineSong(title: title, url: absoluteUrl, artist: 'Server'),
+              OnlineSong(
+                title: title,
+                url: absoluteUrl,
+                artist: 'Server',
+                source: serverName ?? serverAddress,
+              ),
             );
           }
         }

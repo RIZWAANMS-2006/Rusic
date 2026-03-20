@@ -33,7 +33,9 @@ class SupabaseConnection {
         response as List,
       );
 
-      return data.map((map) => OnlineSong.fromMap(map)).toList();
+      return data
+          .map((map) => OnlineSong.fromMap(map, source: tableName))
+          .toList();
     } catch (e) {
       print('Supabase fetch error: $e');
       return [];

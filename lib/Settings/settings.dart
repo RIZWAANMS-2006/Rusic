@@ -585,8 +585,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                             }
                           },
                           icon: const Icon(
-                            Icons.remove_circle_outline,
-                            color: Colors.redAccent,
+                            Icons.remove,
                           ),
                         ),
                       ],
@@ -660,8 +659,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                         }
                       },
                       icon: const Icon(
-                        Icons.remove_circle_outline,
-                        color: Colors.redAccent,
+                        Icons.remove,
                       ),
                     ),
                   ],

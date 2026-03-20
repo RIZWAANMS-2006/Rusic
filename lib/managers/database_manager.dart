@@ -28,7 +28,12 @@ class DatabaseManager {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: 2,
+      onCreate: _createDB,
+      onUpgrade: _upgradeDB,
+    );
   }
 
   Future _createDB(Database db, int version) async {
@@ -42,7 +47,8 @@ CREATE TABLE online_songs (
   url $textType UNIQUE,
   title $textType,
   artist $textNullable,
-  album $textNullable
+  album $textNullable,
+  source $textNullable
 )
 ''');
 
@@ -52,6 +58,12 @@ CREATE TABLE favorites (
   url $textType UNIQUE
 )
 ''');
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE online_songs ADD COLUMN source TEXT');
+    }
   }
 
   Future<void> cacheOnlineSongs(List<OnlineSong> songs) async {
@@ -64,6 +76,7 @@ CREATE TABLE favorites (
           'title': song.title,
           'artist': song.artist,
           'album': song.album,
+          'source': song.source,
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
@@ -78,6 +91,7 @@ CREATE TABLE favorites (
         url: map['url'] as String,
         artist: map['artist'] as String?,
         album: map['album'] as String?,
+        source: map['source'] as String?,
       );
     }).toList();
   }

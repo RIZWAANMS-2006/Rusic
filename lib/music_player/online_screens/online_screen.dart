@@ -27,6 +27,7 @@ class OnlineScreenState extends State<OnlineScreen> {
     final credentials = CredentialsManager();
     final supaCreds = await credentials.getSupabaseCredentials();
     final serverAddress = await credentials.getServerAddress();
+    final serverName = await credentials.getServerName();
 
     final hasSupa = supaCreds['url'] != null && supaCreds['apiKey'] != null;
     final hasServer = serverAddress != null && serverAddress.isNotEmpty;
@@ -57,7 +58,7 @@ class OnlineScreenState extends State<OnlineScreen> {
         });
       }
       // Update cache in the background
-      _fetchAndUpdateCache(credentials, supaCreds, serverAddress);
+      _fetchAndUpdateCache(credentials, supaCreds, serverAddress, serverName);
     } else {
       if (mounted) {
         setState(() {
@@ -65,6 +66,7 @@ class OnlineScreenState extends State<OnlineScreen> {
             credentials,
             supaCreds,
             serverAddress,
+            serverName,
           );
           _isLoading = false;
         });
@@ -76,6 +78,7 @@ class OnlineScreenState extends State<OnlineScreen> {
     CredentialsManager credentials,
     Map<String, String?> supaCreds,
     String? serverAddress,
+    String? serverName,
   ) async {
     List<OnlineSong> combinedSongs = [];
 
@@ -97,7 +100,10 @@ class OnlineScreenState extends State<OnlineScreen> {
     // 2. Fetch HTTP Server
     if (serverAddress != null && serverAddress.isNotEmpty) {
       try {
-        final httpManager = HTTPServerManager(serverAddress: serverAddress);
+        final httpManager = HTTPServerManager(
+          serverAddress: serverAddress,
+          serverName: serverName,
+        );
         combinedSongs.addAll(await httpManager.fetchSongs());
       } catch (e) {
         print('Error fetching Server: $e');
@@ -115,6 +121,7 @@ class OnlineScreenState extends State<OnlineScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
+        backgroundColor: Color.fromRGBO(26, 26, 26, 1),
         body: Center(
           child: CircularProgressIndicator(strokeCap: StrokeCap.round),
         ),
@@ -122,22 +129,22 @@ class OnlineScreenState extends State<OnlineScreen> {
     }
 
     if (!_isConfigured) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Online')),
+      return const Scaffold(
+        backgroundColor: Color.fromRGBO(26, 26, 26, 1),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               Icon(Icons.cloud_off, size: 64, color: Colors.grey),
-              SizedBox(height: 16),
+              SizedBox(height: 6),
               Text(
                 'Not Configured',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 4),
               Text(
                 'Please configure Supabase or Server inside Settings.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(fontSize: 14, color: Colors.grey),
               ),
             ],
           ),

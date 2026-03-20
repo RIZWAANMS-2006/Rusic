@@ -254,7 +254,7 @@ class _MediaUIState extends State<MediaUI> {
               context,
             ).copyWith(scrollbars: false),
             child: CustomScrollView(
-              controller: _scrollController,
+              controller: PrimaryScrollController.maybeOf(context) ?? _scrollController,
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
               ),
@@ -331,7 +331,7 @@ class _MediaUIState extends State<MediaUI> {
         ScrollConfiguration(
           behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
           child: CustomScrollView(
-            controller: _scrollController,
+            controller: PrimaryScrollController.maybeOf(context) ?? _scrollController,
             slivers: [
               if (widget.showNavigationBar)
                 CupertinoSliverNavigationBar(
@@ -544,7 +544,8 @@ class _MediaUIState extends State<MediaUI> {
   /// Scroll to the section starting with the given letter
   void _scrollToLetter(String letter) {
     final index = _letterToIndex[letter];
-    if (index != null && _scrollController.hasClients) {
+    final currentController = PrimaryScrollController.maybeOf(context) ?? _scrollController;
+      if (index != null && currentController.hasClients) {
       // Calculate approximate position
       // For grid: each row has multiple items
       // For list: each item has a fixed height
@@ -556,8 +557,8 @@ class _MediaUIState extends State<MediaUI> {
         final rowIndex = (index / itemsPerRow).floor();
         final offset = rowIndex * (400 / 3 + 5) + 100; // childAspectRatio = 3
 
-        _scrollController.animateTo(
-          offset.clamp(0.0, _scrollController.position.maxScrollExtent),
+        currentController.animateTo(
+          offset.clamp(0.0, currentController.position.maxScrollExtent),
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );
@@ -565,8 +566,8 @@ class _MediaUIState extends State<MediaUI> {
         // List layout calculation
         final offset = index * 50.0 + 100; // approximate item height
 
-        _scrollController.animateTo(
-          offset.clamp(0.0, _scrollController.position.maxScrollExtent),
+        currentController.animateTo(
+          offset.clamp(0.0, currentController.position.maxScrollExtent),
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );
@@ -596,10 +597,17 @@ class OnlineSong {
   final String url;
   final String? artist;
   final String? album;
+  final String? source;
 
-  OnlineSong({required this.title, required this.url, this.artist, this.album});
+  OnlineSong({
+    required this.title,
+    required this.url,
+    this.artist,
+    this.album,
+    this.source,
+  });
 
-  factory OnlineSong.fromMap(Map<String, dynamic> map) {
+  factory OnlineSong.fromMap(Map<String, dynamic> map, {String? source}) {
     // Create a case-insensitive lookup
     final lowerMap = <String, dynamic>{};
     for (final entry in map.entries) {
@@ -621,6 +629,7 @@ class OnlineSong {
           '',
       artist: lowerMap['artist']?.toString(),
       album: lowerMap['album']?.toString(),
+      source: source ?? lowerMap['source']?.toString(),
     );
   }
 }
@@ -667,6 +676,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
   final ScrollController _scrollController = ScrollController();
   final Map<String, int> _letterToIndex = {};
   List<OnlineSong> _sortedSongs = [];
+  String? _selectedSource;
 
   @override
   void dispose() {
@@ -709,7 +719,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
 
     return Scaffold(
       backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(isLoading: true),
       body: Shimmer.fromColors(
         baseColor: Colors.grey[850]!,
         highlightColor: Colors.grey[700]!,
@@ -769,18 +779,81 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
     );
   }
 
-  AppBar _buildAppBar() {
+  AppBar _buildAppBar({List<OnlineSong>? songs, bool isLoading = false}) {
     final isDesktop = MediaQuery.of(context).size.width > 700;
-    return AppBar(
-      title: Text(
-        widget.title,
-        style: TextStyle(
-          fontSize: isDesktop ? 22 : 18,
-          fontFamily: "Normal",
-          fontWeight: FontWeight.w500,
+
+    Set<String> sources = {};
+    if (songs != null) {
+      for (var s in songs) {
+        if (s.source != null && s.source!.isNotEmpty) {
+          sources.add(s.source!);
+        }
+      }
+    }
+
+    Widget titleWidget;
+    if (isLoading) {
+      titleWidget = Shimmer.fromColors(
+        baseColor: Colors.grey[850]!,
+        highlightColor: Colors.grey[700]!,
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 80,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ],
         ),
-      ),
+      );
+    } else {
+      titleWidget = SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            ChoiceChip(
+              label: const Text('All'),
+              selected: _selectedSource == null,
+              onSelected: (selected) {
+                if (selected) {
+                  setState(() => _selectedSource = null);
+                }
+              },
+            ),
+            ...sources.map(
+              (source) => Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: ChoiceChip(
+                  label: Text(source),
+                  selected: _selectedSource == source,
+                  onSelected: (selected) {
+                    setState(() => _selectedSource = selected ? source : null);
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return AppBar(
+      title: titleWidget,
       backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      scrolledUnderElevation: 0,
       actions: [
         if (isDesktop && widget.onLogout != null)
           Padding(
@@ -814,11 +887,16 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
   }
 
   List<OnlineSong>? _lastOnlineSongs;
+  String? _lastSelectedSource;
 
   Widget _buildContent(List<OnlineSong> songs) {
-    if (_lastOnlineSongs != songs) {
-      _sortedSongs = _sortAndMapSongs(songs);
+    if (_lastOnlineSongs != songs || _lastSelectedSource != _selectedSource) {
+      final filteredSongs = _selectedSource == null
+          ? songs
+          : songs.where((s) => s.source == _selectedSource).toList();
+      _sortedSongs = _sortAndMapSongs(filteredSongs);
       _lastOnlineSongs = songs;
+      _lastSelectedSource = _selectedSource;
     }
     final isDesktop = MediaQuery.of(context).size.width > 700;
 
@@ -837,46 +915,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
 
   Widget _buildDesktopLayout(List<OnlineSong> songs) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.title,
-          style: const TextStyle(
-            fontSize: 22,
-            fontFamily: "Normal",
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        actions: [
-          if (widget.onLogout != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Transform.scale(
-                scale: 0.9,
-                child: FilledButton(
-                  onPressed: widget.onLogout,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 15,
-                      vertical: 15,
-                    ),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: const Row(
-                    spacing: 5,
-                    children: [
-                      Icon(Icons.power_settings_new_rounded),
-                      Text("Logout"),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
+      appBar: _buildAppBar(songs: songs),
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
@@ -885,7 +924,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
               context,
             ).copyWith(scrollbars: false),
             child: CustomScrollView(
-              controller: _scrollController,
+              controller: PrimaryScrollController.maybeOf(context) ?? _scrollController,
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
               ),
@@ -963,18 +1002,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
   Widget _buildMobileLayout(List<OnlineSong> songs) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: Text(
-          widget.title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontFamily: "Normal",
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        actions: const [],
-      ),
+      appBar: _buildAppBar(songs: songs),
       body: Stack(
         children: [
           ScrollConfiguration(
@@ -982,7 +1010,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
               context,
             ).copyWith(scrollbars: false),
             child: ListView.builder(
-              controller: _scrollController,
+              controller: PrimaryScrollController.maybeOf(context) ?? _scrollController,
               itemCount: _sortedSongs.length,
               itemBuilder: (context, index) {
                 final song = _sortedSongs[index];
@@ -1173,7 +1201,8 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
   /// Scroll to the section starting with the given letter
   void _scrollToLetter(String letter) {
     final index = _letterToIndex[letter];
-    if (index != null && _scrollController.hasClients) {
+    final currentController = PrimaryScrollController.maybeOf(context) ?? _scrollController;
+      if (index != null && currentController.hasClients) {
       final isDesktop = MediaQuery.of(context).size.width > 700;
 
       if (isDesktop) {
@@ -1182,8 +1211,8 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
         final rowIndex = (index / itemsPerRow).floor();
         final offset = rowIndex * (400 / 3 + 5) + 100;
 
-        _scrollController.animateTo(
-          offset.clamp(0.0, _scrollController.position.maxScrollExtent),
+        currentController.animateTo(
+          offset.clamp(0.0, currentController.position.maxScrollExtent),
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );
@@ -1191,8 +1220,8 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
         // List layout calculation
         final offset = index * 50.0 + 100;
 
-        _scrollController.animateTo(
-          offset.clamp(0.0, _scrollController.position.maxScrollExtent),
+        currentController.animateTo(
+          offset.clamp(0.0, currentController.position.maxScrollExtent),
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );

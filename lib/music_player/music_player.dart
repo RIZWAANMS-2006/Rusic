@@ -65,6 +65,7 @@ class LibraryState extends State<Library>
       body: Stack(
         children: [
           NestedScrollView(
+            physics: const BouncingScrollPhysics(),
             headerSliverBuilder: (context, innerbox) {
               return [
                 const CupertinoSliverNavigationBar(
