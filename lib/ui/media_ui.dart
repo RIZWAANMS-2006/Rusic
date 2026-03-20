@@ -320,12 +320,6 @@ class _MediaUIState extends State<MediaUI> {
               ),
             ),
           ),
-          // Alphabetical scroller – only on the Search page
-          if (widget.showSearchBar)
-            AlphabetScroller(
-              letterToIndex: _letterToIndex,
-              onLetterSelected: _scrollToLetter,
-            ),
         ],
       ),
     );
@@ -418,12 +412,6 @@ class _MediaUIState extends State<MediaUI> {
             ),
           ),
         ),
-        // Alphabetical scroller – only on the Search page
-        if (widget.showSearchBar)
-          AlphabetScroller(
-            letterToIndex: _letterToIndex,
-            onLetterSelected: _scrollToLetter,
-          ),
       ],
     );
   }
@@ -1340,120 +1328,6 @@ class LetterPickerDialog extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Side-rail alphabetical scroller widget (used on Search page).
-class AlphabetScroller extends StatefulWidget {
-  final Map<String, int> letterToIndex;
-  final Function(String) onLetterSelected;
-  final double topPadding;
-  final double bottomPadding;
-
-  const AlphabetScroller({
-    super.key,
-    required this.letterToIndex,
-    required this.onLetterSelected,
-    this.topPadding = 80,
-    this.bottomPadding = 120,
-  });
-
-  @override
-  State<AlphabetScroller> createState() => _AlphabetScrollerState();
-}
-
-class _AlphabetScrollerState extends State<AlphabetScroller> {
-  String? _selectedLetter;
-  static const _alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#';
-
-  void _onLetterTap(String letter) {
-    if (widget.letterToIndex.containsKey(letter)) {
-      setState(() => _selectedLetter = letter);
-      widget.onLetterSelected(letter);
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) setState(() => _selectedLetter = null);
-      });
-    }
-  }
-
-  void _onVerticalDragUpdate(
-    DragUpdateDetails details,
-    BoxConstraints constraints,
-  ) {
-    final RenderBox box = context.findRenderObject() as RenderBox;
-    final localPosition = box.globalToLocal(details.globalPosition);
-    final index = (localPosition.dy / constraints.maxHeight * _alphabet.length)
-        .clamp(0, _alphabet.length - 1)
-        .floor();
-    final letter = _alphabet[index];
-    if (widget.letterToIndex.containsKey(letter) && _selectedLetter != letter) {
-      setState(() => _selectedLetter = letter);
-      widget.onLetterSelected(letter);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      right: 4,
-      top: widget.topPadding,
-      bottom: widget.bottomPadding,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxHeight < 200) return const SizedBox.shrink();
-          return GestureDetector(
-            onVerticalDragUpdate: (details) =>
-                _onVerticalDragUpdate(details, constraints),
-            child: Container(
-              width: 24,
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: _alphabet.split('').map((letter) {
-                  final isAvailable = widget.letterToIndex.containsKey(letter);
-                  final isSelected = _selectedLetter == letter;
-                  return GestureDetector(
-                    onTap: () => _onLetterTap(letter),
-                    child: Container(
-                      width: 24,
-                      height: constraints.maxHeight / _alphabet.length,
-                      alignment: Alignment.center,
-                      decoration: isSelected
-                          ? BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              shape: BoxShape.circle,
-                            )
-                          : null,
-                      child: Text(
-                        letter,
-                        style: TextStyle(
-                          color: isAvailable
-                              ? (isSelected
-                                    ? Theme.of(context).colorScheme.onPrimary
-                                    : Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface.withOpacity(0.7))
-                              : Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withOpacity(0.2),
-                          fontSize: 10,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          );
-        },
       ),
     );
   }

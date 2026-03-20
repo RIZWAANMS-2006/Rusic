@@ -11,6 +11,7 @@ import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:Rusic/managers/settings_manager.dart';
+import 'package:toastification/toastification.dart';
 
 Future<void> main() async {
   // Initialize JustAudioMediaKit And Flutter Bindings
@@ -107,65 +108,67 @@ class MxMusicConsole extends StatefulWidget {
 class MxMusicConsoleState extends State<MxMusicConsole> {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: "Rusic",
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        fontFamily: 'Asimovian',
-        brightness: Brightness.light,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
-        navigationBarTheme: const NavigationBarThemeData(
-          backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+    return ToastificationWrapper(
+      child: MaterialApp(
+        title: "Rusic",
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          fontFamily: 'Asimovian',
+          brightness: Brightness.light,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
+          navigationBarTheme: const NavigationBarThemeData(
+            backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+          ),
+          textTheme: const TextTheme(
+            bodyMedium: TextStyle(color: Colors.black),
+            bodyLarge: TextStyle(color: Colors.black),
+            bodySmall: TextStyle(color: Colors.black),
+            displayLarge: TextStyle(color: Colors.black),
+            displayMedium: TextStyle(color: Colors.black),
+            displaySmall: TextStyle(color: Colors.black),
+            headlineLarge: TextStyle(color: Colors.black),
+            headlineMedium: TextStyle(color: Colors.black),
+            headlineSmall: TextStyle(color: Colors.black),
+            titleLarge: TextStyle(color: Colors.black87),
+            titleMedium: TextStyle(color: Colors.black87),
+            titleSmall: TextStyle(color: Colors.black87),
+          ),
         ),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(color: Colors.black),
-          bodyLarge: TextStyle(color: Colors.black),
-          bodySmall: TextStyle(color: Colors.black),
-          displayLarge: TextStyle(color: Colors.black),
-          displayMedium: TextStyle(color: Colors.black),
-          displaySmall: TextStyle(color: Colors.black),
-          headlineLarge: TextStyle(color: Colors.black),
-          headlineMedium: TextStyle(color: Colors.black),
-          headlineSmall: TextStyle(color: Colors.black),
-          titleLarge: TextStyle(color: Colors.black87),
-          titleMedium: TextStyle(color: Colors.black87),
-          titleSmall: TextStyle(color: Colors.black87),
-        ),
-      ),
-      darkTheme: ThemeData(
-        fontFamily: 'Asimovian',
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
+        darkTheme: ThemeData(
+          fontFamily: 'Asimovian',
           brightness: Brightness.dark,
-          seedColor: Colors.redAccent,
+          colorScheme: ColorScheme.fromSeed(
+            brightness: Brightness.dark,
+            seedColor: Colors.redAccent,
+          ),
+          navigationBarTheme: const NavigationBarThemeData(
+            backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+          ),
+          textTheme: const TextTheme(
+            bodyMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
+            bodyLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
+            bodySmall: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
+            displayLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
+            displayMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
+            displaySmall: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
+            headlineLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
+            headlineMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
+            headlineSmall: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
+            titleLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
+            titleMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
+            titleSmall: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
+          ),
         ),
-        navigationBarTheme: const NavigationBarThemeData(
-          backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+        themeMode: ThemeMode.system,
+        home: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth <= 700) {
+              return const CompactScreen();
+            } else {
+              return const WideScreen();
+            }
+          },
         ),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-          bodyLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-          bodySmall: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-          displayLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-          displayMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-          displaySmall: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-          headlineLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-          headlineMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-          headlineSmall: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-          titleLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-          titleMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-          titleSmall: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-        ),
-      ),
-      themeMode: ThemeMode.system,
-      home: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth <= 700) {
-            return const CompactScreen();
-          } else {
-            return const WideScreen();
-          }
-        },
       ),
     );
   }

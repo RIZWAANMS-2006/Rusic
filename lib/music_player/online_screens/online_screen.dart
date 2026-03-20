@@ -1,10 +1,9 @@
-// ignore_for_file: unused_field
-
-import 'package:flutter/material.dart';
-import 'package:Rusic/music_player/online_screens/online_screen_login.dart';
-import 'package:Rusic/music_player/online_screens/online_screen_login_success.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:Rusic/managers/credentials_manager.dart';
 import 'package:Rusic/managers/server_manager/supabase_manager.dart';
+import 'package:Rusic/managers/server_manager/server_manager.dart';
+import 'package:Rusic/managers/database_manager.dart';
+import 'package:Rusic/ui/media_ui.dart';
 
 class OnlineScreen extends StatefulWidget {
   const OnlineScreen({super.key});
@@ -14,113 +13,144 @@ class OnlineScreen extends StatefulWidget {
 }
 
 class OnlineScreenState extends State<OnlineScreen> {
-  SupabaseConnection? supabaseConnection;
-  bool isChecking = true;
-  bool? connectionStatus;
-  String? _url;
-  String? _apiKey;
-  String? _tableName;
+  Future<List<OnlineSong>>? _songsFuture;
+  bool _isConfigured = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _checkExistingConnection();
+    _checkConfigAndFetch();
   }
 
-  Future<void> _checkExistingConnection() async {
+  Future<void> _checkConfigAndFetch() async {
     final credentials = CredentialsManager();
-    final credentialsData = await credentials.getSupabaseCredentials();
-    final savedUrl = credentialsData['url'];
-    final savedKey = credentialsData['apiKey'];
-    final savedTableName = credentialsData['tableName'];
+    final supaCreds = await credentials.getSupabaseCredentials();
+    final serverAddress = await credentials.getServerAddress();
 
-    if (savedUrl != null && savedKey != null && savedTableName != null) {
-      final connection = SupabaseConnection(
-        supabaseUrl: savedUrl,
-        supabaseAnonKey: savedKey,
-        tableName: savedTableName,
-      );
-      supabaseConnection = connection;
-      final ok = await connection.isConnected();
+    final hasSupa = supaCreds['url'] != null && supaCreds['apiKey'] != null;
+    final hasServer = serverAddress != null && serverAddress.isNotEmpty;
 
-      if (!mounted) return;
+    if (!hasSupa && !hasServer) {
+      if (mounted) {
+        setState(() {
+          _isConfigured = false;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
 
+    if (mounted) {
       setState(() {
-        _url = savedUrl;
-        _apiKey = savedKey;
-        _tableName = savedTableName;
-        connectionStatus = ok;
-        isChecking = false;
+        _isConfigured = true;
       });
+    }
+
+    final cachedSongs = await DatabaseManager.instance.getCachedOnlineSongs();
+
+    if (cachedSongs.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _songsFuture = Future.value(cachedSongs);
+          _isLoading = false;
+        });
+      }
+      // Update cache in the background
+      _fetchAndUpdateCache(credentials, supaCreds, serverAddress);
     } else {
-      if (!mounted) return;
-
-      setState(() {
-        connectionStatus = false;
-        isChecking = false;
-      });
+      if (mounted) {
+        setState(() {
+          _songsFuture = _fetchAndUpdateCache(
+            credentials,
+            supaCreds,
+            serverAddress,
+          );
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  Future<void> _onCredentialsSubmit(
-    String url,
-    String apiKey,
-    String tableName,
+  Future<List<OnlineSong>> _fetchAndUpdateCache(
+    CredentialsManager credentials,
+    Map<String, String?> supaCreds,
+    String? serverAddress,
   ) async {
-    setState(() => isChecking = true);
-    final connection = SupabaseConnection(
-      supabaseUrl: url,
-      supabaseAnonKey: apiKey,
-      tableName: tableName,
-    );
-    supabaseConnection = connection;
-    final ok = await connection.isConnected();
+    List<OnlineSong> combinedSongs = [];
 
-    if (ok) {
-      final credentials = CredentialsManager();
-      await credentials.saveSupabaseCredentials(
-        url: url,
-        apiKey: apiKey,
-        tableName: tableName,
-      );
+    // 1. Fetch Supabase
+    if (supaCreds['url'] != null && supaCreds['apiKey'] != null) {
+      try {
+        final tableName = supaCreds['tableName'] ?? 'Online';
+        final supa = SupabaseConnection(
+          supabaseUrl: supaCreds['url']!,
+          supabaseAnonKey: supaCreds['apiKey']!,
+          tableName: tableName,
+        );
+        combinedSongs.addAll(await supa.fetchOnlineSongsRaw());
+      } catch (e) {
+        print('Error fetching Supabase: $e');
+      }
     }
 
-    if (!mounted) return;
+    // 2. Fetch HTTP Server
+    if (serverAddress != null && serverAddress.isNotEmpty) {
+      try {
+        final httpManager = HTTPServerManager(serverAddress: serverAddress);
+        combinedSongs.addAll(await httpManager.fetchSongs());
+      } catch (e) {
+        print('Error fetching Server: $e');
+      }
+    }
 
-    setState(() {
-      _url = url;
-      _apiKey = apiKey;
-      _tableName = tableName;
-      connectionStatus = ok;
-      isChecking = false;
-    });
-  }
+    if (combinedSongs.isNotEmpty) {
+      await DatabaseManager.instance.cacheOnlineSongs(combinedSongs);
+    }
 
-  Future<void> _logout() async {
-    final credentials = CredentialsManager();
-    await credentials.clearSupabaseCredentials();
-
-    if (!mounted) return;
-
-    setState(() {
-      supabaseConnection = null;
-      _url = null;
-      _apiKey = null;
-      _tableName = null;
-      connectionStatus = false;
-    });
+    return combinedSongs;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isChecking) {
-      return const Center(
-        child: CircularProgressIndicator(strokeCap: StrokeCap.round),
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(strokeCap: StrokeCap.round),
+        ),
       );
     }
 
-    return connectionStatus == true
-        ? OnlineScreenLoginSuccess(onLogout: _logout)
-        : OnlineScreenLogin(onSubmit: _onCredentialsSubmit);
+    if (!_isConfigured) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Online')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.cloud_off, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(
+                'Not Configured',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Please configure Supabase or Server inside Settings.',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return OnlineMediaUI(
+      title: 'Online',
+      songsFuture: _songsFuture,
+      emptyMessage: 'No songs found. Please check your connection or server.',
+      showMusicController: true,
+      onLogout: null, // Removed logout button from UI
+    );
   }
 }

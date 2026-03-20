@@ -22,6 +22,7 @@ class CredentialsManager {
   static const String _keySupabaseTableName = 'secure_supabase_table_name';
 
   static const String _keyServerAddress = 'secure_server_address';
+  static const String _keyServerName = 'secure_server_name';
 
   /// Save Server Address securely
   Future<void> saveServerAddress(String address) async {
@@ -36,6 +37,21 @@ class CredentialsManager {
   /// Remove Server Address
   Future<void> clearServerAddress() async {
     await _storage.delete(key: _keyServerAddress);
+  }
+
+  /// Save Server Name securely
+  Future<void> saveServerName(String name) async {
+    await _storage.write(key: _keyServerName, value: name);
+  }
+
+  /// Get Server Name
+  Future<String?> getServerName() async {
+    return await _storage.read(key: _keyServerName);
+  }
+
+  /// Remove Server Name
+  Future<void> clearServerName() async {
+    await _storage.delete(key: _keyServerName);
   }
 
   /// Save Supabase URL securely

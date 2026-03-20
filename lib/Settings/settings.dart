@@ -1,6 +1,8 @@
 import 'package:Rusic/managers/ui_manager.dart';
 import 'package:Rusic/managers/credentials_manager.dart';
 import 'package:Rusic/managers/server_manager/supabase_manager.dart';
+import 'package:Rusic/settings/server_screens/server_configuration_screen.dart';
+import 'package:Rusic/settings/supabase_screens/supabase_configuration_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
@@ -14,8 +16,24 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
+  final GlobalKey<NavigatorState> _settingsNavigatorKey =
+      GlobalKey<NavigatorState>();
+
   @override
   Widget build(BuildContext context) {
+    return Navigator(
+      key: _settingsNavigatorKey,
+      onGenerateRoute: (settings) {
+        return MaterialPageRoute(
+          builder: (context) {
+            return _buildSettings(context);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSettings(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
       body: ScrollConfiguration(
@@ -95,12 +113,8 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
   FocusNode skipAtBeginningFocusNode = FocusNode();
   FocusNode skipAtEndFocusNode = FocusNode();
 
-  final _formKey = GlobalKey<FormState>();
-  final _serverFormKey = GlobalKey<FormState>();
-  TextEditingController urlController = TextEditingController();
-  TextEditingController apiKeyController = TextEditingController();
-  TextEditingController tableNameController = TextEditingController();
-  TextEditingController serverAddressController = TextEditingController();
+  String supabaseTableName = "";
+  String dynamicServerName = "";
 
   final _credentialsManager = CredentialsManager();
 
@@ -156,6 +170,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
     final supabaseCredentials = await _credentialsManager
         .getSupabaseCredentials();
     final serverAddress = await _credentialsManager.getServerAddress();
+    final serverNameInfo = await _credentialsManager.getServerName();
 
     if (mounted) {
       setState(() {
@@ -163,14 +178,21 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
             supabaseCredentials['apiKey'] != null &&
             supabaseCredentials['tableName'] != null) {
           isSupabaseConfigured = true;
-          urlController.text = supabaseCredentials['url']!;
-          apiKeyController.text = supabaseCredentials['apiKey']!;
-          tableNameController.text = supabaseCredentials['tableName']!;
+          supabaseTableName = supabaseCredentials['tableName']!;
+        } else {
+          isSupabaseConfigured = false;
+          supabaseTableName = "";
         }
 
         if (serverAddress != null && serverAddress.isNotEmpty) {
           isServerConfigured = true;
-          serverAddressController.text = serverAddress;
+          dynamicServerName =
+              serverNameInfo != null && serverNameInfo.isNotEmpty
+              ? serverNameInfo
+              : serverAddress;
+        } else {
+          isServerConfigured = false;
+          dynamicServerName = "";
         }
       });
     }
@@ -180,10 +202,6 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
   void dispose() {
     highlightsDurationController.dispose();
     highlightsDurationFocusNode.dispose();
-    urlController.dispose();
-    apiKeyController.dispose();
-    tableNameController.dispose();
-    serverAddressController.dispose();
     skipAtBeginningController.dispose();
     skipAtBeginningFocusNode.dispose();
     skipAtEndController.dispose();
@@ -516,138 +534,64 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Supabase Configuration"),
-                      Transform.scale(
-                        scale: 0.8,
-                        child: Switch(
-                          value: isSupabaseConfigured,
-                          onChanged: (value) async {
-                            setState(() {
-                              isSupabaseConfigured = value;
-                            });
-                            if (!value) {
-                              await _credentialsManager
-                                  .clearSupabaseCredentials();
-                              urlController.clear();
-                              apiKeyController.clear();
-                              tableNameController.clear();
-                              if (mounted) {
-                                showToast(
-                                  context,
-                                  'Supabase configuration cleared',
-                                );
-                              }
-                            }
-                          },
-                        ),
+                      const Text(
+                        "Supabase Configuration",
+                        style: TextStyle(fontSize: 14),
                       ),
+                      if (!isSupabaseConfigured)
+                        IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (builder) {
+                                  return const SupabaseConfigurationScreen();
+                                },
+                              ),
+                            ).then((_) => _loadConfigurations());
+                          },
+                          icon: const Icon(Icons.add),
+                        ),
                     ],
                   ),
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 200),
-                    child: isSupabaseConfigured
-                        ? Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 10),
-                                const Text("Enter Table Name"),
-                                TextFormField(
-                                  controller: tableNameController,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Enter Valid Table Name';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 10),
-                                const Text("Enter URL"),
-                                TextFormField(
-                                  controller: urlController,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Enter Valid URL';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 10),
-                                const Text("Enter Anon-API Key"),
-                                TextFormField(
-                                  controller: apiKeyController,
-                                  obscureText: true,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Enter Valid Anon-API Key';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 10),
-                                Align(
-                                  alignment: Alignment.bottomRight,
-                                  child: FilledButton(
-                                    onPressed: () async {
-                                      if (_formKey.currentState?.validate() ??
-                                          false) {
-                                        // Verify connection before saving
-                                        final connection = SupabaseConnection(
-                                          supabaseUrl: urlController.text
-                                              .trim(),
-                                          supabaseAnonKey: apiKeyController.text
-                                              .trim(),
-                                          tableName: tableNameController.text
-                                              .trim(),
-                                        );
-
-                                        final isConnected = await connection
-                                            .isConnected();
-
-                                        if (mounted) {
-                                          if (isConnected) {
-                                            await _credentialsManager
-                                                .saveSupabaseCredentials(
-                                                  url: urlController.text
-                                                      .trim(),
-                                                  apiKey: apiKeyController.text
-                                                      .trim(),
-                                                  tableName: tableNameController
-                                                      .text
-                                                      .trim(),
-                                                );
-                                            showToast(
-                                              context,
-                                              'Supabase connected and saved successfully!',
-                                            );
-                                          } else {
-                                            showToast(
-                                              context,
-                                              'Failed to connect to Supabase. Check your credentials.',
-                                            );
-                                          }
-                                        }
-                                      }
-                                    },
-                                    style: ButtonStyle(
-                                      shape: WidgetStatePropertyAll(
-                                        RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            3,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    child: const Text("Save"),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                              ],
+                  if (isSupabaseConfigured) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            supabaseTableName.isNotEmpty
+                                ? supabaseTableName
+                                : "Configured",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            await _credentialsManager
+                                .clearSupabaseCredentials();
+                            await _loadConfigurations();
+                            if (context.mounted) {
+                              showToast(
+                                context,
+                                'Supabase configuration cleared',
+                              );
+                            }
+                          },
+                          icon: const Icon(
+                            Icons.remove_circle_outline,
+                            color: Colors.redAccent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ],
@@ -668,80 +612,61 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Server Configuration"),
-                  Transform.scale(
-                    scale: 0.8,
-                    child: Switch(
-                      value: isServerConfigured,
-                      onChanged: (value) async {
-                        setState(() {
-                          isServerConfigured = value;
-                        });
-                        if (!value) {
-                          await _credentialsManager.clearServerAddress();
-                          serverAddressController.clear();
-                          if (mounted) {
-                            showToast(context, 'Server configuration cleared');
-                          }
-                        }
-                      },
-                    ),
+                  const Text(
+                    "Server Configuration",
+                    style: TextStyle(fontSize: 14),
                   ),
+                  if (!isServerConfigured)
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (builder) {
+                              return const ServerConfigurationScreen();
+                            },
+                          ),
+                        ).then((_) => _loadConfigurations());
+                      },
+                      icon: const Icon(Icons.add),
+                    ),
                 ],
               ),
-              AnimatedSize(
-                duration: const Duration(milliseconds: 200),
-                child: isServerConfigured
-                    ? Form(
-                        key: _serverFormKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 10),
-                            const Text("Server Address"),
-                            TextFormField(
-                              controller: serverAddressController,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Enter Valid Server Address';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 10),
-                            Align(
-                              alignment: Alignment.bottomRight,
-                              child: FilledButton(
-                                onPressed: () async {
-                                  if (_serverFormKey.currentState?.validate() ??
-                                      false) {
-                                    await _credentialsManager.saveServerAddress(
-                                      serverAddressController.text.trim(),
-                                    );
-                                    if (mounted) {
-                                      showToast(
-                                        context,
-                                        'Server configuration saved successfully!',
-                                      );
-                                    }
-                                  }
-                                },
-                                style: ButtonStyle(
-                                  shape: WidgetStatePropertyAll(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(3),
-                                    ),
-                                  ),
-                                ),
-                                child: const Text("Save"),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                          ],
+              if (isServerConfigured) ...[
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        dynamicServerName.isNotEmpty
+                            ? dynamicServerName
+                            : "Configured",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () async {
+                        await _credentialsManager.clearServerAddress();
+                        await _credentialsManager.clearServerName();
+                        await _loadConfigurations();
+                        if (context.mounted) {
+                          showToast(context, 'Server configuration cleared');
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.remove_circle_outline,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
@@ -788,16 +713,16 @@ class _SettingsRow extends StatelessWidget {
 
 void showToast(BuildContext context, String message) {
   toastification.show(
-    context: context,
     title: Text(message),
     style: ToastificationStyle.simple,
-    autoCloseDuration: const Duration(seconds: 3),
+    autoCloseDuration: const Duration(seconds: 2),
     alignment: Alignment.bottomCenter,
     margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
     borderRadius: BorderRadius.circular(30),
     showProgressBar: false,
     type: ToastificationType.info,
-    closeButtonShowType: CloseButtonShowType.none,
+    closeButton: const ToastCloseButton(showType: CloseButtonShowType.none),
+    applyBlurEffect: false,
   );
 }

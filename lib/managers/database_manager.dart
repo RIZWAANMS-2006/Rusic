@@ -64,7 +64,7 @@ CREATE TABLE favorites (
           'title': song.title,
           'artist': song.artist,
           'album': song.album,
-        });
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
   }
