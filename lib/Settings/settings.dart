@@ -538,20 +538,19 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                         "Supabase Configuration",
                         style: TextStyle(fontSize: 14),
                       ),
-                      if (!isSupabaseConfigured)
-                        IconButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (builder) {
-                                  return const SupabaseConfigurationScreen();
-                                },
-                              ),
-                            ).then((_) => _loadConfigurations());
-                          },
-                          icon: const Icon(Icons.add),
-                        ),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (builder) {
+                                return const SupabaseConfigurationScreen();
+                              },
+                            ),
+                          ).then((_) => _loadConfigurations());
+                        },
+                        icon: const Icon(Icons.add),
+                      ),
                     ],
                   ),
                   if (isSupabaseConfigured) ...[
@@ -584,9 +583,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                               );
                             }
                           },
-                          icon: const Icon(
-                            Icons.remove,
-                          ),
+                          icon: const Icon(Icons.remove),
                         ),
                       ],
                     ),
@@ -615,20 +612,19 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                     "Server Configuration",
                     style: TextStyle(fontSize: 14),
                   ),
-                  if (!isServerConfigured)
-                    IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (builder) {
-                              return const ServerConfigurationScreen();
-                            },
-                          ),
-                        ).then((_) => _loadConfigurations());
-                      },
-                      icon: const Icon(Icons.add),
-                    ),
+                  IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (builder) {
+                            return const ServerConfigurationScreen();
+                          },
+                        ),
+                      ).then((_) => _loadConfigurations());
+                    },
+                    icon: const Icon(Icons.add),
+                  ),
                 ],
               ),
               if (isServerConfigured) ...[
@@ -658,9 +654,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                           showToast(context, 'Server configuration cleared');
                         }
                       },
-                      icon: const Icon(
-                        Icons.remove,
-                      ),
+                      icon: const Icon(Icons.remove),
                     ),
                   ],
                 ),
