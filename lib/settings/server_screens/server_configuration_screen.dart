@@ -64,12 +64,11 @@ class _ServerConfigurationScreenState extends State<ServerConfigurationScreen> {
                     child: FilledButton(
                       onPressed: () async {
                         if (_serverFormKey.currentState?.validate() ?? false) {
-                          await _credentialsManager.saveServerAddress(
-                            serverAddressController.text.trim(),
-                          );
-                          await _credentialsManager.saveServerName(
-                            serverNameController.text.trim(),
-                          );
+                          await _credentialsManager.addServerConfiguration({
+                            'serverAddress': serverAddressController.text
+                                .trim(),
+                            'serverName': serverNameController.text.trim(),
+                          });
                           if (!mounted) return;
 
                           ScaffoldMessenger.of(context).showSnackBar(

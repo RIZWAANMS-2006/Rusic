@@ -88,22 +88,22 @@ class _SupabaseConfigurationScreenState
                             supabaseAnonKey: apiKeyController.text.trim(),
                             tableName: tableNameController.text.trim(),
                           );
-                          
+
                           final isConnected = await connection.isConnected();
-                          
+
                           // Fix: Ensure widget is still mounted after async call
                           if (!mounted) return;
-                          
+
                           if (isConnected) {
-                            await _credentialsManager.saveSupabaseCredentials(
-                              url: urlController.text.trim(),
-                              apiKey: apiKeyController.text.trim(),
-                              tableName: tableNameController.text.trim(),
-                            );
-                          
+                            await _credentialsManager.addSupabaseConfiguration({
+                              'url': urlController.text.trim(),
+                              'apiKey': apiKeyController.text.trim(),
+                              'tableName': tableNameController.text.trim(),
+                            });
+
                             // Fix: Check again after second async call
                             if (!mounted) return;
-                          
+
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(

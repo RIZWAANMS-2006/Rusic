@@ -1,6 +1,5 @@
 import 'package:Rusic/managers/ui_manager.dart';
 import 'package:Rusic/managers/credentials_manager.dart';
-import 'package:Rusic/managers/server_manager/supabase_manager.dart';
 import 'package:Rusic/settings/server_screens/server_configuration_screen.dart';
 import 'package:Rusic/settings/supabase_screens/supabase_configuration_screen.dart';
 import 'package:flutter/cupertino.dart';
@@ -103,8 +102,8 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
   double crossFade = 0;
   String videoPreference = "Landscape Contain";
   String appUI = "Minimalistic";
-  bool isSupabaseConfigured = false;
-  bool isServerConfigured = false;
+  List<Map<String, String>> supabaseConfigs = [];
+  List<Map<String, String>> serverConfigs = [];
   bool playHighlights = true;
   TextEditingController highlightsDurationController = TextEditingController();
   TextEditingController skipAtBeginningController = TextEditingController();
@@ -112,9 +111,6 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
   FocusNode highlightsDurationFocusNode = FocusNode();
   FocusNode skipAtBeginningFocusNode = FocusNode();
   FocusNode skipAtEndFocusNode = FocusNode();
-
-  String supabaseTableName = "";
-  String dynamicServerName = "";
 
   final _credentialsManager = CredentialsManager();
 
@@ -167,33 +163,13 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
   }
 
   Future<void> _loadConfigurations() async {
-    final supabaseCredentials = await _credentialsManager
-        .getSupabaseCredentials();
-    final serverAddress = await _credentialsManager.getServerAddress();
-    final serverNameInfo = await _credentialsManager.getServerName();
+    final supaConfigs = await _credentialsManager.getSupabaseConfigurations();
+    final srvConfigs = await _credentialsManager.getServerConfigurations();
 
     if (mounted) {
       setState(() {
-        if (supabaseCredentials['url'] != null &&
-            supabaseCredentials['apiKey'] != null &&
-            supabaseCredentials['tableName'] != null) {
-          isSupabaseConfigured = true;
-          supabaseTableName = supabaseCredentials['tableName']!;
-        } else {
-          isSupabaseConfigured = false;
-          supabaseTableName = "";
-        }
-
-        if (serverAddress != null && serverAddress.isNotEmpty) {
-          isServerConfigured = true;
-          dynamicServerName =
-              serverNameInfo != null && serverNameInfo.isNotEmpty
-              ? serverNameInfo
-              : serverAddress;
-        } else {
-          isServerConfigured = false;
-          dynamicServerName = "";
-        }
+        supabaseConfigs = supaConfigs;
+        serverConfigs = srvConfigs;
       });
     }
   }
@@ -553,16 +529,14 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                       ),
                     ],
                   ),
-                  if (isSupabaseConfigured) ...[
+                  for (final config in supabaseConfigs) ...[
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: Text(
-                            supabaseTableName.isNotEmpty
-                                ? supabaseTableName
-                                : "Configured",
+                            config['tableName'] ?? "Configured",
                             style: TextStyle(
                               fontSize: 16,
                               color: Theme.of(
@@ -574,7 +548,9 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                         IconButton(
                           onPressed: () async {
                             await _credentialsManager
-                                .clearSupabaseCredentials();
+                                .removeSupabaseConfiguration(
+                                  config['tableName']!,
+                                );
                             await _loadConfigurations();
                             if (context.mounted) {
                               showToast(
@@ -627,16 +603,16 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                   ),
                 ],
               ),
-              if (isServerConfigured) ...[
+              for (final config in serverConfigs) ...[
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: Text(
-                        dynamicServerName.isNotEmpty
-                            ? dynamicServerName
-                            : "Configured",
+                        config['serverName'] ??
+                            config['serverAddress'] ??
+                            "Configured",
                         style: TextStyle(
                           fontSize: 16,
                           color: Theme.of(
@@ -647,8 +623,9 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                     ),
                     IconButton(
                       onPressed: () async {
-                        await _credentialsManager.clearServerAddress();
-                        await _credentialsManager.clearServerName();
+                        await _credentialsManager.removeServerConfiguration(
+                          config['serverName']!,
+                        );
                         await _loadConfigurations();
                         if (context.mounted) {
                           showToast(context, 'Server configuration cleared');

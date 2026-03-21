@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Manager for securely storing sensitive credentials like API keys, URLs, and table names
@@ -16,135 +18,201 @@ class CredentialsManager {
     mOptions: MacOsOptions(accessibility: KeychainAccessibility.first_unlock),
   );
 
-  // Key constants for secure storage
+  final StreamController<void> _configStreamController =
+      StreamController<void>.broadcast();
+
+  Stream<void> get configStream => _configStreamController.stream;
+
+  // Legacy Key constants for secure storage (to be migrated)
   static const String _keySupabaseUrl = 'secure_supabase_url';
   static const String _keySupabaseAnonKey = 'secure_supabase_anon_key';
   static const String _keySupabaseTableName = 'secure_supabase_table_name';
-
   static const String _keyServerAddress = 'secure_server_address';
   static const String _keyServerName = 'secure_server_name';
 
-  /// Save Server Address securely
-  Future<void> saveServerAddress(String address) async {
-    await _storage.write(key: _keyServerAddress, value: address);
+  // New List Key constants
+  static const String _keySupabaseConfigsList = 'secure_supabase_configs_list';
+  static const String _keyServerConfigsList = 'secure_server_configs_list';
+
+  bool _hasMigrated = false;
+  List<Map<String, String>>? _cachedSupabaseConfigs;
+  List<Map<String, String>>? _cachedServerConfigs;
+
+  /// Ensure legacy data is migrated safely to the new list structure on first access
+  Future<void> _migrateLegacyDataIfNeeded() async {
+    if (_hasMigrated) return;
+    _hasMigrated = true;
+
+    final legacySupabaseUrl = await _storage.read(key: _keySupabaseUrl);
+    if (legacySupabaseUrl != null) {
+      final key = await _storage.read(key: _keySupabaseAnonKey);
+      final table = await _storage.read(key: _keySupabaseTableName);
+
+      if (key != null && table != null) {
+        await addSupabaseConfiguration({
+          'url': legacySupabaseUrl,
+          'apiKey': key,
+          'tableName': table,
+        });
+      }
+
+      await _storage.delete(key: _keySupabaseUrl);
+      await _storage.delete(key: _keySupabaseAnonKey);
+      await _storage.delete(key: _keySupabaseTableName);
+    }
+
+    final legacyServerAddr = await _storage.read(key: _keyServerAddress);
+    if (legacyServerAddr != null) {
+      final name = await _storage.read(key: _keyServerName);
+      await addServerConfiguration({
+        'serverAddress': legacyServerAddr,
+        'serverName': name ?? legacyServerAddr,
+      });
+
+      await _storage.delete(key: _keyServerAddress);
+      await _storage.delete(key: _keyServerName);
+    }
   }
 
-  /// Get Server Address
+  // --- Supabase Configurations ---
+
+  Future<List<Map<String, String>>> getSupabaseConfigurations() async {
+    if (_cachedSupabaseConfigs != null) return _cachedSupabaseConfigs!;
+    await _migrateLegacyDataIfNeeded();
+    final data = await _storage.read(key: _keySupabaseConfigsList);
+    if (data == null || data.isEmpty) return [];
+
+    try {
+      final List<dynamic> decoded = jsonDecode(data);
+      _cachedSupabaseConfigs = decoded
+          .map((e) => Map<String, String>.from(e))
+          .toList();
+      return _cachedSupabaseConfigs!;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<void> addSupabaseConfiguration(Map<String, String> config) async {
+    final configs = await getSupabaseConfigurations();
+    // Prevent duplicates by checking tableName
+    configs.removeWhere((c) => c['tableName'] == config['tableName']);
+    configs.add(config);
+    await _storage.write(
+      key: _keySupabaseConfigsList,
+      value: jsonEncode(configs),
+    );
+    _cachedSupabaseConfigs = configs;
+    _configStreamController.add(null);
+  }
+
+  Future<void> removeSupabaseConfiguration(String tableName) async {
+    final configs = await getSupabaseConfigurations();
+    configs.removeWhere((c) => c['tableName'] == tableName);
+    await _storage.write(
+      key: _keySupabaseConfigsList,
+      value: jsonEncode(configs),
+    );
+    _cachedSupabaseConfigs = configs;
+    _configStreamController.add(null);
+  }
+
+  // --- Server Configurations ---
+
+  Future<List<Map<String, String>>> getServerConfigurations() async {
+    if (_cachedServerConfigs != null) return _cachedServerConfigs!;
+    await _migrateLegacyDataIfNeeded();
+    final data = await _storage.read(key: _keyServerConfigsList);
+    if (data == null || data.isEmpty) return [];
+
+    try {
+      final List<dynamic> decoded = jsonDecode(data);
+      _cachedServerConfigs = decoded
+          .map((e) => Map<String, String>.from(e))
+          .toList();
+      return _cachedServerConfigs!;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<void> addServerConfiguration(Map<String, String> config) async {
+    final configs = await getServerConfigurations();
+    configs.removeWhere((c) => c['serverName'] == config['serverName']);
+    configs.add(config);
+    await _storage.write(
+      key: _keyServerConfigsList,
+      value: jsonEncode(configs),
+    );
+    _cachedServerConfigs = configs;
+    _configStreamController.add(null);
+  }
+
+  Future<void> removeServerConfiguration(String serverName) async {
+    final configs = await getServerConfigurations();
+    configs.removeWhere((c) => c['serverName'] == serverName);
+    await _storage.write(
+      key: _keyServerConfigsList,
+      value: jsonEncode(configs),
+    );
+    _cachedServerConfigs = configs;
+    _configStreamController.add(null);
+  }
+
+  /// Legacy clear all fallback
+  Future<void> clearAll() async {
+    await _storage.deleteAll();
+    _cachedSupabaseConfigs = null;
+    _cachedServerConfigs = null;
+    _configStreamController.add(null);
+  }
+
+  // To preserve backwards compatibility for places expecting legacy methods:
   Future<String?> getServerAddress() async {
-    return await _storage.read(key: _keyServerAddress);
+    final configs = await getServerConfigurations();
+    if (configs.isNotEmpty) return configs.first['serverAddress'];
+    return null;
   }
 
-  /// Remove Server Address
-  Future<void> clearServerAddress() async {
-    await _storage.delete(key: _keyServerAddress);
-  }
-
-  /// Save Server Name securely
-  Future<void> saveServerName(String name) async {
-    await _storage.write(key: _keyServerName, value: name);
-  }
-
-  /// Get Server Name
   Future<String?> getServerName() async {
-    return await _storage.read(key: _keyServerName);
+    final configs = await getServerConfigurations();
+    if (configs.isNotEmpty) return configs.first['serverName'];
+    return null;
   }
 
-  /// Remove Server Name
-  Future<void> clearServerName() async {
-    await _storage.delete(key: _keyServerName);
+  Future<void> saveServerAddress(
+    String address,
+  ) async {} // No-op, replaced by addServerConfiguration
+  Future<void> saveServerName(
+    String name,
+  ) async {} // No-op, replaced by addServerConfiguration
+  Future<void> clearServerAddress() async {}
+  Future<void> clearServerName() async {}
+
+  Future<Map<String, String?>> getSupabaseCredentials() async {
+    final configs = await getSupabaseConfigurations();
+    if (configs.isNotEmpty) {
+      return {
+        'url': configs.first['url'],
+        'apiKey': configs.first['apiKey'],
+        'tableName': configs.first['tableName'],
+      };
+    }
+    return {'url': null, 'apiKey': null, 'tableName': null};
   }
 
-  /// Save Supabase URL securely
-  Future<void> saveSupabaseUrl(String url) async {
-    await _storage.write(key: _keySupabaseUrl, value: url);
-  }
+  Future<void>
+  clearSupabaseCredentials() async {} // Handled via specific removes now
 
-  /// Save Supabase API Key securely
-  Future<void> saveSupabaseAnonKey(String apiKey) async {
-    await _storage.write(key: _keySupabaseAnonKey, value: apiKey);
-  }
-
-  /// Save Supabase Table Name securely
-  Future<void> saveSupabaseTableName(String tableName) async {
-    await _storage.write(key: _keySupabaseTableName, value: tableName);
-  }
-
-  /// Save all Supabase credentials at once
   Future<void> saveSupabaseCredentials({
     required String url,
     required String apiKey,
     required String tableName,
   }) async {
-    try {
-      // Save sequentially instead of parallel to avoid race conditions
-      await _storage.write(key: _keySupabaseUrl, value: url);
-
-      await _storage.write(key: _keySupabaseAnonKey, value: apiKey);
-
-      await _storage.write(key: _keySupabaseTableName, value: tableName);
-
-      // Verify the save by reading back
-      final verifyUrl = await _storage.read(key: _keySupabaseUrl);
-      final verifyKey = await _storage.read(key: _keySupabaseAnonKey);
-      final verifyTable = await _storage.read(key: _keySupabaseTableName);
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  /// Get Supabase URL
-  Future<String?> getSupabaseUrl() async {
-    return await _storage.read(key: _keySupabaseUrl);
-  }
-
-  /// Get Supabase API Key
-  Future<String?> getSupabaseAnonKey() async {
-    return await _storage.read(key: _keySupabaseAnonKey);
-  }
-
-  /// Get Supabase Table Name
-  Future<String?> getSupabaseTableName() async {
-    return await _storage.read(key: _keySupabaseTableName);
-  }
-
-  /// Get all Supabase credentials at once
-  Future<Map<String, String?>> getSupabaseCredentials() async {
-    try {
-      // Read sequentially with individual logging
-      final url = await _storage.read(key: _keySupabaseUrl);
-
-      final apiKey = await _storage.read(key: _keySupabaseAnonKey);
-
-      final tableName = await _storage.read(key: _keySupabaseTableName);
-
-      // Debug: List all keys in storage
-      final allKeys = await _storage.readAll();
-
-      return {'url': url, 'apiKey': apiKey, 'tableName': tableName};
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  /// Remove all Supabase credentials (logout)
-  Future<void> clearSupabaseCredentials() async {
-    await Future.wait([
-      _storage.delete(key: _keySupabaseUrl),
-      _storage.delete(key: _keySupabaseAnonKey),
-      _storage.delete(key: _keySupabaseTableName),
-    ]);
-  }
-
-  /// Check if credentials exist
-  Future<bool> hasSupabaseCredentials() async {
-    final credentials = await getSupabaseCredentials();
-    return credentials['url'] != null &&
-        credentials['apiKey'] != null &&
-        credentials['tableName'] != null;
-  }
-
-  /// Clear all stored data (use with caution)
-  Future<void> clearAll() async {
-    await _storage.deleteAll();
+    await addSupabaseConfiguration({
+      'url': url,
+      'apiKey': apiKey,
+      'tableName': tableName,
+    });
   }
 }

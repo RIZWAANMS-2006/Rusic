@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:Rusic/managers/credentials_manager.dart';
 import 'package:Rusic/managers/server_manager/supabase_manager.dart';
 import 'package:Rusic/managers/server_manager/server_manager.dart';
@@ -16,21 +17,36 @@ class OnlineScreenState extends State<OnlineScreen> {
   Future<List<OnlineSong>>? _songsFuture;
   bool _isConfigured = false;
   bool _isLoading = true;
+  StreamSubscription<void>? _configSubscription;
 
   @override
   void initState() {
     super.initState();
     _checkConfigAndFetch();
+    _configSubscription = CredentialsManager().configStream.listen((_) {
+      _checkConfigAndFetch(forceRefresh: true);
+    });
   }
 
-  Future<void> _checkConfigAndFetch() async {
-    final credentials = CredentialsManager();
-    final supaCreds = await credentials.getSupabaseCredentials();
-    final serverAddress = await credentials.getServerAddress();
-    final serverName = await credentials.getServerName();
+  @override
+  void dispose() {
+    _configSubscription?.cancel();
+    super.dispose();
+  }
 
-    final hasSupa = supaCreds['url'] != null && supaCreds['apiKey'] != null;
-    final hasServer = serverAddress != null && serverAddress.isNotEmpty;
+  Future<void> _checkConfigAndFetch({bool forceRefresh = false}) async {
+    if (forceRefresh && mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+
+    final credentials = CredentialsManager();
+    final supaConfigs = await credentials.getSupabaseConfigurations();
+    final serverConfigs = await credentials.getServerConfigurations();
+
+    final hasSupa = supaConfigs.isNotEmpty;
+    final hasServer = serverConfigs.isNotEmpty;
 
     if (!hasSupa && !hasServer) {
       if (mounted) {
@@ -50,7 +66,7 @@ class OnlineScreenState extends State<OnlineScreen> {
 
     final cachedSongs = await DatabaseManager.instance.getCachedOnlineSongs();
 
-    if (cachedSongs.isNotEmpty) {
+    if (cachedSongs.isNotEmpty && !forceRefresh) {
       if (mounted) {
         setState(() {
           _songsFuture = Future.value(cachedSongs);
@@ -58,16 +74,11 @@ class OnlineScreenState extends State<OnlineScreen> {
         });
       }
       // Update cache in the background
-      _fetchAndUpdateCache(credentials, supaCreds, serverAddress, serverName);
+      _fetchAndUpdateCache(supaConfigs, serverConfigs);
     } else {
       if (mounted) {
         setState(() {
-          _songsFuture = _fetchAndUpdateCache(
-            credentials,
-            supaCreds,
-            serverAddress,
-            serverName,
-          );
+          _songsFuture = _fetchAndUpdateCache(supaConfigs, serverConfigs);
           _isLoading = false;
         });
       }
@@ -75,43 +86,64 @@ class OnlineScreenState extends State<OnlineScreen> {
   }
 
   Future<List<OnlineSong>> _fetchAndUpdateCache(
-    CredentialsManager credentials,
-    Map<String, String?> supaCreds,
-    String? serverAddress,
-    String? serverName,
+    List<Map<String, String>> supaConfigs,
+    List<Map<String, String>> serverConfigs,
   ) async {
     List<OnlineSong> combinedSongs = [];
 
-    // 1. Fetch Supabase
-    if (supaCreds['url'] != null && supaCreds['apiKey'] != null) {
-      try {
-        final tableName = supaCreds['tableName'] ?? 'Online';
-        final supa = SupabaseConnection(
-          supabaseUrl: supaCreds['url']!,
-          supabaseAnonKey: supaCreds['apiKey']!,
-          tableName: tableName,
-        );
-        combinedSongs.addAll(await supa.fetchOnlineSongsRaw());
-      } catch (e) {
-        print('Error fetching Supabase: $e');
+    // 1. Fetch from all Supabase configs
+    for (final config in supaConfigs) {
+      if (config['url'] != null && config['apiKey'] != null) {
+        try {
+          final tableName = config['tableName'] ?? 'Online';
+          final supa = SupabaseConnection(
+            supabaseUrl: config['url']!,
+            supabaseAnonKey: config['apiKey']!,
+            tableName: tableName,
+          );
+          final rawSongs = await supa.fetchOnlineSongsRaw();
+          combinedSongs.addAll(rawSongs);
+        } catch (e) {
+          print('Error fetching Supabase (${config['tableName']}): $e');
+        }
       }
     }
 
-    // 2. Fetch HTTP Server
-    if (serverAddress != null && serverAddress.isNotEmpty) {
-      try {
-        final httpManager = HTTPServerManager(
-          serverAddress: serverAddress,
-          serverName: serverName,
-        );
-        combinedSongs.addAll(await httpManager.fetchSongs());
-      } catch (e) {
-        print('Error fetching Server: $e');
+    // 2. Fetch from all HTTP Servers
+    for (final config in serverConfigs) {
+      if (config['serverAddress'] != null &&
+          config['serverAddress']!.isNotEmpty) {
+        try {
+          final serverName = config['serverName'] ?? config['serverAddress'];
+          final httpManager = HTTPServerManager(
+            serverAddress: config['serverAddress']!,
+            serverName: serverName,
+          );
+          final songs = await httpManager.fetchSongs();
+          // Ensure the source matches the user-configured serverName.
+          final taggedSongs = songs
+              .map(
+                (s) => OnlineSong(
+                  title: s.title,
+                  url: s.url,
+                  artist: s.artist,
+                  album: s.album,
+                  source: serverName,
+                ),
+              )
+              .toList();
+          combinedSongs.addAll(taggedSongs);
+        } catch (e) {
+          print('Error fetching Server (${config['serverAddress']}): $e');
+        }
       }
     }
 
     if (combinedSongs.isNotEmpty) {
       await DatabaseManager.instance.cacheOnlineSongs(combinedSongs);
+    } else if (supaConfigs.isEmpty && serverConfigs.isEmpty) {
+      // Clear cache if all configs are explicitly gone.
+      await DatabaseManager.instance.cacheOnlineSongs([]);
     }
 
     return combinedSongs;
