@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:Rusic/managers/path_manager.dart';
 import 'package:Rusic/ui/media_ui.dart';
-import 'dart:math' as math;
-
 import 'package:flutter/rendering.dart';
 
 class LocationsTab extends StatefulWidget {
@@ -42,15 +40,30 @@ class _LocationsTabState extends State<LocationsTab> {
   }
 
   void _openLocation(String path, String name) {
+    // Capture the parent Tab's NestedScrollController before navigating
+    final parentScrollController = PrimaryScrollController.maybeOf(context);
+
     _navigatorKey.currentState!.push(
       MaterialPageRoute(
-        builder: (context) => MediaUI(
-          title: name,
-          showNavigationBar: true,
-          mediaFilesFuture: _pathManager
-              .scanMediaFiles(path)
-              .then((files) => {name: files}),
-        ),
+        builder: (newContext) {
+          Widget mediaUI = MediaUI(
+            title: name,
+            showNavigationBar: true,
+            mediaFilesFuture: _pathManager
+                .scanMediaFiles(path)
+                .then((files) => {name: files}),
+          );
+
+          // Wrap the new route in the parent's scroll controller so it signals the
+          // top CupertinoSliverNavigationBar to shrink when scrolling inside MediaUI
+          if (parentScrollController != null) {
+            return PrimaryScrollController(
+              controller: parentScrollController,
+              child: mediaUI,
+            );
+          }
+          return mediaUI;
+        },
       ),
     );
   }
@@ -59,7 +72,7 @@ class _LocationsTabState extends State<LocationsTab> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
 
         final navigator = _navigatorKey.currentState;
