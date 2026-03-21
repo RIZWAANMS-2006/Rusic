@@ -3,6 +3,8 @@ import 'package:Rusic/managers/path_manager.dart';
 import 'package:Rusic/ui/media_ui.dart';
 import 'dart:math' as math;
 
+import 'package:flutter/rendering.dart';
+
 class LocationsTab extends StatefulWidget {
   const LocationsTab({super.key});
 
@@ -44,7 +46,7 @@ class _LocationsTabState extends State<LocationsTab> {
       MaterialPageRoute(
         builder: (context) => MediaUI(
           title: name,
-          showNavigationBar: false,
+          showNavigationBar: true,
           mediaFilesFuture: _pathManager
               .scanMediaFiles(path)
               .then((files) => {name: files}),
@@ -139,6 +141,7 @@ class _LocationsTabState extends State<LocationsTab> {
                 context,
               ).copyWith(scrollbars: false),
               child: CustomScrollView(
+                controller: PrimaryScrollController.maybeOf(context),
                 slivers: [
                   SliverPadding(
                     padding: const EdgeInsets.all(16.0),
@@ -154,38 +157,25 @@ class _LocationsTabState extends State<LocationsTab> {
   }
 
   Widget _buildGrid() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth > 700;
+    return SliverLayoutBuilder(
+      builder: (BuildContext context, SliverConstraints constraints) {
+        final isDesktop = constraints.crossAxisExtent > 700;
 
-    if (isDesktop) {
-      // For desktop/web: Max 3 columns natively responsive
-      // Enforce max 3 columns by ensuring maxCrossAxisExtent is at least a third of the width
-      final double maxExtent = math.max(350.0, (screenWidth - 32) / 3);
-
-      return SliverGrid.extent(
-        maxCrossAxisExtent: maxExtent,
-        childAspectRatio: 1.5, // landscape
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16,
-        children: _locations
-            .map((loc) => _buildLocationCard(loc, true))
-            .toList(),
-      );
-    } else {
-      // For mobile: Exactly 2 grids per row
-      return SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.8, // portrait
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-        ),
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => _buildLocationCard(_locations[index], false),
-          childCount: _locations.length,
-        ),
-      );
-    }
+        return SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: isDesktop ? 3 : 2,
+            childAspectRatio: isDesktop ? 1.5 : 0.8,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) =>
+                _buildLocationCard(_locations[index], isDesktop),
+            childCount: _locations.length,
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildLocationCard(Map<String, String> loc, bool isDesktop) {

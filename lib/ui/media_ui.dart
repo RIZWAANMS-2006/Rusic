@@ -228,13 +228,17 @@ class _MediaUIState extends State<MediaUI> {
   }
 
   Widget _buildNavigationBar() {
-    return CupertinoSliverNavigationBar(
+    return SliverAppBar(
+      pinned: true,
       stretch: true,
       backgroundColor: setContainerColor(context),
-      largeTitle: Text(widget.title),
-      alwaysShowMiddle: false,
-      transitionBetweenRoutes: false,
-      border: null,
+      leadingWidth: 30,
+      expandedHeight: 20,
+      title: Text(
+        widget.title,
+        style: const TextStyle(color: Colors.white, fontSize: 18),
+      ),
+      iconTheme: const IconThemeData(color: Colors.white),
     );
   }
 
@@ -254,7 +258,8 @@ class _MediaUIState extends State<MediaUI> {
               context,
             ).copyWith(scrollbars: false),
             child: CustomScrollView(
-              controller: PrimaryScrollController.maybeOf(context) ?? _scrollController,
+              controller:
+                  PrimaryScrollController.maybeOf(context) ?? _scrollController,
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
               ),
@@ -331,15 +336,10 @@ class _MediaUIState extends State<MediaUI> {
         ScrollConfiguration(
           behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
           child: CustomScrollView(
-            controller: PrimaryScrollController.maybeOf(context) ?? _scrollController,
+            controller:
+                PrimaryScrollController.maybeOf(context) ?? _scrollController,
             slivers: [
-              if (widget.showNavigationBar)
-                CupertinoSliverNavigationBar(
-                  backgroundColor: setContainerColor(context),
-                  largeTitle: Text(widget.title),
-                  middle: Text(widget.title),
-                  alwaysShowMiddle: false,
-                ),
+              if (widget.showNavigationBar) _buildNavigationBar(),
               SliverList.builder(
                 itemCount: _sortedFiles.length,
                 itemBuilder: (context, index) {
@@ -544,8 +544,9 @@ class _MediaUIState extends State<MediaUI> {
   /// Scroll to the section starting with the given letter
   void _scrollToLetter(String letter) {
     final index = _letterToIndex[letter];
-    final currentController = PrimaryScrollController.maybeOf(context) ?? _scrollController;
-      if (index != null && currentController.hasClients) {
+    final currentController =
+        PrimaryScrollController.maybeOf(context) ?? _scrollController;
+    if (index != null && currentController.hasClients) {
       // Calculate approximate position
       // For grid: each row has multiple items
       // For list: each item has a fixed height
@@ -924,7 +925,8 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
               context,
             ).copyWith(scrollbars: false),
             child: CustomScrollView(
-              controller: PrimaryScrollController.maybeOf(context) ?? _scrollController,
+              controller:
+                  PrimaryScrollController.maybeOf(context) ?? _scrollController,
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
               ),
@@ -1010,7 +1012,8 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
               context,
             ).copyWith(scrollbars: false),
             child: ListView.builder(
-              controller: PrimaryScrollController.maybeOf(context) ?? _scrollController,
+              controller:
+                  PrimaryScrollController.maybeOf(context) ?? _scrollController,
               itemCount: _sortedSongs.length,
               itemBuilder: (context, index) {
                 final song = _sortedSongs[index];
@@ -1201,8 +1204,9 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
   /// Scroll to the section starting with the given letter
   void _scrollToLetter(String letter) {
     final index = _letterToIndex[letter];
-    final currentController = PrimaryScrollController.maybeOf(context) ?? _scrollController;
-      if (index != null && currentController.hasClients) {
+    final currentController =
+        PrimaryScrollController.maybeOf(context) ?? _scrollController;
+    if (index != null && currentController.hasClients) {
       final isDesktop = MediaQuery.of(context).size.width > 700;
 
       if (isDesktop) {
