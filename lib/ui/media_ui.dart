@@ -228,10 +228,19 @@ class _MediaUIState extends State<MediaUI> {
   }
 
   Widget _buildNavigationBar() {
+    if (widget.title == 'Search' || widget.showSearchBar) {
+      return CupertinoSliverNavigationBar(
+        stretch: true,
+        backgroundColor: setContainerColor(context),
+        largeTitle: Text(widget.title),
+        alwaysShowMiddle: false,
+        transitionBetweenRoutes: false,
+        border: null,
+      );
+    }
+
     return SliverAppBar(
-      pinned: true,
-      stretch: true,
-      backgroundColor: setContainerColor(context),
+      backgroundColor: Colors.transparent,
       leadingWidth: 30,
       expandedHeight: 20,
       title: Text(
