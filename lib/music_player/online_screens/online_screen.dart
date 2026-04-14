@@ -64,7 +64,12 @@ class OnlineScreenState extends State<OnlineScreen> {
       });
     }
 
-    final cachedSongs = await DatabaseManager.instance.getCachedOnlineSongs();
+    List<OnlineSong> cachedSongs = [];
+    try {
+      cachedSongs = await DatabaseManager.instance.getCachedOnlineSongs();
+    } catch (e) {
+      print('Database error reading cache: $e');
+    }
 
     if (cachedSongs.isNotEmpty && !forceRefresh) {
       if (mounted) {
@@ -91,59 +96,80 @@ class OnlineScreenState extends State<OnlineScreen> {
   ) async {
     List<OnlineSong> combinedSongs = [];
 
-    // 1. Fetch from all Supabase configs
+    // Create parallel fetch futures
+    List<Future<List<OnlineSong>>> fetchTasks = [];
+
+    // 1. Queue all Supabase config fetches
     for (final config in supaConfigs) {
       if (config['url'] != null && config['apiKey'] != null) {
-        try {
-          final tableName = config['tableName'] ?? 'Online';
-          final supa = SupabaseConnection(
-            supabaseUrl: config['url']!,
-            supabaseAnonKey: config['apiKey']!,
-            tableName: tableName,
-          );
-          final rawSongs = await supa.fetchOnlineSongsRaw();
-          combinedSongs.addAll(rawSongs);
-        } catch (e) {
-          print('Error fetching Supabase (${config['tableName']}): $e');
-        }
+        fetchTasks.add(() async {
+          try {
+            final tableName = config['tableName'] ?? 'Online';
+            final supa = SupabaseConnection(
+              supabaseUrl: config['url']!,
+              supabaseAnonKey: config['apiKey']!,
+              tableName: tableName,
+            );
+            return await supa.fetchOnlineSongsRaw();
+          } catch (e) {
+            print('Error fetching Supabase (${config['tableName']}): $e');
+            return <OnlineSong>[];
+          }
+        }());
       }
     }
 
-    // 2. Fetch from all HTTP Servers
+    // 2. Queue all HTTP Server fetches
     for (final config in serverConfigs) {
       if (config['serverAddress'] != null &&
           config['serverAddress']!.isNotEmpty) {
-        try {
-          final serverName = config['serverName'] ?? config['serverAddress'];
-          final httpManager = HTTPServerManager(
-            serverAddress: config['serverAddress']!,
-            serverName: serverName,
-          );
-          final songs = await httpManager.fetchSongs();
-          // Ensure the source matches the user-configured serverName.
-          final taggedSongs = songs
-              .map(
-                (s) => OnlineSong(
-                  title: s.title,
-                  url: s.url,
-                  artist: s.artist,
-                  album: s.album,
-                  source: serverName,
-                ),
-              )
-              .toList();
-          combinedSongs.addAll(taggedSongs);
-        } catch (e) {
-          print('Error fetching Server (${config['serverAddress']}): $e');
-        }
+        fetchTasks.add(() async {
+          try {
+            final serverName = config['serverName'] ?? config['serverAddress'];
+            final httpManager = HTTPServerManager(
+              serverAddress: config['serverAddress']!,
+              serverName: serverName,
+            );
+            final songs = await httpManager.fetchSongs();
+            // Ensure the source matches the user-configured serverName.
+            return songs
+                .map(
+                  (s) => OnlineSong(
+                    title: s.title,
+                    url: s.url,
+                    artist: s.artist,
+                    album: s.album,
+                    source: serverName,
+                  ),
+                )
+                .toList();
+          } catch (e) {
+            print('Error fetching Server (${config['serverAddress']}): $e');
+            return <OnlineSong>[];
+          }
+        }());
       }
     }
 
-    if (combinedSongs.isNotEmpty) {
-      await DatabaseManager.instance.cacheOnlineSongs(combinedSongs);
-    } else if (supaConfigs.isEmpty && serverConfigs.isEmpty) {
+    // Wait for all fetch tasks concurrently
+    final results = await Future.wait(fetchTasks);
+    for (final subset in results) {
+      combinedSongs.addAll(subset);
+    }
+
+    if (supaConfigs.isNotEmpty || serverConfigs.isNotEmpty) {
+      try {
+        await DatabaseManager.instance.cacheOnlineSongs(combinedSongs);
+      } catch (e) {
+        print('Error caching online songs: $e');
+      }
+    } else {
       // Clear cache if all configs are explicitly gone.
-      await DatabaseManager.instance.cacheOnlineSongs([]);
+      try {
+        await DatabaseManager.instance.cacheOnlineSongs([]);
+      } catch (e) {
+        print('Error clearing online songs cache: $e');
+      }
     }
 
     return combinedSongs;

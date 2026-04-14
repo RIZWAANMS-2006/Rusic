@@ -50,7 +50,7 @@ Future<void> main() async {
   // Set Window Size Constraints for Desktop Platforms
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     setWindowMinSize(const Size(500, 1005)); //logical width height
-    setWindowMaxSize(const Size(10000, 10000)); //logical width height
+    // setWindowMaxSize(const Size(10000, 10000)); //logical width height
   }
 
   runApp(const MxMusicConsole());
@@ -216,6 +216,7 @@ class WideScreenState extends State<WideScreen> {
           const SizedBox(
             width: 350,
             height: double.infinity,
+            // child: Full_Size_Rusic(),
             child: SideMusicController(),
           ),
         ],

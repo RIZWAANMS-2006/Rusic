@@ -16,6 +16,9 @@ class AudioManager {
   Stream<Duration> get positionStream => _player.positionStream;
   Duration get totalDuration => _player.duration ?? Duration.zero;
 
+  // Added playerStateStream for SongsManager auto-playing logic
+  Stream<PlayerState> get playerStateStream => _player.playerStateStream;
+
   // Main Logic
   Future<void> play(String path) async {
     try {

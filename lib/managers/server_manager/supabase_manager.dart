@@ -27,7 +27,10 @@ class SupabaseConnection {
   /// Fetches all songs from the Supabase table and converts them to OnlineSong objects
   Future<List<OnlineSong>> fetchOnlineSongsRaw() async {
     try {
-      final response = await client.from(tableName).select();
+      final response = await client
+          .from(tableName)
+          .select()
+          .timeout(const Duration(seconds: 15));
 
       final List<Map<String, dynamic>> data = List<Map<String, dynamic>>.from(
         response as List,

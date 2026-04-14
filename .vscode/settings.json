@@ -1,4 +1,7 @@
 {
-    "cmake.sourceDirectory": "E:/Coding/Dart (Flutter)/Rusic/linux",
+    "cmake.sourceDirectory": "${workspaceFolder}/linux",
+    "terminal.integrated.env.linux": {
+        "PATH": "${workspaceFolder}/toolchain/linux/bin:${env:PATH}"
+    },
     "java.configuration.updateBuildConfiguration": "interactive"
 }

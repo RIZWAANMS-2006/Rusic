@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:Rusic/music_player/music_controller.dart';
 import 'package:Rusic/managers/ui_manager.dart';
 import 'dart:io';
 import 'package:Rusic/search/search_page.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:Rusic/managers/songs_manager.dart';
 
 /// A universal UI component for displaying media files across different tabs.
 ///
@@ -256,6 +256,7 @@ class _MediaUIState extends State<MediaUI> {
     final sortedLetters = groupedFiles.keys.toList()..sort();
 
     return Scaffold(
+      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
       floatingActionButton: widget.showSearchBar
           ? const MusicSearchBar()
           : null,
@@ -466,43 +467,87 @@ class _MediaUIState extends State<MediaUI> {
       file.path.lastIndexOf(Platform.pathSeparator) + 1,
     );
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(
-        minWidth: double.infinity,
-        minHeight: 50,
+    return Dismissible(
+      key: ValueKey(file.path),
+      background: Container(
+        color: Colors.green,
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20.0),
+        child: const Icon(Icons.queue_music, color: Colors.white),
       ),
-      child: ListTile(
-        onTap: () => _onFileTap(file),
-        leading: Container(
-          width: 35,
-          height: 35,
-          padding: const EdgeInsets.all(5),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.all(Radius.circular(5)),
-          ),
-          child: SvgPicture.asset("assets/MusicIcons/MusicLogo.svg"),
+      secondaryBackground: Container(
+        color: Colors.blue,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20.0),
+        child: const Icon(Icons.info_outline, color: Colors.white),
+      ),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.endToStart) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Song Info'),
+              content: Text('Swiped left on $fileName'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+          );
+          return false;
+        } else if (direction == DismissDirection.startToEnd) {
+          SongsManager().addToQueue(
+            QueueItem(id: file.path, title: fileName, path: file.path),
+          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Added $fileName to queue')));
+          return false;
+        }
+        return false;
+      },
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          minWidth: double.infinity,
+          minHeight: 50,
         ),
-        tileColor: const Color.fromRGBO(26, 26, 26, 1),
-        title: Text(
-          fileName,
-          textAlign: TextAlign.left,
-          style: const TextStyle(fontSize: 14),
-          overflow: TextOverflow.ellipsis,
+        child: ListTile(
+          onTap: () => _onFileTap(file),
+          leading: Container(
+            width: 35,
+            height: 35,
+            padding: const EdgeInsets.all(5),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(5)),
+            ),
+            child: SvgPicture.asset("assets/MusicIcons/MusicLogo.svg"),
+          ),
+          tileColor: const Color.fromRGBO(26, 26, 26, 1),
+          title: Text(
+            fileName,
+            textAlign: TextAlign.left,
+            style: const TextStyle(fontSize: 14),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ),
     );
   }
 
   void _onFileTap(File file) {
-    audio_path = file.path;
-    audioPlayAndPauseFunction();
-    if (indicatorState == 0) {
-      indicatorState = 1;
-    } else {
-      indicatorState = 0;
+    if (_sortedFiles.isNotEmpty) {
+      final items = _sortedFiles.map((f) {
+        final fName = f.path.substring(
+          f.path.lastIndexOf(Platform.pathSeparator) + 1,
+        );
+        return QueueItem(id: f.path, title: fName, path: f.path);
+      }).toList();
+      final index = _sortedFiles.indexOf(file);
+      SongsManager().setQueue(queue: items, startIndex: index);
     }
-    setState(() {});
   }
 
   /// Sort files alphabetically and create letter-to-index mapping
@@ -1108,11 +1153,28 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  song.title,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      song.title,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    if (song.source != null && song.source!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        song.source!,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
@@ -1123,52 +1185,108 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
   }
 
   Widget _buildListItem(OnlineSong song, int index) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(
-        minWidth: double.infinity,
-        minHeight: 50,
+    return Dismissible(
+      key: ValueKey(song.url),
+      background: Container(
+        color: Colors.green,
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20.0),
+        child: const Icon(Icons.queue_music, color: Colors.white),
       ),
-      child: ListTile(
-        onTap: () => _onSongTap(song),
-        leading: Container(
-          width: 35,
-          height: 35,
-          padding: const EdgeInsets.all(5),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.all(Radius.circular(5)),
+      secondaryBackground: Container(
+        color: Colors.blue,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20.0),
+        child: const Icon(Icons.info_outline, color: Colors.white),
+      ),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.endToStart) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Song Info'),
+              content: Text('Swiped left on ${song.title}'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+          );
+          return false;
+        } else if (direction == DismissDirection.startToEnd) {
+          SongsManager().addToQueue(
+            QueueItem(
+              id: song.url,
+              title: song.title,
+              path: song.url,
+              artist: song.artist,
+            ),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Added ${song.title} to queue')),
+          );
+          return false;
+        }
+        return false;
+      },
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          minWidth: double.infinity,
+          minHeight: 50,
+        ),
+        child: ListTile(
+          onTap: () => _onSongTap(song),
+          leading: Container(
+            width: 35,
+            height: 35,
+            padding: const EdgeInsets.all(5),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(5)),
+            ),
+            child: SvgPicture.asset("assets/MusicIcons/MusicLogo.svg"),
           ),
-          child: SvgPicture.asset("assets/MusicIcons/MusicLogo.svg"),
-        ),
-        tileColor: const Color.fromRGBO(26, 26, 26, 1),
+          tileColor: const Color.fromRGBO(26, 26, 26, 1),
 
-        title: Text(
-          song.title,
-          textAlign: TextAlign.left,
-          style: const TextStyle(fontSize: 14),
-          overflow: TextOverflow.ellipsis,
+          title: Text(
+            song.title,
+            textAlign: TextAlign.left,
+            style: const TextStyle(fontSize: 14),
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle:
+              (song.artist?.isNotEmpty == true ||
+                  song.source?.isNotEmpty == true)
+              ? Text(
+                  [
+                    song.artist,
+                    song.source,
+                  ].where((e) => e != null && e.isNotEmpty).join(' • '),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
+                )
+              : null,
         ),
-        subtitle: song.artist != null
-            ? Text(
-                song.artist!,
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                overflow: TextOverflow.ellipsis,
-              )
-            : null,
       ),
     );
   }
 
   void _onSongTap(OnlineSong song) {
-    if (song.url.isNotEmpty) {
-      audio_path = song.url;
-      audioPlayAndPauseFunction();
-      if (indicatorState == 0) {
-        indicatorState = 1;
-      } else {
-        indicatorState = 0;
-      }
-      setState(() {});
+    if (song.url.isNotEmpty && _sortedSongs.isNotEmpty) {
+      final items = _sortedSongs
+          .map(
+            (s) => QueueItem(
+              id: s.url,
+              title: s.title,
+              path: s.url,
+              artist: s.artist,
+            ),
+          )
+          .toList();
+      final index = _sortedSongs.indexOf(song);
+      SongsManager().setQueue(queue: items, startIndex: index);
     }
   }
 
@@ -1376,7 +1494,7 @@ class LetterPickerDialog extends StatelessWidget {
 }
 
 class _DesktopShimmer extends StatelessWidget {
-  const _DesktopShimmer({Key? key}) : super(key: key);
+  const _DesktopShimmer();
 
   @override
   Widget build(BuildContext context) {
@@ -1431,7 +1549,7 @@ class _DesktopShimmer extends StatelessWidget {
 }
 
 class _MobileShimmer extends StatelessWidget {
-  const _MobileShimmer({Key? key}) : super(key: key);
+  const _MobileShimmer();
 
   @override
   Widget build(BuildContext context) {
