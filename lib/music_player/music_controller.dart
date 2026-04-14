@@ -470,7 +470,6 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                           backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
                           extendBodyBehindAppBar: true,
                           extendBody: true,
-
                           bottomNavigationBar: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -644,178 +643,171 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                           ),
                           body: Stack(
                             children: [
-                              AnimatedBuilder(
-                                animation: VideoManager(),
-                                builder: (context, _) {
-                                  final isVideo =
-                                      VideoManager().isVideoAvailable;
-                                  return TabBarView(
-                                    physics: isVideo
-                                        ? const BouncingScrollPhysics()
-                                        : const NeverScrollableScrollPhysics(),
-                                    children: [
-                                      Stack(
-                                        children: [
-                                          Positioned(
-                                            bottom:
-                                                constraints.maxHeight * 0.55,
-                                            left: 0,
-                                            right: 0,
-                                            child: Column(
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  top:
+                                      MediaQuery.of(context).padding.top +
+                                      kToolbarHeight,
+                                  bottom: 180,
+                                ),
+                                child: AnimatedBuilder(
+                                  animation: VideoManager(),
+                                  builder: (context, _) {
+                                    final isVideo =
+                                        VideoManager().isVideoAvailable;
+                                    return TabBarView(
+                                      physics: isVideo
+                                          ? const BouncingScrollPhysics()
+                                          : const NeverScrollableScrollPhysics(),
+                                      children: [
+                                        Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          mainAxisSize: MainAxisSize.max,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
                                               children: [
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.end,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                            bottom: 5,
-                                                          ),
-                                                      child: IconButton(
-                                                        icon: SvgPicture.asset(
-                                                          "assets/MusicIcons/Like.svg",
-                                                        ),
-                                                        onPressed: () {},
-                                                      ),
-                                                    ),
-                                                    Container(
-                                                      height:
-                                                          constraints.maxWidth *
-                                                          0.35,
-                                                      width:
-                                                          constraints.maxWidth *
-                                                          0.35,
-                                                      constraints:
-                                                          const BoxConstraints(
-                                                            minHeight: 210,
-                                                            minWidth: 210,
-                                                            maxHeight: 300,
-                                                            maxWidth: 300,
-                                                          ),
-                                                      decoration:
-                                                          const BoxDecoration(
-                                                            color:
-                                                                Color.fromRGBO(
-                                                                  255,
-                                                                  245,
-                                                                  245,
-                                                                  1,
-                                                                ),
-                                                            shape:
-                                                                BoxShape.circle,
-                                                          ),
-                                                      alignment:
-                                                          Alignment.center,
-                                                      child: SvgPicture.asset(
-                                                        "assets/MusicIcons/MusicLogo.svg",
-                                                      ),
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                            bottom: 5,
-                                                          ),
-                                                      child: IconButton(
-                                                        icon: SvgPicture.asset(
-                                                          "assets/MusicIcons/AddPlaylist.svg",
-                                                        ),
-                                                        onPressed: () {},
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Container(
+                                                Padding(
                                                   padding:
                                                       const EdgeInsets.only(
-                                                        top: 20,
+                                                        bottom: 5,
                                                       ),
-                                                  child: Column(
-                                                    spacing: 3,
-                                                    children: [
-                                                      const Text(
-                                                        "Song:",
-                                                        style: TextStyle(
-                                                          color: Color.fromRGBO(
-                                                            255,
-                                                            245,
-                                                            245,
-                                                            1,
-                                                          ),
-                                                          fontSize: 14,
-                                                          fontFamily: "Borel",
+                                                  child: IconButton(
+                                                    icon: SvgPicture.asset(
+                                                      "assets/MusicIcons/Like.svg",
+                                                    ),
+                                                    onPressed: () {},
+                                                  ),
+                                                ),
+                                                Container(
+                                                  height:
+                                                      constraints.maxWidth *
+                                                      0.35,
+                                                  width:
+                                                      constraints.maxWidth *
+                                                      0.35,
+                                                  constraints:
+                                                      const BoxConstraints(
+                                                        minHeight: 210,
+                                                        minWidth: 210,
+                                                        maxHeight: 300,
+                                                        maxWidth: 300,
+                                                      ),
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                        color: Color.fromRGBO(
+                                                          255,
+                                                          245,
+                                                          245,
+                                                          1,
                                                         ),
+                                                        shape: BoxShape.circle,
                                                       ),
-                                                      Text(
-                                                        currentSong == null
-                                                            ? "No Song is Playing..."
-                                                            : currentSong.title,
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        style: const TextStyle(
-                                                          color: Color.fromRGBO(
-                                                            255,
-                                                            245,
-                                                            245,
-                                                            1,
-                                                          ),
-                                                          fontSize: 16,
-                                                          fontFamily: "Borel",
-                                                        ),
+                                                  alignment: Alignment.center,
+                                                  child: SvgPicture.asset(
+                                                    "assets/MusicIcons/MusicLogo.svg",
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        bottom: 5,
                                                       ),
-                                                    ],
+                                                  child: IconButton(
+                                                    icon: SvgPicture.asset(
+                                                      "assets/MusicIcons/AddPlaylist.svg",
+                                                    ),
+                                                    onPressed: () {},
                                                   ),
                                                 ),
                                               ],
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      AnimatedBuilder(
-                                        animation: VideoManager(),
-                                        builder: (context, child) {
-                                          final isAvailable =
-                                              VideoManager().isVideoAvailable;
-                                          final controller =
-                                              VideoManager().controller;
-
-                                          if (!isAvailable ||
-                                              controller == null ||
-                                              !controller.value.isInitialized) {
-                                            return Container(
-                                              color: Colors.black,
-                                              alignment: Alignment.center,
-                                              child: const Text(
-                                                "No Video Available\nFor The Playing Media",
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            );
-                                          }
-
-                                          return Center(
-                                            child: Padding(
+                                            Container(
                                               padding: const EdgeInsets.only(
-                                                bottom: 270,
+                                                top: 20,
                                               ),
+                                              child: Column(
+                                                spacing: 3,
+                                                children: [
+                                                  const Text(
+                                                    "Song:",
+                                                    style: TextStyle(
+                                                      color: Color.fromRGBO(
+                                                        255,
+                                                        245,
+                                                        245,
+                                                        1,
+                                                      ),
+                                                      fontSize: 14,
+                                                      fontFamily: "Borel",
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    currentSong == null
+                                                        ? "No Song is Playing..."
+                                                        : currentSong.title,
+                                                    textAlign: TextAlign.center,
+                                                    style: const TextStyle(
+                                                      color: Color.fromRGBO(
+                                                        255,
+                                                        245,
+                                                        245,
+                                                        1,
+                                                      ),
+                                                      fontSize: 16,
+                                                      fontFamily: "Borel",
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        AnimatedBuilder(
+                                          animation: VideoManager(),
+                                          builder: (context, child) {
+                                            final isAvailable =
+                                                VideoManager().isVideoAvailable;
+                                            final controller =
+                                                VideoManager().controller;
+
+                                            if (!isAvailable ||
+                                                controller == null ||
+                                                !controller
+                                                    .value
+                                                    .isInitialized) {
+                                              return Container(
+                                                color: Colors.black,
+                                                alignment: Alignment.center,
+                                                child: const Text(
+                                                  "No Video Available\nFor The Playing Media",
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+
+                                            return Center(
                                               child: AspectRatio(
                                                 aspectRatio: controller
                                                     .value
                                                     .aspectRatio,
                                                 child: VideoPlayer(controller),
                                               ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                },
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
                               ),
                               Positioned(
                                 left: 0,
