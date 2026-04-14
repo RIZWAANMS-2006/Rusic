@@ -632,17 +632,31 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                           appBar: AppBar(
                             surfaceTintColor: Colors.transparent,
                             backgroundColor: Colors.transparent,
-                            leading: IconButton(
-                              icon: SvgPicture.asset(
-                                "assets/MusicIcons/DownArrow.svg",
-                              ),
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                            ),
+                            automaticallyImplyLeading: false,
+                            leading: MediaQuery.of(context).size.width < 700
+                                ? IconButton(
+                                    icon: SvgPicture.asset(
+                                      "assets/MusicIcons/DownArrow.svg",
+                                    ),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                  )
+                                : const SizedBox.shrink(),
+                            leadingWidth:
+                                MediaQuery.of(context).size.width < 700
+                                ? kToolbarHeight
+                                : 0,
                           ),
                           body: Stack(
                             children: [
+                              ImageFiltered(
+                                imageFilter: ImageFilter.blur(
+                                  sigmaX: 5,
+                                  sigmaY: 5,
+                                ),
+                                child: const WeatherBackground(),
+                              ),
                               Padding(
                                 padding: EdgeInsets.only(
                                   top:
@@ -746,20 +760,28 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                                       fontFamily: "Borel",
                                                     ),
                                                   ),
-                                                  Text(
-                                                    currentSong == null
-                                                        ? "No Song is Playing..."
-                                                        : currentSong.title,
-                                                    textAlign: TextAlign.center,
-                                                    style: const TextStyle(
-                                                      color: Color.fromRGBO(
-                                                        255,
-                                                        245,
-                                                        245,
-                                                        1,
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 10,
+                                                          vertical: 6,
+                                                        ),
+                                                    child: Text(
+                                                      currentSong == null
+                                                          ? "No Song is Playing..."
+                                                          : currentSong.title,
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: const TextStyle(
+                                                        color: Color.fromRGBO(
+                                                          255,
+                                                          245,
+                                                          245,
+                                                          1,
+                                                        ),
+                                                        fontSize: 16,
+                                                        fontFamily: "Borel",
                                                       ),
-                                                      fontSize: 16,
-                                                      fontFamily: "Borel",
                                                     ),
                                                   ),
                                                 ],
@@ -912,14 +934,15 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
   }
 }
 
-class Home_Page_Rusic extends StatefulWidget {
-  const Home_Page_Rusic({super.key});
+class HomePageMusicController extends StatefulWidget {
+  const HomePageMusicController({super.key});
 
   @override
-  State<Home_Page_Rusic> createState() => Home_Page_Rusic_State();
+  State<HomePageMusicController> createState() =>
+      _HomePageMusicControllerState();
 }
 
-class Home_Page_Rusic_State extends State<Home_Page_Rusic> {
+class _HomePageMusicControllerState extends State<HomePageMusicController> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(

@@ -11,6 +11,7 @@ import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:Rusic/managers/settings_manager.dart';
+import 'package:Rusic/managers/ui_manager.dart';
 import 'package:toastification/toastification.dart';
 
 Future<void> main() async {
@@ -208,16 +209,54 @@ class WideScreenState extends State<WideScreen> {
             width: 0.5,
           ),
           Expanded(
-            child: IndexedStack(
-              index: navigationIndex,
-              children: const [Search(), Library(), Settings()],
+            child: ValueListenableBuilder<bool>(
+              valueListenable: wideScreenPanelsSwapped,
+              builder: (context, isSwapped, _) {
+                final double compactPaneWidth =
+                    (MediaQuery.of(context).size.width * 0.3)
+                        .clamp(350, double.infinity)
+                        .toDouble();
+
+                final contentPane = IndexedStack(
+                  index: navigationIndex,
+                  children: const [Search(), Library(), Settings()],
+                );
+
+                const musicPane = FullSizeMusicController();
+
+                return Stack(
+                  children: [
+                    Row(
+                      children: isSwapped
+                          ? [
+                              Expanded(child: musicPane),
+                              SizedBox(
+                                width: compactPaneWidth,
+                                height: double.infinity,
+                                child: contentPane,
+                              ),
+                            ]
+                          : [
+                              Expanded(child: contentPane),
+                              SizedBox(
+                                width: compactPaneWidth,
+                                height: double.infinity,
+                                child: musicPane,
+                              ),
+                            ],
+                    ),
+                    Positioned(
+                      top: MediaQuery.of(context).padding.top + 4,
+                      right: compactPaneWidth - 52,
+                      child: IconButton(
+                        onPressed: toggleWideScreenPanels,
+                        icon: SvgPicture.asset("assets/MusicIcons/Swap.svg"),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-          ),
-          const SizedBox(
-            width: 350,
-            height: double.infinity,
-            // child: Full_Size_Rusic(),
-            child: SideMusicController(),
           ),
         ],
       ),
