@@ -508,7 +508,7 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                         width: 20,
                                         height: 20,
                                       ),
-                                      onPressed: null 
+                                      onPressed: null,
                                       // () {
                                       //   SongsManager().playPrevious();
                                       // },
@@ -771,16 +771,18 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                                           ),
                                                       decoration:
                                                           const BoxDecoration(
-                                                            color: Color.fromRGBO(
-                                                              255,
-                                                              245,
-                                                              245,
-                                                              1,
-                                                            ),
+                                                            color:
+                                                                Color.fromRGBO(
+                                                                  255,
+                                                                  245,
+                                                                  245,
+                                                                  1,
+                                                                ),
                                                             shape:
                                                                 BoxShape.circle,
                                                           ),
-                                                      alignment: Alignment.center,
+                                                      alignment:
+                                                          Alignment.center,
                                                       child: SvgPicture.asset(
                                                         "assets/MusicIcons/music_logo_black.svg",
                                                       ),
