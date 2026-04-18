@@ -491,27 +491,34 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                     IconButton(
                                       icon: SvgPicture.asset(
                                         "assets/MusicIcons/shuffle.svg",
-                                        color: SongsManager().isShuffle
-                                            ? Colors.red
+                                        color: currentSong == null
+                                            ? Colors.white24
+                                            : (SongsManager().isShuffle
+                                                  ? Colors.red
+                                                  : null),
+                                        width: 20,
+                                        height: 20,
+                                      ),
+                                      onPressed: currentSong == null
+                                          ? null
+                                          : () {
+                                              SongsManager().toggleShuffle();
+                                            },
+                                    ),
+                                    IconButton(
+                                      icon: SvgPicture.asset(
+                                        "assets/MusicIcons/previous_button.svg",
+                                        color: currentSong == null
+                                            ? Colors.white24
                                             : null,
                                         width: 20,
                                         height: 20,
                                       ),
-                                      onPressed: () {
-                                        SongsManager().toggleShuffle();
-                                      },
-                                    ),
-                                    IconButton(
-                                      // disabledColor: Colors.grey[600],
-                                      icon: SvgPicture.asset(
-                                        "assets/MusicIcons/previous_button.svg",
-                                        width: 20,
-                                        height: 20,
-                                      ),
-                                      onPressed: null,
-                                      // () {
-                                      //   SongsManager().playPrevious();
-                                      // },
+                                      onPressed: currentSong == null
+                                          ? null
+                                          : () {
+                                              SongsManager().playPrevious();
+                                            },
                                     ),
                                     Stack(
                                       alignment: Alignment.center,
@@ -519,8 +526,20 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                         Container(
                                           width: 50,
                                           height: 50,
-                                          decoration: const BoxDecoration(
-                                            color: Color.fromRGBO(255, 0, 0, 1),
+                                          decoration: BoxDecoration(
+                                            color: currentSong == null
+                                                ? const Color.fromRGBO(
+                                                    255,
+                                                    0,
+                                                    0,
+                                                    0.4,
+                                                  )
+                                                : const Color.fromRGBO(
+                                                    255,
+                                                    0,
+                                                    0,
+                                                    1,
+                                                  ),
                                             shape: BoxShape.circle,
                                           ),
                                         ),
@@ -536,14 +555,21 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                                 playing
                                                     ? "assets/MusicIcons/pause.svg"
                                                     : "assets/MusicIcons/play.svg",
+                                                color: currentSong == null
+                                                    ? Colors.white60
+                                                    : null,
                                                 width: 20,
                                                 height: 20,
                                               ),
-                                              onPressed: () {
-                                                playing
-                                                    ? AudioManager().pause()
-                                                    : AudioManager().resume();
-                                              },
+                                              onPressed: currentSong == null
+                                                  ? null
+                                                  : () {
+                                                      playing
+                                                          ? AudioManager()
+                                                                .pause()
+                                                          : AudioManager()
+                                                                .resume();
+                                                    },
                                             );
                                           },
                                         ),
@@ -552,27 +578,35 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                     IconButton(
                                       icon: SvgPicture.asset(
                                         "assets/MusicIcons/next_button.svg",
-                                        width: 20,
-                                        height: 20,
-                                      ),
-                                      onPressed: () {
-                                        SongsManager().playNext();
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: SvgPicture.asset(
-                                        "assets/MusicIcons/loop.svg",
-                                        color:
-                                            SongsManager().repeatMode.name !=
-                                                'off'
-                                            ? Colors.red
+                                        color: currentSong == null
+                                            ? Colors.white24
                                             : null,
                                         width: 20,
                                         height: 20,
                                       ),
-                                      onPressed: () {
-                                        SongsManager().toggleRepeat();
-                                      },
+                                      onPressed: currentSong == null
+                                          ? null
+                                          : () {
+                                              SongsManager().playNext();
+                                            },
+                                    ),
+                                    IconButton(
+                                      icon: SvgPicture.asset(
+                                        "assets/MusicIcons/loop.svg",
+                                        color: currentSong == null
+                                            ? Colors.white24
+                                            : (SongsManager().repeatMode.name !=
+                                                      'off'
+                                                  ? Colors.red
+                                                  : null),
+                                        width: 20,
+                                        height: 20,
+                                      ),
+                                      onPressed: currentSong == null
+                                          ? null
+                                          : () {
+                                              SongsManager().toggleRepeat();
+                                            },
                                     ),
                                   ],
                                 ),
@@ -591,44 +625,53 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                             : Icons.queue_music,
                                         size: 15,
                                       ),
-                                      onPressed: () {
-                                        if (isQueueOpen) {
-                                          Navigator.pop(context);
-                                        } else {
-                                          setState(() {
-                                            isQueueOpen = true;
-                                          });
-                                          Scaffold.of(context)
-                                              .showBottomSheet((context) {
-                                                return ClipRRect(
-                                                  borderRadius:
-                                                      const BorderRadius.vertical(
-                                                        top: Radius.circular(
-                                                          20,
+                                      style: FilledButton.styleFrom(
+                                        disabledBackgroundColor: Colors.white24,
+                                        disabledForegroundColor: Colors.white60,
+                                      ),
+                                      onPressed: currentSong == null
+                                          ? null
+                                          : () {
+                                              if (isQueueOpen) {
+                                                Navigator.pop(context);
+                                              } else {
+                                                setState(() {
+                                                  isQueueOpen = true;
+                                                });
+                                                Scaffold.of(context)
+                                                    .showBottomSheet((context) {
+                                                      return ClipRRect(
+                                                        borderRadius:
+                                                            const BorderRadius.vertical(
+                                                              top:
+                                                                  Radius.circular(
+                                                                    20,
+                                                                  ),
+                                                            ),
+                                                        child: SizedBox(
+                                                          height:
+                                                              MediaQuery.of(
+                                                                context,
+                                                              ).size.height *
+                                                              0.65,
+                                                          child:
+                                                              MusicQueueScreen(
+                                                                context:
+                                                                    context,
+                                                              ),
                                                         ),
-                                                      ),
-                                                  child: SizedBox(
-                                                    height:
-                                                        MediaQuery.of(
-                                                          context,
-                                                        ).size.height *
-                                                        0.65,
-                                                    child: MusicQueueScreen(
-                                                      context: context,
-                                                    ),
-                                                  ),
-                                                );
-                                              })
-                                              .closed
-                                              .then((_) {
-                                                if (mounted) {
-                                                  setState(() {
-                                                    isQueueOpen = false;
-                                                  });
-                                                }
-                                              });
-                                        }
-                                      },
+                                                      );
+                                                    })
+                                                    .closed
+                                                    .then((_) {
+                                                      if (mounted) {
+                                                        setState(() {
+                                                          isQueueOpen = false;
+                                                        });
+                                                      }
+                                                    });
+                                              }
+                                            },
                                       label: Text(
                                         isQueueOpen ? "Close" : "Queue",
                                         style: const TextStyle(fontSize: 12),
@@ -727,30 +770,38 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                                         isLiked
                                                             ? "assets/MusicIcons/liked.svg"
                                                             : "assets/MusicIcons/like.svg",
+                                                        color:
+                                                            currentSong == null
+                                                            ? Colors.white24
+                                                            : null,
                                                       ),
-                                                      onPressed: () {
-                                                        setState(() {
-                                                          isLiked = !isLiked;
-                                                          if (isLiked) {
-                                                            _showLikeAnimation =
-                                                                true;
-                                                            Future.delayed(
-                                                              const Duration(
-                                                                milliseconds:
-                                                                    1500,
-                                                              ),
-                                                              () {
-                                                                if (mounted) {
-                                                                  setState(() {
-                                                                    _showLikeAnimation =
-                                                                        false;
-                                                                  });
+                                                      onPressed:
+                                                          currentSong == null
+                                                          ? null
+                                                          : () {
+                                                              setState(() {
+                                                                isLiked =
+                                                                    !isLiked;
+                                                                if (isLiked) {
+                                                                  _showLikeAnimation =
+                                                                      true;
+                                                                  Future.delayed(
+                                                                    const Duration(
+                                                                      milliseconds:
+                                                                          1500,
+                                                                    ),
+                                                                    () {
+                                                                      if (mounted) {
+                                                                        setState(() {
+                                                                          _showLikeAnimation =
+                                                                              false;
+                                                                        });
+                                                                      }
+                                                                    },
+                                                                  );
                                                                 }
-                                                              },
-                                                            );
-                                                          }
-                                                        });
-                                                      },
+                                                              });
+                                                            },
                                                     ),
                                                   ),
                                                   Hero(
@@ -796,8 +847,15 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                                     child: IconButton(
                                                       icon: SvgPicture.asset(
                                                         "assets/MusicIcons/add_playlist.svg",
+                                                        color:
+                                                            currentSong == null
+                                                            ? Colors.white24
+                                                            : null,
                                                       ),
-                                                      onPressed: () {},
+                                                      onPressed:
+                                                          currentSong == null
+                                                          ? null
+                                                          : () {},
                                                     ),
                                                   ),
                                                 ],
@@ -906,73 +964,97 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                         width: 130,
                                         height: 30,
                                         decoration: BoxDecoration(
-                                          color: const Color.fromRGBO(
-                                            225,
-                                            225,
-                                            225,
-                                            1,
-                                          ),
+                                          color: currentSong == null
+                                              ? const Color.fromRGBO(
+                                                  225,
+                                                  225,
+                                                  225,
+                                                  0.4,
+                                                )
+                                              : const Color.fromRGBO(
+                                                  225,
+                                                  225,
+                                                  225,
+                                                  1,
+                                                ),
                                           borderRadius: BorderRadius.circular(
                                             25.0,
                                           ),
                                         ),
-                                        child: AnimatedBuilder(
-                                          animation: VideoManager(),
-                                          builder: (context, _) {
-                                            final isVideo =
-                                                VideoManager().isVideoAvailable;
-                                            return TabBar(
-                                              indicatorSize:
-                                                  TabBarIndicatorSize.tab,
-                                              indicator: BoxDecoration(
-                                                color: const Color.fromRGBO(
-                                                  34,
-                                                  34,
-                                                  34,
-                                                  1,
+                                        child: IgnorePointer(
+                                          ignoring: currentSong == null,
+                                          child: AnimatedBuilder(
+                                            animation: VideoManager(),
+                                            builder: (context, _) {
+                                              final isVideo = VideoManager()
+                                                  .isVideoAvailable;
+                                              return TabBar(
+                                                indicatorSize:
+                                                    TabBarIndicatorSize.tab,
+                                                indicator: BoxDecoration(
+                                                  color: currentSong == null
+                                                      ? const Color.fromRGBO(
+                                                          34,
+                                                          34,
+                                                          34,
+                                                          0.4,
+                                                        )
+                                                      : const Color.fromRGBO(
+                                                          34,
+                                                          34,
+                                                          34,
+                                                          1,
+                                                        ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        25.0,
+                                                      ),
                                                 ),
-                                                borderRadius:
+                                                dividerColor:
+                                                    Colors.transparent,
+                                                labelColor: currentSong == null
+                                                    ? Colors.white60
+                                                    : Colors.white,
+                                                unselectedLabelColor:
+                                                    currentSong == null
+                                                    ? Colors.black38
+                                                    : Colors.black,
+                                                splashBorderRadius:
                                                     BorderRadius.circular(25.0),
-                                              ),
-                                              dividerColor: Colors.transparent,
-                                              labelColor: Colors.white,
-                                              unselectedLabelColor:
-                                                  Colors.black,
-                                              splashBorderRadius:
-                                                  BorderRadius.circular(25.0),
-                                              onTap: (index) {
-                                                if (!isVideo && index == 1) {
-                                                  // Bounce back to Audio tab immediately
-                                                  DefaultTabController.of(
-                                                    context,
-                                                  ).animateTo(0);
-                                                }
-                                              },
-                                              tabs: [
-                                                const Tab(
-                                                  child: Text(
-                                                    "Audio",
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Tab(
-                                                  child: Opacity(
-                                                    opacity: isVideo
-                                                        ? 1.0
-                                                        : 0.4,
-                                                    child: const Text(
-                                                      "Video",
+                                                onTap: (index) {
+                                                  if (!isVideo && index == 1) {
+                                                    // Bounce back to Audio tab immediately
+                                                    DefaultTabController.of(
+                                                      context,
+                                                    ).animateTo(0);
+                                                  }
+                                                },
+                                                tabs: [
+                                                  const Tab(
+                                                    child: Text(
+                                                      "Audio",
                                                       style: TextStyle(
                                                         fontSize: 12,
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ],
-                                            );
-                                          },
+                                                  Tab(
+                                                    child: Opacity(
+                                                      opacity: isVideo
+                                                          ? 1.0
+                                                          : 0.4,
+                                                      child: const Text(
+                                                        "Video",
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          ),
                                         ),
                                       ),
                                     ],

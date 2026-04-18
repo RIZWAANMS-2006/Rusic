@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:Rusic/search/search_page.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:Rusic/managers/songs_manager.dart';
+import 'package:Rusic/managers/database_manager.dart';
 import 'package:flutter_swipe_action_cell/flutter_swipe_action_cell.dart';
 
 /// A universal UI component for displaying media files across different tabs.
@@ -62,6 +63,22 @@ class _MediaUIState extends State<MediaUI> {
   final ScrollController _scrollController = ScrollController();
   final Map<String, int> _letterToIndex = {};
   List<File> _sortedFiles = [];
+  final Set<String> _likedFiles = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    final favorites = await DatabaseManager.instance.getAllFavorites();
+    if (mounted) {
+      setState(() {
+        _likedFiles.addAll(favorites);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -488,11 +505,28 @@ class _MediaUIState extends State<MediaUI> {
           },
         ),
         SwipeAction(
-          icon: const Icon(Icons.favorite_border, color: Colors.white),
+          icon: Icon(
+            _likedFiles.contains(file.path)
+                ? Icons.favorite_rounded
+                : Icons.favorite_outline_rounded,
+            color: Colors.white,
+          ),
           color: Colors.redAccent,
           performsFirstActionWithFullSwipe: true,
           onTap: (CompletionHandler handler) async {
             await handler(false);
+
+            await DatabaseManager.instance.toggleFavorite(file.path);
+
+            if (mounted) {
+              setState(() {
+                if (_likedFiles.contains(file.path)) {
+                  _likedFiles.remove(file.path);
+                } else {
+                  _likedFiles.add(file.path);
+                }
+              });
+            }
             // Handle like action here
           },
         ),

@@ -2,6 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:Rusic/music_player/online_screens/online_screen.dart';
 import 'package:Rusic/music_player/location_screens/location_screen.dart';
+import 'package:Rusic/managers/database_manager.dart';
+import 'package:Rusic/ui/media_ui.dart';
+import 'dart:io';
 
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;
@@ -98,17 +101,27 @@ class LibraryState extends State<Library>
             },
             body: TabBarView(
               controller: _tabController,
-              children: const [
-                OnlineScreen(),
-                Scaffold(
-                  backgroundColor: Colors.transparent,
-                  body: Center(child: Text("No Favorite Yet...")),
+              children: [
+                const OnlineScreen(),
+                MediaUI(
+                  title: "Favorites",
+                  showNavigationBar: false,
+                  emptyMessage: "No Favorite Yet...",
+                  mediaFilesFuture: DatabaseManager.instance
+                      .getAllFavorites()
+                      .then((paths) {
+                        final files = paths
+                            .map((path) => File(path))
+                            .where((file) => file.existsSync())
+                            .toList();
+                        return {"Favorites": files};
+                      }),
                 ),
-                Scaffold(
+                const Scaffold(
                   backgroundColor: Colors.transparent,
                   body: Center(child: Text("No Playlist Yet...")),
                 ),
-                LocationsTab(),
+                const LocationsTab(),
               ],
             ),
           ),

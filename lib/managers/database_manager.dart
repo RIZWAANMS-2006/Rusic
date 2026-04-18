@@ -116,4 +116,10 @@ CREATE TABLE favorites (
     );
     return maps.isNotEmpty;
   }
+
+  Future<List<String>> getAllFavorites() async {
+    final db = await database;
+    final maps = await db.query('favorites');
+    return maps.map((map) => map['url'] as String).toList();
+  }
 }
