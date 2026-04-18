@@ -67,7 +67,7 @@ List<Widget> navigationBarDestinationsItems = [
     icon: Transform.scale(
       scale: 1.05,
       child: SvgPicture.asset(
-        "assets/MusicIcons/MusicLogo.svg",
+        "assets/MusicIcons/music_logo.svg",
         height: 25,
         width: 25,
         color: const Color.fromRGBO(216, 194, 192, 1),
@@ -229,7 +229,7 @@ class WideScreenState extends State<WideScreen> {
                     Row(
                       children: isSwapped
                           ? [
-                              Expanded(child: musicPane),
+                              const Expanded(child: musicPane),
                               SizedBox(
                                 width: compactPaneWidth,
                                 height: double.infinity,
@@ -250,7 +250,7 @@ class WideScreenState extends State<WideScreen> {
                       right: compactPaneWidth - 52,
                       child: IconButton(
                         onPressed: toggleWideScreenPanels,
-                        icon: SvgPicture.asset("assets/MusicIcons/Swap.svg"),
+                        icon: SvgPicture.asset("assets/MusicIcons/swap.svg"),
                       ),
                     ),
                   ],

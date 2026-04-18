@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:Rusic/search/search_page.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:Rusic/managers/songs_manager.dart';
+import 'package:flutter_swipe_action_cell/flutter_swipe_action_cell.dart';
 
 /// A universal UI component for displaying media files across different tabs.
 ///
@@ -467,47 +468,53 @@ class _MediaUIState extends State<MediaUI> {
       file.path.lastIndexOf(Platform.pathSeparator) + 1,
     );
 
-    return Dismissible(
+    return SwipeActionCell(
       key: ValueKey(file.path),
-      background: Container(
-        color: Colors.green,
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.only(left: 20.0),
-        child: const Icon(Icons.queue_music, color: Colors.white),
-      ),
-      secondaryBackground: Container(
-        color: Colors.blue,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20.0),
-        child: const Icon(Icons.info_outline, color: Colors.white),
-      ),
-      confirmDismiss: (direction) async {
-        if (direction == DismissDirection.endToStart) {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Song Info'),
-              content: Text('Swiped left on $fileName'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Close'),
-                ),
-              ],
-            ),
-          );
-          return false;
-        } else if (direction == DismissDirection.startToEnd) {
-          SongsManager().addToQueue(
-            QueueItem(id: file.path, title: fileName, path: file.path),
-          );
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Added $fileName to queue')));
-          return false;
-        }
-        return false;
-      },
+      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      trailingActions: <SwipeAction>[
+        SwipeAction(
+          icon: const Icon(Icons.close, color: Colors.white),
+          color: Colors.grey[850]!,
+          onTap: (CompletionHandler handler) async {
+            await handler(false);
+          },
+        ),
+        SwipeAction(
+          icon: const Icon(Icons.playlist_add, color: Colors.white),
+          color: Colors.grey[700]!,
+          onTap: (CompletionHandler handler) async {
+            await handler(false);
+            // Handle playlist addition here
+          },
+        ),
+        SwipeAction(
+          icon: const Icon(Icons.favorite_border, color: Colors.white),
+          color: Colors.redAccent,
+          performsFirstActionWithFullSwipe: true,
+          onTap: (CompletionHandler handler) async {
+            await handler(false);
+            // Handle like action here
+          },
+        ),
+      ],
+      leadingActions: <SwipeAction>[
+        SwipeAction(
+          icon: const Icon(Icons.queue_music, color: Colors.white),
+          color: Colors.green,
+          performsFirstActionWithFullSwipe: true,
+          onTap: (CompletionHandler handler) async {
+            await handler(false);
+            SongsManager().addToQueue(
+              QueueItem(id: file.path, title: fileName, path: file.path),
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Added $fileName to queue')),
+              );
+            }
+          },
+        ),
+      ],
       child: ConstrainedBox(
         constraints: const BoxConstraints(
           minWidth: double.infinity,
@@ -523,9 +530,8 @@ class _MediaUIState extends State<MediaUI> {
               color: Colors.white,
               borderRadius: BorderRadius.all(Radius.circular(5)),
             ),
-            child: SvgPicture.asset("assets/MusicIcons/MusicLogo.svg"),
+            child: SvgPicture.asset("assets/MusicIcons/music_logo_black.svg"),
           ),
-          tileColor: const Color.fromRGBO(26, 26, 26, 1),
           title: Text(
             fileName,
             textAlign: TextAlign.left,
@@ -1185,52 +1191,57 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
   }
 
   Widget _buildListItem(OnlineSong song, int index) {
-    return Dismissible(
+    return SwipeActionCell(
       key: ValueKey(song.url),
-      background: Container(
-        color: Colors.green,
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.only(left: 20.0),
-        child: const Icon(Icons.queue_music, color: Colors.white),
-      ),
-      secondaryBackground: Container(
-        color: Colors.blue,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20.0),
-        child: const Icon(Icons.info_outline, color: Colors.white),
-      ),
-      confirmDismiss: (direction) async {
-        if (direction == DismissDirection.endToStart) {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Song Info'),
-              content: Text('Swiped left on ${song.title}'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Close'),
-                ),
-              ],
-            ),
-          );
-          return false;
-        } else if (direction == DismissDirection.startToEnd) {
-          SongsManager().addToQueue(
-            QueueItem(
-              id: song.url,
-              title: song.title,
-              path: song.url,
-              artist: song.artist,
-            ),
-          );
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Added ${song.title} to queue')),
-          );
-          return false;
-        }
-        return false;
-      },
+      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      trailingActions: <SwipeAction>[
+        SwipeAction(
+          icon: const Icon(Icons.close, color: Colors.white),
+          color: Colors.grey[850]!,
+          onTap: (CompletionHandler handler) async {
+            await handler(false);
+          },
+        ),
+        SwipeAction(
+          icon: const Icon(Icons.playlist_add, color: Colors.white),
+          color: Colors.grey[700]!,
+          onTap: (CompletionHandler handler) async {
+            await handler(false);
+            // Handle playlist addition here
+          },
+        ),
+        SwipeAction(
+          icon: const Icon(Icons.favorite_border, color: Colors.white),
+          color: Colors.redAccent,
+          performsFirstActionWithFullSwipe: true,
+          onTap: (CompletionHandler handler) async {
+            await handler(false);
+            // Handle like action here
+          },
+        ),
+      ],
+      leadingActions: <SwipeAction>[
+        SwipeAction(
+          icon: const Icon(Icons.queue_music, color: Colors.white),
+          color: Colors.green,
+          onTap: (CompletionHandler handler) async {
+            await handler(false);
+            SongsManager().addToQueue(
+              QueueItem(
+                id: song.url,
+                title: song.title,
+                path: song.url,
+                artist: song.artist,
+              ),
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Added ${song.title} to queue')),
+              );
+            }
+          },
+        ),
+      ],
       child: ConstrainedBox(
         constraints: const BoxConstraints(
           minWidth: double.infinity,
@@ -1246,10 +1257,8 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
               color: Colors.white,
               borderRadius: BorderRadius.all(Radius.circular(5)),
             ),
-            child: SvgPicture.asset("assets/MusicIcons/MusicLogo.svg"),
+            child: SvgPicture.asset("assets/MusicIcons/music_logo_black.svg"),
           ),
-          tileColor: const Color.fromRGBO(26, 26, 26, 1),
-
           title: Text(
             song.title,
             textAlign: TextAlign.left,

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:Rusic/music_player/dynamic_background.dart';
@@ -243,16 +244,19 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(left: 8, right: 8),
-                        child: Container(
-                          width: 45,
-                          height: 45,
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: const Color.fromRGBO(34, 34, 34, 1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: SvgPicture.asset(
-                            "assets/MusicIcons/Vector-3.svg",
+                        child: Hero(
+                          tag: "Music Logo",
+                          child: Container(
+                            width: 45,
+                            height: 45,
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color.fromRGBO(34, 34, 34, 1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: SvgPicture.asset(
+                              "assets/MusicIcons/music_logo.svg",
+                            ),
                           ),
                         ),
                       ),
@@ -282,8 +286,8 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                             return IconButton(
                               icon: SvgPicture.asset(
                                 playing
-                                    ? "assets/MusicIcons/Pause.svg"
-                                    : "assets/MusicIcons/Play.svg",
+                                    ? "assets/MusicIcons/pause.svg"
+                                    : "assets/MusicIcons/play.svg",
                                 color: const Color.fromRGBO(34, 34, 34, 1),
                                 width: 25,
                                 height: 25,
@@ -301,7 +305,7 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                             SongsManager().toggleRepeat();
                           },
                           icon: SvgPicture.asset(
-                            "assets/MusicIcons/Loop.svg",
+                            "assets/MusicIcons/loop.svg",
                             color: SongsManager().repeatMode.name != 'off'
                                 ? Colors.red
                                 : const Color.fromRGBO(34, 34, 34, 1),
@@ -312,7 +316,7 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                             SongsManager().toggleShuffle();
                           },
                           icon: SvgPicture.asset(
-                            "assets/MusicIcons/Shuffle.svg",
+                            "assets/MusicIcons/shuffle.svg",
                             color: SongsManager().isShuffle
                                 ? Colors.red
                                 : const Color.fromRGBO(34, 34, 34, 1),
@@ -440,6 +444,9 @@ class FullSizeMusicController extends StatefulWidget {
 class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
   late CurvedAnimation curved;
   bool isQueueOpen = false;
+  bool isLiked = false;
+  bool _showLikeAnimation = false;
+  Offset? _tapPosition;
 
   @override
   void initState() {
@@ -460,7 +467,8 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
         final currentSong = SongsManager().currentSong;
         return LayoutBuilder(
           builder: (context, constraints) {
-            return (constraints.maxWidth < 700)
+            final bool isEmbedded = ModalRoute.of(context)?.isFirst ?? true;
+            return (constraints.maxWidth < 700 || isEmbedded)
                 ? LayoutBuilder(
                     builder: (context, constraints) {
                       return DefaultTabController(
@@ -482,7 +490,7 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                   children: [
                                     IconButton(
                                       icon: SvgPicture.asset(
-                                        "assets/MusicIcons/Shuffle.svg",
+                                        "assets/MusicIcons/shuffle.svg",
                                         color: SongsManager().isShuffle
                                             ? Colors.red
                                             : null,
@@ -494,14 +502,16 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                       },
                                     ),
                                     IconButton(
+                                      // disabledColor: Colors.grey[600],
                                       icon: SvgPicture.asset(
-                                        "assets/MusicIcons/PreviousButton.svg",
+                                        "assets/MusicIcons/previous_button.svg",
                                         width: 20,
                                         height: 20,
                                       ),
-                                      onPressed: () {
-                                        SongsManager().playPrevious();
-                                      },
+                                      onPressed: null 
+                                      // () {
+                                      //   SongsManager().playPrevious();
+                                      // },
                                     ),
                                     Stack(
                                       alignment: Alignment.center,
@@ -524,8 +534,8 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                             return IconButton(
                                               icon: SvgPicture.asset(
                                                 playing
-                                                    ? "assets/MusicIcons/Pause.svg"
-                                                    : "assets/MusicIcons/Play.svg",
+                                                    ? "assets/MusicIcons/pause.svg"
+                                                    : "assets/MusicIcons/play.svg",
                                                 width: 20,
                                                 height: 20,
                                               ),
@@ -541,7 +551,7 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                     ),
                                     IconButton(
                                       icon: SvgPicture.asset(
-                                        "assets/MusicIcons/NextButton.svg",
+                                        "assets/MusicIcons/next_button.svg",
                                         width: 20,
                                         height: 20,
                                       ),
@@ -551,7 +561,7 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                     ),
                                     IconButton(
                                       icon: SvgPicture.asset(
-                                        "assets/MusicIcons/Loop.svg",
+                                        "assets/MusicIcons/loop.svg",
                                         color:
                                             SongsManager().repeatMode.name !=
                                                 'off'
@@ -636,7 +646,7 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                             leading: MediaQuery.of(context).size.width < 700
                                 ? IconButton(
                                     icon: SvgPicture.asset(
-                                      "assets/MusicIcons/DownArrow.svg",
+                                      "assets/MusicIcons/down_arrow.svg",
                                     ),
                                     onPressed: () {
                                       Navigator.pop(context);
@@ -648,270 +658,347 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                 ? kToolbarHeight
                                 : 0,
                           ),
-                          body: Stack(
-                            children: [
-                              ImageFiltered(
-                                imageFilter: ImageFilter.blur(
-                                  sigmaX: 5,
-                                  sigmaY: 5,
+                          body: GestureDetector(
+                            onDoubleTapDown: (details) {
+                              _tapPosition = details.localPosition;
+                            },
+                            onDoubleTap: () {
+                              setState(() {
+                                isLiked =
+                                    true; // Optionally set isLiked if tapping means like
+                                _showLikeAnimation = true;
+                                Future.delayed(
+                                  const Duration(milliseconds: 1500),
+                                  () {
+                                    if (mounted) {
+                                      setState(() {
+                                        _showLikeAnimation = false;
+                                        _tapPosition = null;
+                                      });
+                                    }
+                                  },
+                                );
+                              });
+                            },
+                            child: Stack(
+                              children: [
+                                ImageFiltered(
+                                  imageFilter: ImageFilter.blur(
+                                    sigmaX: 5,
+                                    sigmaY: 5,
+                                  ),
+                                  child: const WeatherBackground(),
                                 ),
-                                child: const WeatherBackground(),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.only(
-                                  top:
-                                      MediaQuery.of(context).padding.top +
-                                      kToolbarHeight,
-                                  bottom: 180,
-                                ),
-                                child: AnimatedBuilder(
-                                  animation: VideoManager(),
-                                  builder: (context, _) {
-                                    final isVideo =
-                                        VideoManager().isVideoAvailable;
-                                    return TabBarView(
-                                      physics: isVideo
-                                          ? const BouncingScrollPhysics()
-                                          : const NeverScrollableScrollPhysics(),
-                                      children: [
-                                        Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          mainAxisSize: MainAxisSize.max,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.end,
-                                              children: [
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        bottom: 5,
-                                                      ),
-                                                  child: IconButton(
-                                                    icon: SvgPicture.asset(
-                                                      "assets/MusicIcons/Like.svg",
-                                                    ),
-                                                    onPressed: () {},
-                                                  ),
-                                                ),
-                                                Container(
-                                                  height:
-                                                      constraints.maxWidth *
-                                                      0.35,
-                                                  width:
-                                                      constraints.maxWidth *
-                                                      0.35,
-                                                  constraints:
-                                                      const BoxConstraints(
-                                                        minHeight: 210,
-                                                        minWidth: 210,
-                                                        maxHeight: 300,
-                                                        maxWidth: 300,
-                                                      ),
-                                                  decoration:
-                                                      const BoxDecoration(
-                                                        color: Color.fromRGBO(
-                                                          255,
-                                                          245,
-                                                          245,
-                                                          1,
-                                                        ),
-                                                        shape: BoxShape.circle,
-                                                      ),
-                                                  alignment: Alignment.center,
-                                                  child: SvgPicture.asset(
-                                                    "assets/MusicIcons/MusicLogo.svg",
-                                                  ),
-                                                ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        bottom: 5,
-                                                      ),
-                                                  child: IconButton(
-                                                    icon: SvgPicture.asset(
-                                                      "assets/MusicIcons/AddPlaylist.svg",
-                                                    ),
-                                                    onPressed: () {},
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Container(
-                                              padding: const EdgeInsets.only(
-                                                top: 20,
-                                              ),
-                                              child: Column(
-                                                spacing: 3,
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    top:
+                                        MediaQuery.of(context).padding.top +
+                                        kToolbarHeight,
+                                    bottom: 180,
+                                  ),
+                                  child: AnimatedBuilder(
+                                    animation: VideoManager(),
+                                    builder: (context, _) {
+                                      final isVideo =
+                                          VideoManager().isVideoAvailable;
+                                      return TabBarView(
+                                        physics: isVideo
+                                            ? const BouncingScrollPhysics()
+                                            : const NeverScrollableScrollPhysics(),
+                                        children: [
+                                          Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            mainAxisSize: MainAxisSize.max,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.end,
                                                 children: [
-                                                  const Text(
-                                                    "Song:",
-                                                    style: TextStyle(
-                                                      color: Color.fromRGBO(
-                                                        255,
-                                                        245,
-                                                        245,
-                                                        1,
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                          bottom: 5,
+                                                        ),
+                                                    child: IconButton(
+                                                      icon: SvgPicture.asset(
+                                                        isLiked
+                                                            ? "assets/MusicIcons/liked.svg"
+                                                            : "assets/MusicIcons/like.svg",
                                                       ),
-                                                      fontSize: 14,
-                                                      fontFamily: "Borel",
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          isLiked = !isLiked;
+                                                          if (isLiked) {
+                                                            _showLikeAnimation =
+                                                                true;
+                                                            Future.delayed(
+                                                              const Duration(
+                                                                milliseconds:
+                                                                    1500,
+                                                              ),
+                                                              () {
+                                                                if (mounted) {
+                                                                  setState(() {
+                                                                    _showLikeAnimation =
+                                                                        false;
+                                                                  });
+                                                                }
+                                                              },
+                                                            );
+                                                          }
+                                                        });
+                                                      },
+                                                    ),
+                                                  ),
+                                                  Hero(
+                                                    tag: "Music Logo",
+                                                    child: Container(
+                                                      height:
+                                                          constraints.maxWidth *
+                                                          0.35,
+                                                      width:
+                                                          constraints.maxWidth *
+                                                          0.35,
+                                                      constraints:
+                                                          const BoxConstraints(
+                                                            minHeight: 210,
+                                                            minWidth: 210,
+                                                            maxHeight: 300,
+                                                            maxWidth: 300,
+                                                          ),
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                            color: Color.fromRGBO(
+                                                              255,
+                                                              245,
+                                                              245,
+                                                              1,
+                                                            ),
+                                                            shape:
+                                                                BoxShape.circle,
+                                                          ),
+                                                      alignment: Alignment.center,
+                                                      child: SvgPicture.asset(
+                                                        "assets/MusicIcons/music_logo_black.svg",
+                                                      ),
                                                     ),
                                                   ),
                                                   Padding(
                                                     padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 10,
-                                                          vertical: 6,
+                                                        const EdgeInsets.only(
+                                                          bottom: 5,
                                                         ),
-                                                    child: Text(
-                                                      currentSong == null
-                                                          ? "No Song is Playing..."
-                                                          : currentSong.title,
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: const TextStyle(
+                                                    child: IconButton(
+                                                      icon: SvgPicture.asset(
+                                                        "assets/MusicIcons/add_playlist.svg",
+                                                      ),
+                                                      onPressed: () {},
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.only(
+                                                  top: 20,
+                                                ),
+                                                child: Column(
+                                                  spacing: 3,
+                                                  children: [
+                                                    const Text(
+                                                      "Song:",
+                                                      style: TextStyle(
                                                         color: Color.fromRGBO(
                                                           255,
                                                           245,
                                                           245,
                                                           1,
                                                         ),
-                                                        fontSize: 16,
+                                                        fontSize: 14,
                                                         fontFamily: "Borel",
                                                       ),
                                                     ),
-                                                  ),
-                                                ],
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 10,
+                                                            vertical: 6,
+                                                          ),
+                                                      child: Text(
+                                                        currentSong == null
+                                                            ? "No Song is Playing..."
+                                                            : currentSong.title,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: const TextStyle(
+                                                          color: Color.fromRGBO(
+                                                            255,
+                                                            245,
+                                                            245,
+                                                            1,
+                                                          ),
+                                                          fontSize: 16,
+                                                          fontFamily: "Borel",
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                        AnimatedBuilder(
-                                          animation: VideoManager(),
-                                          builder: (context, child) {
-                                            final isAvailable =
-                                                VideoManager().isVideoAvailable;
-                                            final controller =
-                                                VideoManager().controller;
+                                            ],
+                                          ),
+                                          AnimatedBuilder(
+                                            animation: VideoManager(),
+                                            builder: (context, child) {
+                                              final isAvailable = VideoManager()
+                                                  .isVideoAvailable;
+                                              final controller =
+                                                  VideoManager().controller;
 
-                                            if (!isAvailable ||
-                                                controller == null ||
-                                                !controller
-                                                    .value
-                                                    .isInitialized) {
-                                              return Container(
-                                                color: Colors.black,
-                                                alignment: Alignment.center,
-                                                child: const Text(
-                                                  "No Video Available\nFor The Playing Media",
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                    color: Colors.grey,
-                                                    fontSize: 14,
+                                              if (!isAvailable ||
+                                                  controller == null ||
+                                                  !controller
+                                                      .value
+                                                      .isInitialized) {
+                                                return Container(
+                                                  color: Colors.black,
+                                                  alignment: Alignment.center,
+                                                  child: const Text(
+                                                    "No Video Available\nFor The Playing Media",
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+
+                                              return Center(
+                                                child: AspectRatio(
+                                                  aspectRatio: controller
+                                                      .value
+                                                      .aspectRatio,
+                                                  child: VideoPlayer(
+                                                    controller,
                                                   ),
                                                 ),
                                               );
-                                            }
-
-                                            return Center(
-                                              child: AspectRatio(
-                                                aspectRatio: controller
-                                                    .value
-                                                    .aspectRatio,
-                                                child: VideoPlayer(controller),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ),
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                bottom: 180,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      width: 130,
-                                      height: 30,
-                                      decoration: BoxDecoration(
-                                        color: const Color.fromRGBO(
-                                          225,
-                                          225,
-                                          225,
-                                          1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                          25.0,
-                                        ),
-                                      ),
-                                      child: AnimatedBuilder(
-                                        animation: VideoManager(),
-                                        builder: (context, _) {
-                                          final isVideo =
-                                              VideoManager().isVideoAvailable;
-                                          return TabBar(
-                                            indicatorSize:
-                                                TabBarIndicatorSize.tab,
-                                            indicator: BoxDecoration(
-                                              color: const Color.fromRGBO(
-                                                34,
-                                                34,
-                                                34,
-                                                1,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(25.0),
-                                            ),
-                                            dividerColor: Colors.transparent,
-                                            labelColor: Colors.white,
-                                            unselectedLabelColor: Colors.black,
-                                            splashBorderRadius:
-                                                BorderRadius.circular(25.0),
-                                            onTap: (index) {
-                                              if (!isVideo && index == 1) {
-                                                // Bounce back to Audio tab immediately
-                                                DefaultTabController.of(
-                                                  context,
-                                                ).animateTo(0);
-                                              }
                                             },
-                                            tabs: [
-                                              const Tab(
-                                                child: Text(
-                                                  "Audio",
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                  ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 180,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 130,
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          color: const Color.fromRGBO(
+                                            225,
+                                            225,
+                                            225,
+                                            1,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            25.0,
+                                          ),
+                                        ),
+                                        child: AnimatedBuilder(
+                                          animation: VideoManager(),
+                                          builder: (context, _) {
+                                            final isVideo =
+                                                VideoManager().isVideoAvailable;
+                                            return TabBar(
+                                              indicatorSize:
+                                                  TabBarIndicatorSize.tab,
+                                              indicator: BoxDecoration(
+                                                color: const Color.fromRGBO(
+                                                  34,
+                                                  34,
+                                                  34,
+                                                  1,
                                                 ),
+                                                borderRadius:
+                                                    BorderRadius.circular(25.0),
                                               ),
-                                              Tab(
-                                                child: Opacity(
-                                                  opacity: isVideo ? 1.0 : 0.4,
-                                                  child: const Text(
-                                                    "Video",
+                                              dividerColor: Colors.transparent,
+                                              labelColor: Colors.white,
+                                              unselectedLabelColor:
+                                                  Colors.black,
+                                              splashBorderRadius:
+                                                  BorderRadius.circular(25.0),
+                                              onTap: (index) {
+                                                if (!isVideo && index == 1) {
+                                                  // Bounce back to Audio tab immediately
+                                                  DefaultTabController.of(
+                                                    context,
+                                                  ).animateTo(0);
+                                                }
+                                              },
+                                              tabs: [
+                                                const Tab(
+                                                  child: Text(
+                                                    "Audio",
                                                     style: TextStyle(
                                                       fontSize: 12,
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                            ],
-                                          );
-                                        },
+                                                Tab(
+                                                  child: Opacity(
+                                                    opacity: isVideo
+                                                        ? 1.0
+                                                        : 0.4,
+                                                    child: const Text(
+                                                      "Video",
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (_showLikeAnimation)
+                                  Positioned(
+                                    left: _tapPosition != null
+                                        ? _tapPosition!.dx - 150
+                                        : null,
+                                    top: _tapPosition != null
+                                        ? _tapPosition!.dy - 150
+                                        : null,
+                                    right: _tapPosition == null ? 0 : null,
+                                    bottom: _tapPosition == null ? 0 : null,
+                                    child: IgnorePointer(
+                                      child: Center(
+                                        child: Lottie.asset(
+                                          "assets/lottie_files/like_animation.json",
+                                          repeat: false,
+                                          width: 300,
+                                          height: 300,
+                                        ),
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       );
