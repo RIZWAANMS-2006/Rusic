@@ -17,6 +17,8 @@ class SettingsManager {
       userSettings.getString('lastSongPlayedPath') ?? "";
   static int get getCrossfadeDuration =>
       userSettings.getInt('crossfadeDuration') ?? 0;
+  static int get getLastLibraryTab =>
+      userSettings.getInt('lastLibraryTab') ?? 0;
 
   //Set Functions
   static Future<void> setDarkMode(bool value) async {
@@ -37,6 +39,10 @@ class SettingsManager {
 
   static Future<void> setCrossfadeDuration(int value) async {
     await userSettings.setInt('crossfadeDuration', value);
+  }
+
+  static Future<void> setLastLibraryTab(int value) async {
+    await userSettings.setInt('lastLibraryTab', value);
   }
 
   static Future<void> setDefaults() async {

@@ -8,6 +8,7 @@ import 'package:Rusic/managers/audio_manager.dart';
 import "package:Rusic/managers/ui_manager.dart";
 import 'package:Rusic/managers/songs_manager.dart';
 import 'package:Rusic/managers/video_manager.dart';
+import 'package:Rusic/managers/database_manager.dart';
 import 'package:video_player/video_player.dart';
 
 bool _isDragging = false;
@@ -444,7 +445,6 @@ class FullSizeMusicController extends StatefulWidget {
 class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
   late CurvedAnimation curved;
   bool isQueueOpen = false;
-  bool isLiked = false;
   bool _showLikeAnimation = false;
   Offset? _tapPosition;
 
@@ -462,7 +462,7 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: SongsManager(),
+      animation: Listenable.merge([SongsManager(), DatabaseManager.instance]),
       builder: (context, _) {
         final currentSong = SongsManager().currentSong;
         return LayoutBuilder(
@@ -705,23 +705,28 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                             onDoubleTapDown: (details) {
                               _tapPosition = details.localPosition;
                             },
-                            onDoubleTap: () {
-                              setState(() {
-                                isLiked =
-                                    true; // Optionally set isLiked if tapping means like
-                                _showLikeAnimation = true;
-                                Future.delayed(
-                                  const Duration(milliseconds: 1500),
-                                  () {
-                                    if (mounted) {
-                                      setState(() {
-                                        _showLikeAnimation = false;
-                                        _tapPosition = null;
-                                      });
-                                    }
-                                  },
+                            onDoubleTap: () async {
+                              if (currentSong != null) {
+                                await DatabaseManager.instance.addFavorite(
+                                  currentSong.path,
                                 );
-                              });
+                                if (mounted) {
+                                  setState(() {
+                                    _showLikeAnimation = true;
+                                    Future.delayed(
+                                      const Duration(milliseconds: 1500),
+                                      () {
+                                        if (mounted) {
+                                          setState(() {
+                                            _showLikeAnimation = false;
+                                            _tapPosition = null;
+                                          });
+                                        }
+                                      },
+                                    );
+                                  });
+                                }
+                              }
                             },
                             child: Stack(
                               children: [
@@ -767,7 +772,13 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                                         ),
                                                     child: IconButton(
                                                       icon: SvgPicture.asset(
-                                                        isLiked
+                                                        currentSong != null &&
+                                                                DatabaseManager
+                                                                    .instance
+                                                                    .isFavoriteSync(
+                                                                      currentSong
+                                                                          .path,
+                                                                    )
                                                             ? "assets/MusicIcons/liked.svg"
                                                             : "assets/MusicIcons/like.svg",
                                                         color:
@@ -778,11 +789,23 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                                       onPressed:
                                                           currentSong == null
                                                           ? null
-                                                          : () {
-                                                              setState(() {
-                                                                isLiked =
-                                                                    !isLiked;
-                                                                if (isLiked) {
+                                                          : () async {
+                                                              final isFav =
+                                                                  DatabaseManager
+                                                                      .instance
+                                                                      .isFavoriteSync(
+                                                                        currentSong
+                                                                            .path,
+                                                                      );
+                                                              await DatabaseManager
+                                                                  .instance
+                                                                  .toggleFavorite(
+                                                                    currentSong
+                                                                        .path,
+                                                                  );
+                                                              if (!isFav &&
+                                                                  mounted) {
+                                                                setState(() {
                                                                   _showLikeAnimation =
                                                                       true;
                                                                   Future.delayed(
@@ -799,8 +822,8 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                                                       }
                                                                     },
                                                                   );
-                                                                }
-                                                              });
+                                                                });
+                                                              }
                                                             },
                                                     ),
                                                   ),

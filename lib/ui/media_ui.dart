@@ -319,7 +319,7 @@ class _MediaUIState extends State<MediaUI> {
                       padding: const EdgeInsets.symmetric(horizontal: 5),
                       sliver: SliverGrid.extent(
                         maxCrossAxisExtent: 400,
-                        childAspectRatio: 3,
+                        childAspectRatio: 4,
                         mainAxisSpacing: 5,
                         crossAxisSpacing: 5,
                         children: filesInSection.map((file) {
@@ -1055,7 +1055,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
                         padding: const EdgeInsets.symmetric(horizontal: 5),
                         sliver: SliverGrid.extent(
                           maxCrossAxisExtent: 400,
-                          childAspectRatio: 3,
+                          childAspectRatio: 4,
                           mainAxisSpacing: 5,
                           crossAxisSpacing: 5,
                           children: songsInSection.map((song) {

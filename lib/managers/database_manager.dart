@@ -4,9 +4,13 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../ui/media_ui.dart';
 
-class DatabaseManager {
+class DatabaseManager extends ChangeNotifier {
   static final DatabaseManager instance = DatabaseManager._init();
   static Database? _database;
+
+  // Added a cache to avoid frequent disk lookups and prevent UI flickering
+  final Set<String> _cachedFavorites = {};
+  bool _isCacheInitialized = false;
 
   DatabaseManager._init();
 
@@ -14,7 +18,24 @@ class DatabaseManager {
     if (_database != null) return _database!;
 
     _database = await _initDB('rusic_data.db');
+    await _initCache();
     return _database!;
+  }
+
+  Future<void> _initCache() async {
+    if (_isCacheInitialized) return;
+    final db = _database!;
+    final maps = await db.query('favorites');
+    _cachedFavorites.clear();
+    for (var map in maps) {
+      _cachedFavorites.add(map['url'] as String);
+    }
+    _isCacheInitialized = true;
+    notifyListeners();
+  }
+
+  bool isFavoriteSync(String url) {
+    return _cachedFavorites.contains(url);
   }
 
   Future<Database> _initDB(String filePath) async {
@@ -99,12 +120,15 @@ CREATE TABLE favorites (
     final db = await database;
     final isFav = await isFavorite(url);
     if (isFav) {
+      _cachedFavorites.remove(url);
       await db.delete('favorites', where: 'url = ?', whereArgs: [url]);
     } else {
+      _cachedFavorites.add(url);
       await db.insert('favorites', {
         'url': url,
       }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
+    notifyListeners();
   }
 
   Future<bool> isFavorite(String url) async {
@@ -117,9 +141,30 @@ CREATE TABLE favorites (
     return maps.isNotEmpty;
   }
 
+  Future<void> addFavorite(String url) async {
+    final db = await database;
+    _cachedFavorites.add(url);
+    await db.insert('favorites', {
+      'url': url,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    notifyListeners();
+  }
+
+  Future<void> removeFavorite(String url) async {
+    final db = await database;
+    _cachedFavorites.remove(url);
+    await db.delete('favorites', where: 'url = ?', whereArgs: [url]);
+    notifyListeners();
+  }
+
   Future<List<String>> getAllFavorites() async {
     final db = await database;
     final maps = await db.query('favorites');
-    return maps.map((map) => map['url'] as String).toList();
+    _cachedFavorites.clear();
+    for (var map in maps) {
+      _cachedFavorites.add(map['url'] as String);
+    }
+    _isCacheInitialized = true;
+    return _cachedFavorites.toList();
   }
 }

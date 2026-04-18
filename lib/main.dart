@@ -11,6 +11,7 @@ import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:Rusic/managers/settings_manager.dart';
+import 'package:Rusic/managers/database_manager.dart';
 import 'package:Rusic/managers/ui_manager.dart';
 import 'package:toastification/toastification.dart';
 
@@ -20,6 +21,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   SettingsManager.init();
+  await DatabaseManager
+      .instance
+      .database; // Ensure database & cache initialized
 
   // Request Android permissions early (Android 11+)
   if (Platform.isAndroid) {
@@ -214,7 +218,7 @@ class WideScreenState extends State<WideScreen> {
               builder: (context, isSwapped, _) {
                 final double compactPaneWidth =
                     (MediaQuery.of(context).size.width * 0.3)
-                        .clamp(350, double.infinity)
+                        .clamp(350, 450)
                         .toDouble();
 
                 final contentPane = IndexedStack(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:Rusic/music_player/online_screens/online_screen.dart';
 import 'package:Rusic/music_player/location_screens/location_screen.dart';
 import 'package:Rusic/managers/database_manager.dart';
+import 'package:Rusic/managers/settings_manager.dart';
 import 'package:Rusic/ui/media_ui.dart';
 import 'dart:io';
 
@@ -51,7 +52,17 @@ class LibraryState extends State<Library>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(
+      length: 4,
+      vsync: this,
+      initialIndex: SettingsManager.getLastLibraryTab,
+    );
+
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        SettingsManager.setLastLibraryTab(_tabController.index);
+      }
+    });
   }
 
   @override
@@ -103,19 +114,26 @@ class LibraryState extends State<Library>
               controller: _tabController,
               children: [
                 const OnlineScreen(),
-                MediaUI(
-                  title: "Favorites",
-                  showNavigationBar: false,
-                  emptyMessage: "No Favorite Yet...",
-                  mediaFilesFuture: DatabaseManager.instance
-                      .getAllFavorites()
-                      .then((paths) {
-                        final files = paths
-                            .map((path) => File(path))
-                            .where((file) => file.existsSync())
-                            .toList();
-                        return {"Favorites": files};
-                      }),
+                AnimatedBuilder(
+                  animation: DatabaseManager.instance,
+                  builder: (context, _) {
+                    return MediaUI(
+                      // Uses the timestamp / unique key on rebuild so MediaUI fetches anew
+                      key: ValueKey(DateTime.now().millisecondsSinceEpoch),
+                      title: "Favorites",
+                      showNavigationBar: false,
+                      emptyMessage: "No Favorite Yet...",
+                      mediaFilesFuture: DatabaseManager.instance
+                          .getAllFavorites()
+                          .then((paths) {
+                            final files = paths
+                                .map((path) => File(path))
+                                .where((file) => file.existsSync())
+                                .toList();
+                            return {"Favorites": files};
+                          }),
+                    );
+                  },
                 ),
                 const Scaffold(
                   backgroundColor: Colors.transparent,
