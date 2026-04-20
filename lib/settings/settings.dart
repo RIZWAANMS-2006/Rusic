@@ -43,7 +43,7 @@ class _SettingsState extends State<Settings> {
     // Both views are unified under _UnifiedSettingsScreen which handles
     // the layout changes internally below.
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
         child: CustomScrollView(
@@ -51,8 +51,10 @@ class _SettingsState extends State<Settings> {
             CupertinoSliverNavigationBar(
               stretch: true,
               alwaysShowMiddle: false,
-              border: null,
-              backgroundColor: setContainerColor(context),
+              border: Border(
+                bottom: BorderSide(color: setAppBarBorderColor(context)),
+              ),
+              backgroundColor: setAppBarColor(context),
               largeTitle: const Text("Settings"),
             ),
             const SliverPadding(

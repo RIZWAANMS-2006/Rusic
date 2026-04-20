@@ -120,7 +120,7 @@ class _MediaUIState extends State<MediaUI> {
     final isDesktop = MediaQuery.of(context).size.width > 700;
 
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
         child: CustomScrollView(
@@ -143,7 +143,7 @@ class _MediaUIState extends State<MediaUI> {
 
   Widget _buildErrorState(String error) {
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
         child: CustomScrollView(
@@ -178,7 +178,7 @@ class _MediaUIState extends State<MediaUI> {
 
   Widget _buildEmptyState() {
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
         child: CustomScrollView(
@@ -240,20 +240,26 @@ class _MediaUIState extends State<MediaUI> {
     final isDesktop = MediaQuery.of(context).size.width > 700;
 
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
     );
   }
 
   Widget _buildNavigationBar() {
     if (widget.title == 'Search' || widget.showSearchBar) {
-      return CupertinoSliverNavigationBar(
-        stretch: true,
-        backgroundColor: setContainerColor(context),
-        largeTitle: Text(widget.title),
-        alwaysShowMiddle: false,
-        transitionBetweenRoutes: false,
-        border: null,
+      return Builder(
+        builder: (context) {
+          return CupertinoSliverNavigationBar(
+            stretch: true,
+            backgroundColor: setAppBarColor(context),
+            largeTitle: Text(widget.title),
+            alwaysShowMiddle: false,
+            transitionBetweenRoutes: false,
+            border: Border(
+              bottom: BorderSide(color: setAppBarBorderColor(context)),
+            ),
+          );
+        },
       );
     }
 
@@ -274,7 +280,7 @@ class _MediaUIState extends State<MediaUI> {
     final sortedLetters = groupedFiles.keys.toList()..sort();
 
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: widget.showSearchBar
           ? const MusicSearchBar()
           : null,
@@ -487,7 +493,7 @@ class _MediaUIState extends State<MediaUI> {
 
     return SwipeActionCell(
       key: ValueKey(file.path),
-      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       trailingActions: <SwipeAction>[
         SwipeAction(
           icon: const Icon(Icons.close, color: Colors.white),
@@ -813,7 +819,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
     final isDesktop = MediaQuery.of(context).size.width > 700;
 
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(isLoading: true),
       body: Shimmer.fromColors(
         baseColor: Colors.grey[850]!,
@@ -825,7 +831,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
 
   Widget _buildErrorState(String error) {
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),
       body: Center(
         child: Column(
@@ -851,7 +857,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
 
   Widget _buildEmptyState() {
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),
       body: Center(
         child: Column(
@@ -996,7 +1002,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
     final isDesktop = MediaQuery.of(context).size.width > 700;
 
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       // floatingActionButton: widget.showMusicController && !isDesktop
       //     ? Padding(
@@ -1227,7 +1233,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
   Widget _buildListItem(OnlineSong song, int index) {
     return SwipeActionCell(
       key: ValueKey(song.url),
-      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       trailingActions: <SwipeAction>[
         SwipeAction(
           icon: const Icon(Icons.close, color: Colors.white),

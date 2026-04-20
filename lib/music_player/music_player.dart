@@ -5,6 +5,7 @@ import 'package:Rusic/music_player/location_screens/location_screen.dart';
 import 'package:Rusic/managers/database_manager.dart';
 import 'package:Rusic/managers/settings_manager.dart';
 import 'package:Rusic/ui/media_ui.dart';
+import 'package:Rusic/managers/ui_manager.dart';
 import 'dart:io';
 
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
@@ -24,7 +25,15 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(color: const Color.fromRGBO(34, 34, 34, 1), child: tabBar);
+    return Container(
+      decoration: BoxDecoration(
+        color: setAppBarColor(context),
+        border: Border(
+          bottom: BorderSide(color: setAppBarBorderColor(context)),
+        ),
+      ),
+      child: tabBar,
+    );
   }
 
   @override
@@ -75,18 +84,18 @@ class LibraryState extends State<Library>
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           NestedScrollView(
             physics: const BouncingScrollPhysics(),
             headerSliverBuilder: (context, innerbox) {
               return [
-                const CupertinoSliverNavigationBar(
-                  largeTitle: Text("Library"),
-                  middle: Text("Library"),
+                CupertinoSliverNavigationBar(
+                  largeTitle: const Text("Library"),
+                  middle: const Text("Library"),
                   alwaysShowMiddle: false,
-                  backgroundColor: Color.fromRGBO(34, 34, 34, 1),
+                  backgroundColor: setAppBarColor(context),
                   stretch: true,
                   border: null,
                 ),

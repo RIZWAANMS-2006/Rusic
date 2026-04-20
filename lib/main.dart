@@ -20,7 +20,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   JustAudioMediaKit.ensureInitialized();
 
-  SettingsManager.init();
+  await SettingsManager.init();
   await DatabaseManager
       .instance
       .database; // Ensure database & cache initialized
@@ -58,7 +58,7 @@ Future<void> main() async {
     // setWindowMaxSize(const Size(10000, 10000)); //logical width height
   }
 
-  runApp(const MxMusicConsole());
+  runApp(const Rusic());
 }
 
 //index for Navigation Bar
@@ -103,77 +103,42 @@ const List<NavigationRailDestination> navigationRailDestinationsItems = [
   ),
 ];
 
-class MxMusicConsole extends StatefulWidget {
-  const MxMusicConsole({super.key});
+class Rusic extends StatefulWidget {
+  const Rusic({super.key});
 
   @override
-  State<MxMusicConsole> createState() => MxMusicConsoleState();
+  State<Rusic> createState() => RusicState();
 }
 
-class MxMusicConsoleState extends State<MxMusicConsole> {
+class RusicState extends State<Rusic> {
   @override
   Widget build(BuildContext context) {
     return ToastificationWrapper(
-      child: MaterialApp(
-        title: "Rusic",
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          fontFamily: 'Asimovian',
-          brightness: Brightness.light,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
-          navigationBarTheme: const NavigationBarThemeData(
-            backgroundColor: Color.fromRGBO(26, 26, 26, 1),
-          ),
-          textTheme: const TextTheme(
-            bodyMedium: TextStyle(color: Colors.black),
-            bodyLarge: TextStyle(color: Colors.black),
-            bodySmall: TextStyle(color: Colors.black),
-            displayLarge: TextStyle(color: Colors.black),
-            displayMedium: TextStyle(color: Colors.black),
-            displaySmall: TextStyle(color: Colors.black),
-            headlineLarge: TextStyle(color: Colors.black),
-            headlineMedium: TextStyle(color: Colors.black),
-            headlineSmall: TextStyle(color: Colors.black),
-            titleLarge: TextStyle(color: Colors.black87),
-            titleMedium: TextStyle(color: Colors.black87),
-            titleSmall: TextStyle(color: Colors.black87),
-          ),
-        ),
-        darkTheme: ThemeData(
-          fontFamily: 'Asimovian',
-          brightness: Brightness.dark,
-          colorScheme: ColorScheme.fromSeed(
-            brightness: Brightness.dark,
-            seedColor: Colors.redAccent,
-          ),
-          navigationBarTheme: const NavigationBarThemeData(
-            backgroundColor: Color.fromRGBO(26, 26, 26, 1),
-          ),
-          textTheme: const TextTheme(
-            bodyMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-            bodyLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-            bodySmall: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-            displayLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-            displayMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-            displaySmall: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-            headlineLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-            headlineMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-            headlineSmall: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-            titleLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-            titleMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-            titleSmall: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
-          ),
-        ),
-        themeMode: ThemeMode.system,
-        home: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth <= 700) {
-              return const CompactScreen();
-            } else {
-              return const WideScreen();
-            }
-          },
-        ),
+      child: ValueListenableBuilder(
+        valueListenable: SettingsManager.systemTheme,
+        builder: (context, value, child) {
+          final themeMode = value == "System"
+              ? ThemeMode.system
+              : (value == "Light" ? ThemeMode.light : ThemeMode.dark);
+
+          return MaterialApp(
+            title: "Rusic",
+            debugShowCheckedModeBanner: false,
+            theme: SettingsManager().lightTheme,
+            darkTheme: SettingsManager().darkTheme,
+            themeMode: themeMode,
+            //ThemeMode.system,
+            home: LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth <= 700) {
+                  return const CompactScreen();
+                } else {
+                  return const WideScreen();
+                }
+              },
+            ),
+          );
+        },
       ),
     );
   }
@@ -298,9 +263,9 @@ class CompactScreenState extends State<CompactScreen> {
               topRight: Radius.circular(15),
             ),
             child: NavigationBar(
-              backgroundColor: Theme.of(context).brightness == Brightness.light
-                  ? Colors.white
-                  : Colors.black,
+              backgroundColor: Theme.of(
+                context,
+              ).navigationBarTheme.backgroundColor,
               height: 80,
               destinations: navigationBarDestinationsItems,
               selectedIndex: navigationIndex,
