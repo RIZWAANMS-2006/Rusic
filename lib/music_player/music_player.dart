@@ -118,8 +118,6 @@ class LibraryState extends State<Library>
                   animation: DatabaseManager.instance,
                   builder: (context, _) {
                     return MediaUI(
-                      // Uses the timestamp / unique key on rebuild so MediaUI fetches anew
-                      key: ValueKey(DateTime.now().millisecondsSinceEpoch),
                       title: "Favorites",
                       showNavigationBar: false,
                       emptyMessage: "No Favorite Yet...",

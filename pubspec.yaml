@@ -60,6 +60,7 @@ dependencies:
   http: ^1.6.0
   html: ^0.15.6
   flutter_swipe_action_cell: ^3.1.6
+  sqlite3_flutter_libs: ^0.6.0+eol
   
 dev_dependencies:
   flutter_test:

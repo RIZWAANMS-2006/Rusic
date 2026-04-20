@@ -17,8 +17,8 @@ import 'package:toastification/toastification.dart';
 
 Future<void> main() async {
   // Initialize JustAudioMediaKit And Flutter Bindings
-  JustAudioMediaKit.ensureInitialized();
   WidgetsFlutterBinding.ensureInitialized();
+  JustAudioMediaKit.ensureInitialized();
 
   SettingsManager.init();
   await DatabaseManager
@@ -67,19 +67,19 @@ int navigationIndex = 1;
 // Bottom Navigation Bar Items
 List<Widget> navigationBarDestinationsItems = [
   const NavigationDestination(icon: Icon(Icons.search), label: "Search"),
-  NavigationDestination(
-    icon: Transform.scale(
-      scale: 1.05,
-      child: SvgPicture.asset(
-        "assets/MusicIcons/music_logo.svg",
-        height: 25,
-        width: 25,
-        color: const Color.fromRGBO(216, 194, 192, 1),
-      ),
-    ),
-    label: "Home",
-  ),
-  // const NavigationDestination(icon: Icon(Icons.music_note), label: "Home"),
+  // NavigationDestination(
+  //   icon: Transform.scale(
+  //     scale: 1.05,
+  //     child: SvgPicture.asset(
+  //       "assets/MusicIcons/music_logo.svg",
+  //       height: 25,
+  //       width: 25,
+  //       color: const Color.fromRGBO(216, 194, 192, 1),
+  //     ),
+  //   ),
+  //   label: "Home",
+  // ),
+  const NavigationDestination(icon: Icon(Icons.music_note), label: "Home"),
   const NavigationDestination(icon: Icon(Icons.settings), label: "Settings"),
 ];
 
@@ -298,6 +298,9 @@ class CompactScreenState extends State<CompactScreen> {
               topRight: Radius.circular(15),
             ),
             child: NavigationBar(
+              backgroundColor: Theme.of(context).brightness == Brightness.light
+                  ? Colors.white
+                  : Colors.black,
               height: 80,
               destinations: navigationBarDestinationsItems,
               selectedIndex: navigationIndex,

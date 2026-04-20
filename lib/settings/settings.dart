@@ -1,11 +1,18 @@
 import 'package:Rusic/managers/ui_manager.dart';
 import 'package:Rusic/managers/credentials_manager.dart';
+import 'package:Rusic/managers/settings_manager.dart';
 import 'package:Rusic/settings/server_screens/server_configuration_screen.dart';
 import 'package:Rusic/settings/supabase_screens/supabase_configuration_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+const Map<String, Widget> _systemThemeOptions = {
+  "System": Text("System"),
+  "Light": Text("Light"),
+  "Dark": Text("Dark"),
+};
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -33,9 +40,8 @@ class _SettingsState extends State<Settings> {
   }
 
   Widget _buildSettings(BuildContext context) {
-    // Detect screen width to switch between compact and wide views
-    bool isWideScreen = MediaQuery.of(context).size.width > 700;
-
+    // Both views are unified under _UnifiedSettingsScreen which handles
+    // the layout changes internally below.
     return Scaffold(
       backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
       body: ScrollConfiguration(
@@ -49,13 +55,9 @@ class _SettingsState extends State<Settings> {
               backgroundColor: setContainerColor(context),
               largeTitle: const Text("Settings"),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
-              sliver: SliverToBoxAdapter(
-                child: isWideScreen
-                    ? const WideSettingsScreen()
-                    : const CompactSettingsScreen(),
-              ),
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(10, 20, 10, 10),
+              sliver: SliverToBoxAdapter(child: UnifiedSettingsScreen()),
             ),
             SliverToBoxAdapter(
               child: Padding(
@@ -63,7 +65,7 @@ class _SettingsState extends State<Settings> {
                 child: Center(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.withOpacity(0.8),
+                      backgroundColor: Colors.red.withValues(alpha: 0.8),
                       foregroundColor: Colors.white,
                     ),
                     onPressed: () async {
@@ -92,81 +94,152 @@ class _SettingsState extends State<Settings> {
   }
 }
 
-class CompactSettingsScreen extends StatefulWidget {
-  const CompactSettingsScreen({super.key});
+class UnifiedSettingsScreen extends StatefulWidget {
+  const UnifiedSettingsScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() => _CompactSettingsScreenState();
+  State<UnifiedSettingsScreen> createState() => _UnifiedSettingsScreenState();
 }
 
-class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
-  Map<String, Widget> systemTheme = {
-    "System": const Text("System"),
-    "Light": const Text("Light"),
-    "Dark": const Text("Dark"),
-  };
-  String selectedSystemTheme = "System";
-  double crossFade = 0;
-  String videoPreference = "Landscape Contain";
-  String appUI = "Minimalistic";
-  List<Map<String, String>> supabaseConfigs = [];
-  List<Map<String, String>> serverConfigs = [];
-  bool playHighlights = true;
-  TextEditingController highlightsDurationController = TextEditingController();
-  TextEditingController skipAtBeginningController = TextEditingController();
-  TextEditingController skipAtEndController = TextEditingController();
-  FocusNode highlightsDurationFocusNode = FocusNode();
-  FocusNode skipAtBeginningFocusNode = FocusNode();
-  FocusNode skipAtEndFocusNode = FocusNode();
+class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
+  static const List<String> _fontOptions = [
+    'Asimovian',
+    'Borel',
+    'Comic Relief',
+    'System Font',
+  ];
 
-  final _credentialsManager = CredentialsManager();
+  final CredentialsManager _credentialsManager = CredentialsManager();
+
+  late TextEditingController highlightsDurationController;
+  late TextEditingController skipAtBeginningController;
+  late TextEditingController skipAtEndController;
+  late FocusNode highlightsDurationFocusNode;
+  late FocusNode skipAtBeginningFocusNode;
+  late FocusNode skipAtEndFocusNode;
+
+  late String _selectedSystemTheme;
+  late String _selectedAppUi;
+  late String _selectedVideoPreference;
+  late String _selectedFont;
+  late double _crossFade;
+  late bool _playHighlights;
+  List<Map<String, String>> _supabaseConfigs = [];
+  List<Map<String, String>> _serverConfigs = [];
 
   @override
   void initState() {
     super.initState();
+    _selectedSystemTheme = SettingsManager.getSystemTheme;
+    _selectedAppUi = SettingsManager.getAppUI;
+    _selectedVideoPreference = SettingsManager.getVideoPreference;
+    _selectedFont = _normalizeFont(SettingsManager.getFontFamily);
+    _crossFade = SettingsManager.getCrossfadeDuration;
+    _playHighlights = SettingsManager.getPlayHighlights;
+
+    highlightsDurationController = TextEditingController(
+      text: SettingsManager.getHighlightsDuration,
+    );
+    skipAtBeginningController = TextEditingController(
+      text: SettingsManager.getSkipAtBeginning,
+    );
+    skipAtEndController = TextEditingController(
+      text: SettingsManager.getSkipAtEnd,
+    );
+    highlightsDurationFocusNode = FocusNode();
+    skipAtBeginningFocusNode = FocusNode();
+    skipAtEndFocusNode = FocusNode();
+
     _loadConfigurations();
-    highlightsDurationController.text = "30";
-    skipAtBeginningController.text = "5";
-    skipAtEndController.text = "10";
 
     highlightsDurationFocusNode.addListener(() {
       if (!highlightsDurationFocusNode.hasFocus) {
-        if (highlightsDurationController.text.isEmpty) {
-          return;
-        } else {
+        if (highlightsDurationController.text.isNotEmpty) {
           int value = int.tryParse(highlightsDurationController.text) ?? 0;
           if (value < 10) value = 10;
           if (value > 60) value = 60;
           highlightsDurationController.text = value.toString();
+          SettingsManager.setHighlightsDuration(value.toString());
         }
       }
     });
 
     skipAtBeginningFocusNode.addListener(() {
       if (!skipAtBeginningFocusNode.hasFocus) {
-        if (skipAtBeginningController.text.isEmpty) {
-          return;
-        } else {
+        if (skipAtBeginningController.text.isNotEmpty) {
           int value = int.tryParse(skipAtBeginningController.text) ?? 0;
           if (value < 0) value = 0;
           if (value > 10) value = 10;
           skipAtBeginningController.text = value.toString();
+          SettingsManager.setSkipAtBeginning(value.toString());
         }
       }
     });
 
     skipAtEndFocusNode.addListener(() {
       if (!skipAtEndFocusNode.hasFocus) {
-        if (skipAtEndController.text.isEmpty) {
-          return;
-        } else {
+        if (skipAtEndController.text.isNotEmpty) {
           int value = int.tryParse(skipAtEndController.text) ?? 0;
           if (value < 0) value = 0;
           if (value > 10) value = 10;
           skipAtEndController.text = value.toString();
+          SettingsManager.setSkipAtEnd(value.toString());
         }
       }
     });
+  }
+
+  String _normalizeFont(String font) {
+    if (_fontOptions.contains(font)) {
+      return font;
+    }
+    return 'System Font';
+  }
+
+  void _onSystemThemeChanged(String? value) {
+    final selectedTheme = value ?? 'System';
+    setState(() {
+      _selectedSystemTheme = selectedTheme;
+    });
+    SettingsManager.setSystemTheme(selectedTheme);
+  }
+
+  void _onFontChanged(String? value) {
+    if (value == null) {
+      return;
+    }
+    setState(() {
+      _selectedFont = value;
+    });
+    SettingsManager.setFontFamily(value);
+  }
+
+  void _onAppUiChanged(String value) {
+    setState(() {
+      _selectedAppUi = value;
+    });
+    SettingsManager.setAppUI(value);
+  }
+
+  void _onVideoPreferenceChanged(String value) {
+    setState(() {
+      _selectedVideoPreference = value;
+    });
+    SettingsManager.setVideoPreference(value);
+  }
+
+  void _onCrossFadeChanged(double value) {
+    setState(() {
+      _crossFade = value;
+    });
+    SettingsManager.setCrossfadeDuration(value);
+  }
+
+  void _onPlayHighlightsChanged(bool value) {
+    setState(() {
+      _playHighlights = value;
+    });
+    SettingsManager.setPlayHighlights(value);
   }
 
   Future<void> _loadConfigurations() async {
@@ -175,8 +248,8 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
 
     if (mounted) {
       setState(() {
-        supabaseConfigs = supaConfigs;
-        serverConfigs = srvConfigs;
+        _supabaseConfigs = supaConfigs;
+        _serverConfigs = srvConfigs;
       });
     }
   }
@@ -194,6 +267,16 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isWideScreen = MediaQuery.of(context).size.width > 700;
+
+    if (isWideScreen) {
+      return _buildWide(context);
+    } else {
+      return _buildCompact(context);
+    }
+  }
+
+  Widget _buildCompact(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,7 +287,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -218,6 +301,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                 child: DropdownMenu(
                   width: 150,
                   hintText: "Select Font",
+                  initialSelection: _selectedFont,
                   textStyle: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 14,
@@ -240,7 +324,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                       label: 'System Font',
                     ),
                   ],
-                  onSelected: (value) {},
+                  onSelected: _onFontChanged,
                 ),
               ),
               const SizedBox(height: 16),
@@ -248,15 +332,11 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
               const SizedBox(height: 10),
               Center(
                 child: CupertinoSlidingSegmentedControl(
-                  children: systemTheme,
-                  groupValue: selectedSystemTheme,
+                  children: _systemThemeOptions,
+                  groupValue: _selectedSystemTheme,
                   thumbColor: Theme.of(context).colorScheme.primary,
                   isMomentary: false,
-                  onValueChanged: (value) {
-                    setState(() {
-                      selectedSystemTheme = value ?? 'System';
-                    });
-                  },
+                  onValueChanged: _onSystemThemeChanged,
                 ),
               ),
               const SizedBox(height: 16),
@@ -270,28 +350,18 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                   children: [
                     ChoiceChip(
                       label: const Text("Minimalistic"),
-                      selected: appUI == "Minimalistic",
-                      onSelected: (_) {
-                        setState(() => appUI = "Minimalistic");
-                      },
+                      selected: _selectedAppUi == "Minimalistic",
+                      onSelected: (_) => _onAppUiChanged("Minimalistic"),
                     ),
                     ChoiceChip(
                       label: const Text("Graphic"),
-                      selected: appUI == "Graphic",
-                      onSelected: (_) {
-                        setState(() {
-                          appUI = "Graphic";
-                        });
-                      },
+                      selected: _selectedAppUi == "Graphic",
+                      onSelected: (_) => _onAppUiChanged("Graphic"),
                     ),
                     ChoiceChip(
                       label: const Text("Weather Theme"),
-                      selected: appUI == "Weather Theme",
-                      onSelected: (_) {
-                        setState(() {
-                          appUI = "Weather Theme";
-                        });
-                      },
+                      selected: _selectedAppUi == "Weather Theme",
+                      onSelected: (_) => _onAppUiChanged("Weather Theme"),
                     ),
                   ],
                 ),
@@ -307,7 +377,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -381,17 +451,13 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                   showValueIndicator: ShowValueIndicator.onDrag,
                 ),
                 child: Slider(
-                  padding: null,
-                  value: crossFade,
-                  onChanged: (value) {
-                    setState(() {
-                      crossFade = value;
-                    });
-                  },
+                  padding: EdgeInsets.zero,
+                  value: _crossFade,
+                  onChanged: _onCrossFadeChanged,
                   min: 0,
                   max: 10,
                   divisions: 10,
-                  label: crossFade.toInt().toString(),
+                  label: _crossFade.toInt().toString(),
                 ),
               ),
               const Padding(
@@ -421,7 +487,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -440,27 +506,27 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                   children: [
                     ChoiceChip(
                       label: const Text("Landscape Contain"),
-                      selected: videoPreference == "Landscape Contain",
+                      selected: _selectedVideoPreference == "Landscape Contain",
                       onSelected: (_) =>
-                          setState(() => videoPreference = "Landscape Contain"),
+                          _onVideoPreferenceChanged("Landscape Contain"),
                     ),
                     ChoiceChip(
                       label: const Text("Landscape Cover"),
-                      selected: videoPreference == "Landscape Cover",
+                      selected: _selectedVideoPreference == "Landscape Cover",
                       onSelected: (_) =>
-                          setState(() => videoPreference = "Landscape Cover"),
+                          _onVideoPreferenceChanged("Landscape Cover"),
                     ),
                     ChoiceChip(
                       label: const Text("Portrait Contain"),
-                      selected: videoPreference == "Portrait Contain",
+                      selected: _selectedVideoPreference == "Portrait Contain",
                       onSelected: (_) =>
-                          setState(() => videoPreference = "Portrait Contain"),
+                          _onVideoPreferenceChanged("Portrait Contain"),
                     ),
                     ChoiceChip(
                       label: const Text("Portrait Cover"),
-                      selected: videoPreference == "Portrait Cover",
+                      selected: _selectedVideoPreference == "Portrait Cover",
                       onSelected: (_) =>
-                          setState(() => videoPreference = "Portrait Cover"),
+                          _onVideoPreferenceChanged("Portrait Cover"),
                     ),
                   ],
                 ),
@@ -471,9 +537,8 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                 child: Transform.scale(
                   scale: 0.8,
                   child: Switch(
-                    value: playHighlights,
-                    onChanged: (value) =>
-                        setState(() => playHighlights = value),
+                    value: _playHighlights,
+                    onChanged: _onPlayHighlightsChanged,
                   ),
                 ),
               ),
@@ -505,7 +570,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -529,7 +594,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                       ),
                     ],
                   ),
-                  for (final config in supabaseConfigs) ...[
+                  for (final config in _supabaseConfigs) ...[
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -575,7 +640,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -596,7 +661,7 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
                   ),
                 ],
               ),
-              for (final config in serverConfigs) ...[
+              for (final config in _serverConfigs) ...[
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -635,110 +700,8 @@ class _CompactSettingsScreenState extends State<CompactSettingsScreen> {
       ],
     );
   }
-}
 
-class WideSettingsScreen extends StatefulWidget {
-  const WideSettingsScreen({super.key});
-
-  @override
-  State<StatefulWidget> createState() => _WideSettingsScreenState();
-}
-
-class _WideSettingsScreenState extends State<WideSettingsScreen> {
-  Map<String, Widget> systemTheme = {
-    "System": const Text("System"),
-    "Light": const Text("Light"),
-    "Dark": const Text("Dark"),
-  };
-  String selectedSystemTheme = "System";
-  double crossFade = 0;
-  String videoPreference = "Landscape Contain";
-  String appUI = "Minimalistic";
-  List<Map<String, String>> supabaseConfigs = [];
-  List<Map<String, String>> serverConfigs = [];
-  bool playHighlights = true;
-  TextEditingController highlightsDurationController = TextEditingController();
-  TextEditingController skipAtBeginningController = TextEditingController();
-  TextEditingController skipAtEndController = TextEditingController();
-  FocusNode highlightsDurationFocusNode = FocusNode();
-  FocusNode skipAtBeginningFocusNode = FocusNode();
-  FocusNode skipAtEndFocusNode = FocusNode();
-
-  final _credentialsManager = CredentialsManager();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadConfigurations();
-    highlightsDurationController.text = "30";
-    skipAtBeginningController.text = "5";
-    skipAtEndController.text = "10";
-
-    highlightsDurationFocusNode.addListener(() {
-      if (!highlightsDurationFocusNode.hasFocus) {
-        if (highlightsDurationController.text.isEmpty) {
-          return;
-        } else {
-          int value = int.tryParse(highlightsDurationController.text) ?? 0;
-          if (value < 10) value = 10;
-          if (value > 60) value = 60;
-          highlightsDurationController.text = value.toString();
-        }
-      }
-    });
-
-    skipAtBeginningFocusNode.addListener(() {
-      if (!skipAtBeginningFocusNode.hasFocus) {
-        if (skipAtBeginningController.text.isEmpty) {
-          return;
-        } else {
-          int value = int.tryParse(skipAtBeginningController.text) ?? 0;
-          if (value < 0) value = 0;
-          if (value > 10) value = 10;
-          skipAtBeginningController.text = value.toString();
-        }
-      }
-    });
-
-    skipAtEndFocusNode.addListener(() {
-      if (!skipAtEndFocusNode.hasFocus) {
-        if (skipAtEndController.text.isEmpty) {
-          return;
-        } else {
-          int value = int.tryParse(skipAtEndController.text) ?? 0;
-          if (value < 0) value = 0;
-          if (value > 10) value = 10;
-          skipAtEndController.text = value.toString();
-        }
-      }
-    });
-  }
-
-  Future<void> _loadConfigurations() async {
-    final supaConfigs = await _credentialsManager.getSupabaseConfigurations();
-    final srvConfigs = await _credentialsManager.getServerConfigurations();
-
-    if (mounted) {
-      setState(() {
-        supabaseConfigs = supaConfigs;
-        serverConfigs = srvConfigs;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    highlightsDurationController.dispose();
-    highlightsDurationFocusNode.dispose();
-    skipAtBeginningController.dispose();
-    skipAtBeginningFocusNode.dispose();
-    skipAtEndController.dispose();
-    skipAtEndFocusNode.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildWide(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -749,7 +712,7 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -772,6 +735,7 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
                       child: DropdownMenu(
                         width: 150,
                         hintText: "Select Font",
+                        initialSelection: _selectedFont,
                         textStyle: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 14,
@@ -797,7 +761,7 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
                             label: 'System Font',
                           ),
                         ],
-                        onSelected: (value) {},
+                        onSelected: _onFontChanged,
                       ),
                     ),
                   ),
@@ -813,15 +777,11 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
                         const SizedBox(height: 10),
                         Flexible(
                           child: CupertinoSlidingSegmentedControl(
-                            children: systemTheme,
-                            groupValue: selectedSystemTheme,
+                            children: _systemThemeOptions,
+                            groupValue: _selectedSystemTheme,
                             thumbColor: Theme.of(context).colorScheme.primary,
                             isMomentary: false,
-                            onValueChanged: (value) {
-                              setState(() {
-                                selectedSystemTheme = value ?? 'System';
-                              });
-                            },
+                            onValueChanged: _onSystemThemeChanged,
                           ),
                         ),
                       ],
@@ -841,28 +801,20 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
                             children: [
                               ChoiceChip(
                                 label: const Text("Minimalistic"),
-                                selected: appUI == "Minimalistic",
-                                onSelected: (_) {
-                                  setState(() => appUI = "Minimalistic");
-                                },
+                                selected: _selectedAppUi == "Minimalistic",
+                                onSelected: (_) =>
+                                    _onAppUiChanged("Minimalistic"),
                               ),
                               ChoiceChip(
                                 label: const Text("Graphic"),
-                                selected: appUI == "Graphic",
-                                onSelected: (_) {
-                                  setState(() {
-                                    appUI = "Graphic";
-                                  });
-                                },
+                                selected: _selectedAppUi == "Graphic",
+                                onSelected: (_) => _onAppUiChanged("Graphic"),
                               ),
                               ChoiceChip(
                                 label: const Text("Weather Theme"),
-                                selected: appUI == "Weather Theme",
-                                onSelected: (_) {
-                                  setState(() {
-                                    appUI = "Weather Theme";
-                                  });
-                                },
+                                selected: _selectedAppUi == "Weather Theme",
+                                onSelected: (_) =>
+                                    _onAppUiChanged("Weather Theme"),
                               ),
                             ],
                           ),
@@ -883,7 +835,7 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -974,16 +926,12 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
                             ),
                             child: Slider(
                               padding: EdgeInsets.zero,
-                              value: crossFade,
-                              onChanged: (value) {
-                                setState(() {
-                                  crossFade = value;
-                                });
-                              },
+                              value: _crossFade,
+                              onChanged: _onCrossFadeChanged,
                               min: 0,
                               max: 10,
                               divisions: 10,
-                              label: crossFade.toInt().toString(),
+                              label: _crossFade.toInt().toString(),
                             ),
                           ),
                         ),
@@ -1025,7 +973,7 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -1060,31 +1008,37 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
                               ChoiceChip(
                                 label: const Text("Landscape Contain"),
                                 selected:
-                                    videoPreference == "Landscape Contain",
-                                onSelected: (_) => setState(
-                                  () => videoPreference = "Landscape Contain",
+                                    _selectedVideoPreference ==
+                                    "Landscape Contain",
+                                onSelected: (_) => _onVideoPreferenceChanged(
+                                  "Landscape Contain",
                                 ),
                               ),
                               ChoiceChip(
                                 label: const Text("Landscape Cover"),
-                                selected: videoPreference == "Landscape Cover",
-                                onSelected: (_) => setState(
-                                  () => videoPreference = "Landscape Cover",
+                                selected:
+                                    _selectedVideoPreference ==
+                                    "Landscape Cover",
+                                onSelected: (_) => _onVideoPreferenceChanged(
+                                  "Landscape Cover",
                                 ),
                               ),
                               ChoiceChip(
                                 label: const Text("Portrait Contain"),
-                                selected: videoPreference == "Portrait Contain",
-                                onSelected: (_) => setState(
-                                  () => videoPreference = "Portrait Contain",
+                                selected:
+                                    _selectedVideoPreference ==
+                                    "Portrait Contain",
+                                onSelected: (_) => _onVideoPreferenceChanged(
+                                  "Portrait Contain",
                                 ),
                               ),
                               ChoiceChip(
                                 label: const Text("Portrait Cover"),
-                                selected: videoPreference == "Portrait Cover",
-                                onSelected: (_) => setState(
-                                  () => videoPreference = "Portrait Cover",
-                                ),
+                                selected:
+                                    _selectedVideoPreference ==
+                                    "Portrait Cover",
+                                onSelected: (_) =>
+                                    _onVideoPreferenceChanged("Portrait Cover"),
                               ),
                             ],
                           ),
@@ -1098,9 +1052,8 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
                       child: Transform.scale(
                         scale: 0.8,
                         child: Switch(
-                          value: playHighlights,
-                          onChanged: (value) =>
-                              setState(() => playHighlights = value),
+                          value: _playHighlights,
+                          onChanged: _onPlayHighlightsChanged,
                         ),
                       ),
                     ),
@@ -1136,7 +1089,7 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -1172,7 +1125,7 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     children: [
-                      for (final config in supabaseConfigs)
+                      for (final config in _supabaseConfigs)
                         _GridItemCard(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1224,7 +1177,7 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -1254,7 +1207,7 @@ class _WideSettingsScreenState extends State<WideSettingsScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  for (final config in serverConfigs)
+                  for (final config in _serverConfigs)
                     _GridItemCard(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1368,7 +1321,7 @@ class _GridItemCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(0.2),
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(10),
       ),
       alignment: Alignment.centerLeft,

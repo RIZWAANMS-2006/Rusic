@@ -64,12 +64,15 @@ void serverConfigurationScreenState(BuildContext context) {
                             onPressed: () async {
                               if (serverFormKey.currentState?.validate() ??
                                   false) {
-                                await credentialsManager.addServerConfiguration({
-                                  'serverAddress': serverAddressController.text
-                                      .trim(),
-                                  'serverName': serverNameController.text.trim(),
-                                });
-                
+                                await credentialsManager
+                                    .addServerConfiguration({
+                                      'serverAddress': serverAddressController
+                                          .text
+                                          .trim(),
+                                      'serverName': serverNameController.text
+                                          .trim(),
+                                    });
+
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text(
