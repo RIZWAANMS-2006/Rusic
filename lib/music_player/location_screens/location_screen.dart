@@ -196,9 +196,9 @@ class _LocationsTabState extends State<LocationsTab> {
       onTap: () => _openLocation(loc['path']!, loc['name']!),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color.fromRGBO(36, 36, 36, 1),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white10, width: 1),
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1), width: 1),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -214,8 +214,8 @@ class _LocationsTabState extends State<LocationsTab> {
               child: Text(
                 loc['name']!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:Rusic/managers/credentials_manager.dart';
 import 'package:Rusic/managers/server_manager/supabase_manager.dart';
@@ -179,7 +179,6 @@ class OnlineScreenState extends State<OnlineScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: Color.fromRGBO(26, 26, 26, 1),
         body: Center(
           child: CircularProgressIndicator(strokeCap: StrokeCap.round),
         ),
@@ -188,7 +187,6 @@ class OnlineScreenState extends State<OnlineScreen> {
 
     if (!_isConfigured) {
       return const Scaffold(
-        backgroundColor: Color.fromRGBO(26, 26, 26, 1),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

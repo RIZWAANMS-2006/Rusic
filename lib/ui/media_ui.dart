@@ -7,6 +7,7 @@ import 'package:Rusic/search/search_page.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:Rusic/managers/songs_manager.dart';
 import 'package:Rusic/managers/database_manager.dart';
+import 'package:Rusic/managers/settings_manager.dart';
 import 'package:flutter_swipe_action_cell/flutter_swipe_action_cell.dart';
 
 /// A universal UI component for displaying media files across different tabs.
@@ -64,6 +65,7 @@ class _MediaUIState extends State<MediaUI> {
   final Map<String, int> _letterToIndex = {};
   List<File> _sortedFiles = [];
   final Set<String> _likedFiles = {};
+  String _searchQuery = "";
 
   @override
   void initState() {
@@ -232,16 +234,28 @@ class _MediaUIState extends State<MediaUI> {
 
   Widget _buildContent(Map<String, List<File>> mediaByLocation) {
     if (_lastMediaByLocation != mediaByLocation) {
-      final allFiles = mediaByLocation.values.expand((files) => files).toList();
-      _sortedFiles = _sortAndMapFiles(allFiles);
+      final uniqueFiles = <String, File>{};
+      for (final file in mediaByLocation.values.expand((files) => files)) {
+        uniqueFiles[file.path] = file;
+      }
+      final allFiles = uniqueFiles.values.toList();
       _lastMediaByLocation = mediaByLocation;
+      _sortedFiles = _sortAndMapFiles(allFiles);
+    }
+    
+    List<File> filesToDisplay = _sortedFiles;
+    if (_searchQuery.isNotEmpty) {
+      filesToDisplay = filesToDisplay.where((f) {
+        final name = f.path.split(Platform.pathSeparator).last.toLowerCase();
+        return name.contains(_searchQuery.toLowerCase());
+      }).toList();
     }
 
     final isDesktop = MediaQuery.of(context).size.width > 700;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
+      body: isDesktop ? _buildDesktopLayout(filesToDisplay) : _buildMobileLayout(filesToDisplay),
     );
   }
 
@@ -275,16 +289,12 @@ class _MediaUIState extends State<MediaUI> {
     );
   }
 
-  Widget _buildDesktopLayout() {
-    final groupedFiles = _groupFilesByLetter(_sortedFiles);
+  Widget _buildDesktopLayout(List<File> displayFiles) {
+    final groupedFiles = _groupFilesByLetter(displayFiles);
     final sortedLetters = groupedFiles.keys.toList()..sort();
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      floatingActionButton: widget.showSearchBar
-          ? const MusicSearchBar()
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           ScrollConfiguration(
@@ -299,6 +309,21 @@ class _MediaUIState extends State<MediaUI> {
               ),
               slivers: [
                 if (widget.showNavigationBar) _buildNavigationBar(),
+                if (widget.showSearchBar)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                      child: CupertinoSearchTextField(
+                        placeholder: 'Search...',
+                        style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
                 // Build sections for each letter
                 ...sortedLetters.expand((letter) {
                   final filesInSection = groupedFiles[letter]!;
@@ -349,9 +374,8 @@ class _MediaUIState extends State<MediaUI> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.black.withOpacity(0.0),
-                    Colors.black.withOpacity(0.9),
-                    Colors.black,
+                    Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.0),
+                    Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.9)
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -364,7 +388,7 @@ class _MediaUIState extends State<MediaUI> {
     );
   }
 
-  Widget _buildMobileLayout() {
+  Widget _buildMobileLayout(List<File> displayFiles) {
     return Stack(
       children: [
         ScrollConfiguration(
@@ -374,10 +398,25 @@ class _MediaUIState extends State<MediaUI> {
                 PrimaryScrollController.maybeOf(context) ?? _scrollController,
             slivers: [
               if (widget.showNavigationBar) _buildNavigationBar(),
+              if (widget.showSearchBar)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                    child: CupertinoSearchTextField(
+                      placeholder: 'Search...',
+                      style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
+                    ),
+                  ),
+                ),
               SliverList.builder(
-                itemCount: _sortedFiles.length,
+                itemCount: displayFiles.length,
                 itemBuilder: (context, index) {
-                  final file = _sortedFiles[index];
+                  final file = displayFiles[index];
                   final fileName = file.path.substring(
                     file.path.lastIndexOf(Platform.pathSeparator) + 1,
                   );
@@ -390,7 +429,7 @@ class _MediaUIState extends State<MediaUI> {
                   if (index == 0) {
                     showHeader = true;
                   } else {
-                    final prevFile = _sortedFiles[index - 1];
+                    final prevFile = displayFiles[index - 1];
                     final prevFileName = prevFile.path.substring(
                       prevFile.path.lastIndexOf(Platform.pathSeparator) + 1,
                     );
@@ -436,10 +475,9 @@ class _MediaUIState extends State<MediaUI> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.black.withOpacity(0.0),
-                  Colors.black.withOpacity(0.9),
-                  Colors.black,
-                ],
+                    Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.0),
+                    Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.9)
+                  ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -507,7 +545,16 @@ class _MediaUIState extends State<MediaUI> {
           color: Colors.grey[700]!,
           onTap: (CompletionHandler handler) async {
             await handler(false);
-            // Handle playlist addition here
+            if (context.mounted) {
+              final title = file.path.split(Platform.pathSeparator).last;
+              await showAddToPlaylistDialog(
+                context,
+                url: file.path,
+                title: title,
+                artist: null,
+                source: 'Local',
+              );
+            }
           },
         ),
         SwipeAction(
@@ -778,6 +825,29 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
   final Map<String, int> _letterToIndex = {};
   List<OnlineSong> _sortedSongs = [];
   String? _selectedSource;
+  String _searchQuery = "";
+
+  Widget _borelAlignedChipLabel(String text) {
+    final isBorelFont = SettingsManager.getFontFamily == 'Borel';
+    final label = Text(
+      text,
+      textHeightBehavior: isBorelFont
+          ? const TextHeightBehavior(applyHeightToLastDescent: false)
+          : null,
+      style: isBorelFont
+          ? const TextStyle(
+              height: 1.0,
+              leadingDistribution: TextLeadingDistribution.even,
+            )
+          : null,
+    );
+
+    if (!isBorelFont) {
+      return label;
+    }
+
+    return Transform.translate(offset: const Offset(0, 7), child: label);
+  }
 
   @override
   void dispose() {
@@ -892,9 +962,9 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
       }
     }
 
-    Widget titleWidget;
+    Widget chipsWidget;
     if (isLoading) {
-      titleWidget = Shimmer.fromColors(
+      chipsWidget = Shimmer.fromColors(
         baseColor: Colors.grey[850]!,
         highlightColor: Colors.grey[700]!,
         child: Row(
@@ -920,12 +990,12 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
         ),
       );
     } else {
-      titleWidget = SingleChildScrollView(
+      chipsWidget = SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
             ChoiceChip(
-              label: const Text('All'),
+              label: _borelAlignedChipLabel('All'),
               selected: _selectedSource == null,
               onSelected: (selected) {
                 if (selected) {
@@ -937,7 +1007,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
               (source) => Padding(
                 padding: const EdgeInsets.only(left: 8.0),
                 child: ChoiceChip(
-                  label: Text(source),
+                  label: _borelAlignedChipLabel(source),
                   selected: _selectedSource == source,
                   onSelected: (selected) {
                     setState(() => _selectedSource = selected ? source : null);
@@ -950,8 +1020,28 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
       );
     }
 
+    final searchField = CupertinoSearchTextField(
+      placeholder: 'Search...',
+      style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+      onChanged: (value) {
+        setState(() {
+          _searchQuery = value;
+        });
+      },
+    );
+
     return AppBar(
-      title: titleWidget,
+      title: searchField,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(50),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 12.0, left: 16.0),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: chipsWidget,
+          ),
+        ),
+      ),
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       scrolledUnderElevation: 0,
@@ -999,6 +1089,15 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
       _lastOnlineSongs = songs;
       _lastSelectedSource = _selectedSource;
     }
+
+    List<OnlineSong> songsToDisplay = _sortedSongs;
+    if (_searchQuery.isNotEmpty) {
+      songsToDisplay = songsToDisplay.where((s) {
+        final titleMatch = s.title.toLowerCase().contains(_searchQuery.toLowerCase());
+        final artistMatch = s.artist?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false;
+        return titleMatch || artistMatch;
+      }).toList();
+    }
     final isDesktop = MediaQuery.of(context).size.width > 700;
 
     return Scaffold(
@@ -1010,13 +1109,16 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
       //         child: BottomMusicController(),
       //       )
       //     : null,
-      body: isDesktop ? _buildDesktopLayout(songs) : _buildMobileLayout(songs),
+      body: isDesktop ? _buildDesktopLayout(songsToDisplay) : _buildMobileLayout(songsToDisplay),
     );
   }
 
-  Widget _buildDesktopLayout(List<OnlineSong> songs) {
+  Widget _buildDesktopLayout(List<OnlineSong> displaySongs) {
+    final groupedSongs = _groupSongsByLetter(displaySongs);
+    final sortedLetters = groupedSongs.keys.toList()..sort();
+
     return Scaffold(
-      appBar: _buildAppBar(songs: songs),
+      appBar: _buildAppBar(songs: displaySongs),
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
@@ -1033,9 +1135,6 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
               slivers: [
                 // Build sections for each letter
                 ...(() {
-                  final groupedSongs = _groupSongsByLetter(_sortedSongs);
-                  final sortedLetters = groupedSongs.keys.toList()..sort();
-
                   return sortedLetters.expand((letter) {
                     final songsInSection = groupedSongs[letter]!;
                     return [
@@ -1086,9 +1185,8 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.black.withOpacity(0.0),
-                    Colors.black.withOpacity(0.9),
-                    Colors.black,
+                    Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.0),
+                    Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.9)
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -1101,10 +1199,10 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
     );
   }
 
-  Widget _buildMobileLayout(List<OnlineSong> songs) {
+  Widget _buildMobileLayout(List<OnlineSong> displaySongs) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: _buildAppBar(songs: songs),
+      appBar: _buildAppBar(songs: displaySongs),
       body: Stack(
         children: [
           ScrollConfiguration(
@@ -1114,9 +1212,9 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
             child: ListView.builder(
               controller:
                   PrimaryScrollController.maybeOf(context) ?? _scrollController,
-              itemCount: _sortedSongs.length,
+              itemCount: displaySongs.length,
               itemBuilder: (context, index) {
-                final song = _sortedSongs[index];
+                final song = displaySongs[index];
                 final currentLetter = song.title.isNotEmpty
                     ? song.title[0].toUpperCase()
                     : '#';
@@ -1126,7 +1224,7 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
                 if (index == 0) {
                   showHeader = true;
                 } else {
-                  final prevSong = _sortedSongs[index - 1];
+                  final prevSong = displaySongs[index - 1];
                   final prevLetter = prevSong.title.isNotEmpty
                       ? prevSong.title[0].toUpperCase()
                       : '#';
@@ -1166,9 +1264,8 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.black.withOpacity(0.0),
-                    Colors.black.withOpacity(0.9),
-                    Colors.black,
+                    Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.0),
+                    Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.9)
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -1247,16 +1344,39 @@ class _OnlineMediaUIState extends State<OnlineMediaUI> {
           color: Colors.grey[700]!,
           onTap: (CompletionHandler handler) async {
             await handler(false);
-            // Handle playlist addition here
+            if (context.mounted) {
+              await showAddToPlaylistDialog(
+                context,
+                url: song.url,
+                title: song.title,
+                artist: song.artist,
+                source: song.source,
+              );
+            }
           },
         ),
         SwipeAction(
-          icon: const Icon(Icons.favorite_border, color: Colors.white),
+          icon: AnimatedBuilder(
+            animation: DatabaseManager.instance,
+            builder: (context, _) {
+              return Icon(
+                DatabaseManager.instance.isFavoriteSync(song.url)
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border,
+                color: Colors.white,
+              );
+            },
+          ),
           color: Colors.redAccent,
           performsFirstActionWithFullSwipe: true,
           onTap: (CompletionHandler handler) async {
             await handler(false);
-            // Handle like action here
+            await DatabaseManager.instance.toggleFavoriteOnline(
+              song.url,
+              song.title,
+              song.artist,
+              song.source,
+            );
           },
         ),
       ],
@@ -1642,4 +1762,126 @@ class _MobileShimmer extends StatelessWidget {
       },
     );
   }
+}
+
+Future<void> showAddToPlaylistDialog(
+  BuildContext context, {
+  required String url,
+  required String title,
+  String? artist,
+  required String? source,
+}) async {
+  bool isCreating = false;
+  String newPlaylistName = "";
+
+  await showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Text(
+              isCreating ? "Create Playlist" : "Add to Playlist",
+              style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: 300,
+              child: isCreating
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          autofocus: true,
+                          style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                          decoration: InputDecoration(
+                            labelText: "Playlist Name",
+                            labelStyle: const TextStyle(color: Colors.grey),
+                            border: const OutlineInputBorder(),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                            ),
+                          ),
+                          onChanged: (val) => newPlaylistName = val,
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => setState(() => isCreating = false),
+                              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () async {
+                                if (newPlaylistName.trim().isNotEmpty) {
+                                  await DatabaseManager.instance.createPlaylist(newPlaylistName.trim());
+                                  setState(() => isCreating = false);
+                                }
+                              },
+                              child: const Text("Create"),
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  : FutureBuilder<List<Map<String, dynamic>>>(
+                      future: DatabaseManager.instance.getPlaylists(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        final playlists = snapshot.data ?? [];
+                        return ListView.builder(
+                          itemCount: playlists.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index == 0) {
+                              return ListTile(
+                                leading: const Icon(Icons.add, color: Colors.grey),
+                                title: const Text(
+                                  "Create New Playlist",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                                onTap: () => setState(() => isCreating = true),
+                              );
+                            }
+                            final playlist = playlists[index - 1];
+                            return ListTile(
+                              leading: Icon(Icons.queue_music, color: Theme.of(context).colorScheme.primary),
+                              title: Text(
+                                playlist['name'],
+                                style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                              ),
+                              onTap: () async {
+                                await DatabaseManager.instance.addSongToPlaylist(
+                                  playlist['id'] as int,
+                                  url,
+                                  title,
+                                  artist,
+                                  source,
+                                );
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Added to ${playlist['name']}')),
+                                  );
+                                }
+                              },
+                            );
+                          },
+                        );
+                      },
+                    ),
+            ),
+          );
+        },
+      );
+    },
+  );
 }

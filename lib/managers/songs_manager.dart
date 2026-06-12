@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:Rusic/managers/audio_manager.dart';
 import 'package:Rusic/managers/video_manager.dart';
+import 'package:Rusic/managers/settings_manager.dart';
 
 enum RepeatMode { off, all, one }
 
@@ -37,13 +38,56 @@ class SongsManager extends ChangeNotifier {
   static final SongsManager _instance = SongsManager._internal();
   factory SongsManager() => _instance;
 
+  bool _isTransitioning = false;
+
   SongsManager._internal() {
     // Listen to the audio player's state to auto-play the next song when finished
-    AudioManager().instance.playerStateStream.listen((state) {
+    AudioManager().playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
-        playNext(isAutoPlay: true);
+        if (!_isTransitioning) playNext(isAutoPlay: true);
       }
     });
+
+    AudioManager().positionStream.listen(_handlePositionUpdate);
+  }
+
+  void _handlePositionUpdate(Duration pos) async {
+    if (_isTransitioning) return;
+    if (_currentQueue.isEmpty) return;
+
+    final duration = AudioManager().totalDuration;
+    if (duration == Duration.zero) return;
+
+    final skipAtBeginning = int.tryParse(SettingsManager.skipAtBeginning.value) ?? 0;
+    final skipAtEnd = int.tryParse(SettingsManager.skipAtEnd.value) ?? 10;
+    final playHighlights = SettingsManager.playHighlights.value;
+    final highlightsDuration = int.tryParse(SettingsManager.highlightsDuration.value) ?? 30;
+    final crossfade = SettingsManager.crossfadeDuration.value;
+
+    int effectiveEndMs = duration.inMilliseconds;
+
+    if (playHighlights) {
+      effectiveEndMs = (skipAtBeginning + highlightsDuration) * 1000;
+      if (effectiveEndMs > duration.inMilliseconds) {
+        effectiveEndMs = duration.inMilliseconds;
+      }
+    } else {
+      if (skipAtEnd > 0) {
+        effectiveEndMs = duration.inMilliseconds - (skipAtEnd * 1000);
+      }
+    }
+
+    int nextSongTriggerMs = effectiveEndMs;
+    if (crossfade > 0) {
+      nextSongTriggerMs -= (crossfade * 1000).toInt();
+    }
+
+    if (pos.inMilliseconds >= nextSongTriggerMs && nextSongTriggerMs > 0) {
+      _isTransitioning = true;
+      await playNext(isAutoPlay: true);
+      _isTransitioning = false;
+      return;
+    }
   }
 
   List<QueueItem> _originalQueue = [];
@@ -156,20 +200,20 @@ class SongsManager extends ChangeNotifier {
 
     if (isAutoPlay && _repeatMode == RepeatMode.one) {
       // Loop single song
-      await _playCurrent();
+      await _playCurrent(isAutoPlay: isAutoPlay);
       return;
     }
 
     if (_currentIndex < _currentQueue.length - 1) {
       _currentIndex++;
       notifyListeners();
-      await _playCurrent();
+      await _playCurrent(isAutoPlay: isAutoPlay);
     } else {
       // Reached the end of the queue
       if (_repeatMode == RepeatMode.all) {
         _currentIndex = 0;
         notifyListeners();
-        await _playCurrent();
+        await _playCurrent(isAutoPlay: isAutoPlay);
       } else {
         // Stop or just pause at the end
         await AudioManager().stop();
@@ -247,12 +291,20 @@ class SongsManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _playCurrent() async {
+  Future<void> _playCurrent({bool isAutoPlay = false}) async {
     if (_currentIndex >= 0 && _currentIndex < _currentQueue.length) {
       final song = _currentQueue[_currentIndex];
       // Dispose old video if active
       VideoManager().disposeVideo();
-      await AudioManager().play(song.path);
+      
+      final skipAtBeginning = int.tryParse(SettingsManager.skipAtBeginning.value) ?? 0;
+      final crossfade = isAutoPlay ? SettingsManager.crossfadeDuration.value : 0.0;
+      await AudioManager().play(
+        song.path, 
+        initialPosition: Duration(seconds: skipAtBeginning),
+        crossfadeDuration: crossfade,
+      );
+      
       // Initialize new video if compatible
       VideoManager().initializeVideo();
     }

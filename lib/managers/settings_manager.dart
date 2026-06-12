@@ -1,33 +1,52 @@
-import 'package:flutter/cupertino.dart';
 import "package:shared_preferences/shared_preferences.dart";
 import 'package:flutter/material.dart';
 
 class SettingsManager {
-  ThemeData lightTheme = ThemeData(
-    fontFamily: 'Asimovian',
-    brightness: Brightness.light,
-    colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
-    navigationBarTheme: const NavigationBarThemeData(
-      backgroundColor: Color.fromRGBO(255, 255, 255, 1),
-    ),
-    scaffoldBackgroundColor: const Color.fromRGBO(244, 248, 251,1),
-    textTheme: const TextTheme(
-      bodyMedium: TextStyle(color: Colors.black),
-      bodyLarge: TextStyle(color: Colors.black),
-      bodySmall: TextStyle(color: Colors.black),
-      displayLarge: TextStyle(color: Colors.black),
-      displayMedium: TextStyle(color: Colors.black),
-      displaySmall: TextStyle(color: Colors.black),
-      headlineLarge: TextStyle(color: Colors.black),
-      headlineMedium: TextStyle(color: Colors.black),
-      headlineSmall: TextStyle(color: Colors.black),
-      titleLarge: TextStyle(color: Colors.black87),
-      titleMedium: TextStyle(color: Colors.black87),
-      titleSmall: TextStyle(color: Colors.black87),
-    ),
-  );
-  ThemeData darkTheme = ThemeData(
-    fontFamily: 'Asimovian',
+  static const String defaultFontFamily = 'Asimovian';
+  static const String systemFontOption = 'System Font';
+
+  ThemeData get lightTheme {
+    const textColor = Colors.black; // Black text
+    
+    return ThemeData(
+      fontFamily: _themeFontFamily,
+      brightness: Brightness.light,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFFF28D7B), // Coral / warm peach seed
+        surfaceContainerHighest: const Color(0xFFE29F8B), // For cards with 0.3 opacity
+      ),
+      navigationBarTheme: const NavigationBarThemeData(
+        backgroundColor: Colors.white,
+      ),
+      scaffoldBackgroundColor: const Color(0xFFFDF1E6), // Pale peach/beige background
+      navigationRailTheme: const NavigationRailThemeData(
+        backgroundColor: Colors.white,
+      ),
+      textTheme: const TextTheme(
+        bodyMedium: TextStyle(color: textColor),
+        bodyLarge: TextStyle(color: textColor),
+        bodySmall: TextStyle(color: textColor),
+        displayLarge: TextStyle(color: textColor),
+        displayMedium: TextStyle(color: textColor),
+        displaySmall: TextStyle(color: textColor),
+        headlineLarge: TextStyle(color: textColor),
+        headlineMedium: TextStyle(color: textColor),
+        headlineSmall: TextStyle(color: textColor),
+        titleLarge: TextStyle(color: textColor),
+        titleMedium: TextStyle(color: textColor),
+        titleSmall: TextStyle(color: textColor),
+      ),
+      iconTheme: const IconThemeData(color: Colors.black87),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.black87),
+        titleTextStyle: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+  ThemeData get darkTheme => ThemeData(
+    fontFamily: _themeFontFamily,
     brightness: Brightness.dark,
     colorScheme: ColorScheme.fromSeed(
       brightness: Brightness.dark,
@@ -37,6 +56,9 @@ class SettingsManager {
       backgroundColor: Color.fromRGBO(26, 26, 26, 1),
     ),
     scaffoldBackgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+    navigationRailTheme: const NavigationRailThemeData(
+      backgroundColor: Color.fromRGBO(26, 26, 26, 1),
+    ),
     textTheme: const TextTheme(
       bodyMedium: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
       bodyLarge: TextStyle(color: Color.fromRGBO(255, 245, 245, 1)),
@@ -57,13 +79,23 @@ class SettingsManager {
 
   static const String _systemThemeKey = 'systemTheme';
   static final ValueNotifier<String> systemTheme = ValueNotifier('System');
+  static final ValueNotifier<String> fontFamily = ValueNotifier(
+    defaultFontFamily,
+  );
   static const String _appUiKey = 'appUI';
+  static final ValueNotifier<String> appUI = ValueNotifier('Minimalistic');
   static const String _crossfadeDurationKey = 'crossfadeDuration';
+  static final ValueNotifier<double> crossfadeDuration = ValueNotifier(0.0);
   static const String _videoPreferenceKey = 'videoPreference';
+  static final ValueNotifier<String> videoPreference = ValueNotifier('Contain');
   static const String _playHighlightsKey = 'playHighlights';
+  static final ValueNotifier<bool> playHighlights = ValueNotifier(false);
   static const String _highlightsDurationKey = 'highlightsDuration';
+  static final ValueNotifier<String> highlightsDuration = ValueNotifier('30');
   static const String _skipAtBeginningKey = 'skipAtBeginning';
+  static final ValueNotifier<String> skipAtBeginning = ValueNotifier('0');
   static const String _skipAtEndKey = 'skipAtEnd';
+  static final ValueNotifier<String> skipAtEnd = ValueNotifier('10');
   static const String _fontFamilyKey = 'fontFamily';
   static const String _lastSongPlayedNameKey = 'lastSongPlayedName';
   static const String _lastSongPlayedPathKey = 'lastSongPlayedPath';
@@ -72,6 +104,14 @@ class SettingsManager {
   static Future<void> init() async {
     userSettings = await SharedPreferences.getInstance();
     systemTheme.value = userSettings.getString(_systemThemeKey) ?? 'System';
+    fontFamily.value = getFontFamily;
+    appUI.value = getAppUI;
+    crossfadeDuration.value = getCrossfadeDuration;
+    videoPreference.value = getVideoPreference;
+    playHighlights.value = getPlayHighlights;
+    highlightsDuration.value = getHighlightsDuration;
+    skipAtBeginning.value = getSkipAtBeginning;
+    skipAtEnd.value = getSkipAtEnd;
   }
 
   // Get Functions
@@ -82,9 +122,9 @@ class SettingsManager {
   static double get getCrossfadeDuration =>
       userSettings.getDouble(_crossfadeDurationKey) ?? 0.0;
   static String get getVideoPreference =>
-      userSettings.getString(_videoPreferenceKey) ?? "Landscape Contain";
+      userSettings.getString(_videoPreferenceKey) ?? "Contain";
   static bool get getPlayHighlights =>
-      userSettings.getBool(_playHighlightsKey) ?? true;
+      userSettings.getBool(_playHighlightsKey) ?? false;
   static String get getHighlightsDuration =>
       userSettings.getString(_highlightsDurationKey) ?? "30";
   static String get getSkipAtBeginning =>
@@ -94,12 +134,12 @@ class SettingsManager {
 
   // Previously existing gets
   static String get getFontFamily {
-    final value = userSettings.getString(_fontFamilyKey);
-    // Keep backward compatibility with older persisted values.
-    if (value == null || value == "normal") {
-      return "System Font";
-    }
-    return value;
+    return _normalizeFontValue(userSettings.getString(_fontFamilyKey));
+  }
+
+  String? get _themeFontFamily {
+    final family = getFontFamily;
+    return family == systemFontOption ? null : family;
   }
 
   static String get getLastSongPlayedName =>
@@ -117,35 +157,44 @@ class SettingsManager {
 
   static Future<void> setAppUI(String value) async {
     await userSettings.setString(_appUiKey, value);
+    appUI.value = value;
   }
 
   static Future<void> setCrossfadeDuration(double value) async {
     await userSettings.setDouble(_crossfadeDurationKey, value);
+    crossfadeDuration.value = value;
   }
 
   static Future<void> setVideoPreference(String value) async {
     await userSettings.setString(_videoPreferenceKey, value);
+    videoPreference.value = value;
   }
 
   static Future<void> setPlayHighlights(bool value) async {
     await userSettings.setBool(_playHighlightsKey, value);
+    playHighlights.value = value;
   }
 
   static Future<void> setHighlightsDuration(String value) async {
     await userSettings.setString(_highlightsDurationKey, value);
+    highlightsDuration.value = value;
   }
 
   static Future<void> setSkipAtBeginning(String value) async {
     await userSettings.setString(_skipAtBeginningKey, value);
+    skipAtBeginning.value = value;
   }
 
   static Future<void> setSkipAtEnd(String value) async {
     await userSettings.setString(_skipAtEndKey, value);
+    skipAtEnd.value = value;
   }
 
   // Previously existing sets
   static Future<void> setFontFamily(String value) async {
-    await userSettings.setString(_fontFamilyKey, value);
+    final normalizedValue = _normalizeFontValue(value);
+    await userSettings.setString(_fontFamilyKey, normalizedValue);
+    fontFamily.value = normalizedValue;
   }
 
   static Future<void> setLastSongPlayedName(String value) async {
@@ -164,12 +213,42 @@ class SettingsManager {
     await userSettings.setString(_systemThemeKey, "System");
     systemTheme.value = "System";
     await userSettings.setString(_appUiKey, "Minimalistic");
+    appUI.value = "Minimalistic";
     await userSettings.setDouble(_crossfadeDurationKey, 0.0);
-    await userSettings.setString(_videoPreferenceKey, "Landscape Contain");
-    await userSettings.setBool(_playHighlightsKey, true);
+    crossfadeDuration.value = 0.0;
+    await userSettings.setString(_videoPreferenceKey, "Contain");
+    videoPreference.value = "Contain";
+    await userSettings.setBool(_playHighlightsKey, false);
+    playHighlights.value = false;
     await userSettings.setString(_highlightsDurationKey, "30");
+    highlightsDuration.value = "30";
     await userSettings.setString(_skipAtBeginningKey, "0");
+    skipAtBeginning.value = "0";
     await userSettings.setString(_skipAtEndKey, "10");
-    await userSettings.setString(_fontFamilyKey, "System Font");
+    skipAtEnd.value = "10";
+    await userSettings.setString(_fontFamilyKey, defaultFontFamily);
+    fontFamily.value = defaultFontFamily;
+  }
+
+  static String _normalizeFontValue(String? value) {
+    if (value == null || value.isEmpty) {
+      return defaultFontFamily;
+    }
+    if (value == 'Calm') {
+      return defaultFontFamily;
+    }
+    if (value == 'normal' || value == systemFontOption) {
+      return systemFontOption;
+    }
+    if (value == 'Comic Relief') {
+      return 'ComicRelief';
+    }
+    const validFonts = <String>{
+      defaultFontFamily,
+      'Borel',
+      'ComicRelief',
+      systemFontOption,
+    };
+    return validFonts.contains(value) ? value : defaultFontFamily;
   }
 }

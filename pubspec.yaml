@@ -118,22 +118,19 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: Doto
-      fonts:
-        - asset: assets/fonts/Doto-VariableFont_ROND,wght.ttf
+
     - family: Asimovian
       fonts:
         - asset: assets/Asimovian/Asimovian-Regular.ttf
 
-    - family: Calm
-      fonts:
-        - asset: assets/Delius_Unicase/DeliusUnicase-Regular.ttf
-    - family: Bored
+    - family: Borel
       fonts:
         - asset: assets/Borel/Borel-Regular.ttf
+   
     - family: ComicRelief
       fonts:
         - asset: assets/Comic_Relief/ComicRelief-Regular.ttf
+  
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro

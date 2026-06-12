@@ -114,9 +114,13 @@ class RusicState extends State<Rusic> {
   @override
   Widget build(BuildContext context) {
     return ToastificationWrapper(
-      child: ValueListenableBuilder(
-        valueListenable: SettingsManager.systemTheme,
-        builder: (context, value, child) {
+      child: AnimatedBuilder(
+        animation: Listenable.merge([
+          SettingsManager.systemTheme,
+          SettingsManager.fontFamily,
+        ]),
+        builder: (context, child) {
+          final value = SettingsManager.systemTheme.value;
           final themeMode = value == "System"
               ? ThemeMode.system
               : (value == "Light" ? ThemeMode.light : ThemeMode.dark);
@@ -127,6 +131,29 @@ class RusicState extends State<Rusic> {
             theme: SettingsManager().lightTheme,
             darkTheme: SettingsManager().darkTheme,
             themeMode: themeMode,
+            builder: (context, child) {
+              if (child == null) {
+                return const SizedBox.shrink();
+              }
+
+              final isBorelFont = SettingsManager.getFontFamily == 'Borel';
+              if (!isBorelFont) {
+                return child;
+              }
+
+              return DefaultTextHeightBehavior(
+                textHeightBehavior: const TextHeightBehavior(
+                  applyHeightToLastDescent: false,
+                ),
+                child: DefaultTextStyle.merge(
+                  style: const TextStyle(
+                    height: 1.0,
+                    leadingDistribution: TextLeadingDistribution.even,
+                  ),
+                  child: child,
+                ),
+              );
+            },
             //ThemeMode.system,
             home: LayoutBuilder(
               builder: (context, constraints) {
@@ -162,7 +189,7 @@ class WideScreenState extends State<WideScreen> {
             // extended: true,
             destinations: navigationRailDestinationsItems,
             groupAlignment: 0,
-            backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+            // backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
             labelType: NavigationRailLabelType.selected,
             indicatorShape: ContinuousRectangleBorder(
               borderRadius: BorderRadius.circular(28),

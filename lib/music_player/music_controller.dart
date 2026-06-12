@@ -10,6 +10,7 @@ import 'package:Rusic/managers/songs_manager.dart';
 import 'package:Rusic/managers/video_manager.dart';
 import 'package:Rusic/managers/database_manager.dart';
 import 'package:video_player/video_player.dart';
+import 'package:Rusic/managers/settings_manager.dart';
 
 bool _isDragging = false;
 double _dragValue = 0.0;
@@ -40,7 +41,7 @@ class _MusicQueueScreenState extends State<MusicQueueScreen> {
         }
 
         return Scaffold(
-          backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
             title: const Text("Playing Queue"),
             backgroundColor: Colors.transparent,
@@ -67,12 +68,12 @@ class _MusicQueueScreenState extends State<MusicQueueScreen> {
                 ),
                 title: Text(
                   currentSong?.title ?? "No Song is Playing...",
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
                 ),
                 subtitle: currentSong?.artist != null
                     ? Text(
                         currentSong!.artist!,
-                        style: const TextStyle(color: Colors.white70),
+                        style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
                       )
                     : null,
                 trailing: Icon(
@@ -80,7 +81,7 @@ class _MusicQueueScreenState extends State<MusicQueueScreen> {
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
-              const Divider(color: Colors.white24, indent: 16, endIndent: 16),
+              Divider(color: Theme.of(context).dividerColor.withValues(alpha: 0.5), indent: 16, endIndent: 16),
               const Padding(
                 padding: EdgeInsets.all(10.0),
                 child: Text(
@@ -113,21 +114,21 @@ class _MusicQueueScreenState extends State<MusicQueueScreen> {
                       key: ValueKey(songItem.id),
                       leading: Text(
                         "${index + 1}",
-                        style: const TextStyle(color: Colors.grey),
+                        style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7)),
                       ),
                       title: Text(
                         songItem.title,
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
                       ),
                       subtitle: songItem.artist != null
                           ? Text(
                               songItem.artist!,
-                              style: const TextStyle(color: Colors.white70),
+                              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
                             )
                           : null,
-                      trailing: const Icon(
+                      trailing: Icon(
                         Icons.drag_handle,
-                        color: Colors.grey,
+                        color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.5),
                       ),
                     );
                   },
@@ -252,11 +253,12 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                             height: 45,
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color.fromRGBO(34, 34, 34, 1),
+                              color: setContainerColor(context),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: SvgPicture.asset(
                               "assets/MusicIcons/music_logo.svg",
+                              color: Theme.of(context).textTheme.bodyLarge!.color!,
                             ),
                           ),
                         ),
@@ -268,9 +270,7 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                               ? "No Song is Playing..."
                               : currentSong.title,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color.fromRGBO(34, 34, 34, 1),
-                          ),
+                          style: TextStyle(color: setContainerColor(context)),
                         ),
                       ),
                     ],
@@ -281,7 +281,7 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         StreamBuilder<PlayerState>(
-                          stream: AudioManager().instance.playerStateStream,
+                          stream: AudioManager().playerStateStream,
                           builder: (context, snapshot) {
                             final playing = snapshot.data?.playing ?? false;
                             return IconButton(
@@ -289,7 +289,7 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                                 playing
                                     ? "assets/MusicIcons/pause.svg"
                                     : "assets/MusicIcons/play.svg",
-                                color: const Color.fromRGBO(34, 34, 34, 1),
+                                color: setContainerColor(context),
                                 width: 25,
                                 height: 25,
                               ),
@@ -309,7 +309,7 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                             "assets/MusicIcons/loop.svg",
                             color: SongsManager().repeatMode.name != 'off'
                                 ? Colors.red
-                                : const Color.fromRGBO(34, 34, 34, 1),
+                                : setContainerColor(context),
                           ),
                         ),
                         IconButton(
@@ -320,7 +320,7 @@ class BottomMusicControllerState extends State<BottomMusicController> {
                             "assets/MusicIcons/shuffle.svg",
                             color: SongsManager().isShuffle
                                 ? Colors.red
-                                : const Color.fromRGBO(34, 34, 34, 1),
+                                : setContainerColor(context),
                           ),
                         ),
                       ],
@@ -478,9 +478,12 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                           backgroundColor: const Color.fromRGBO(26, 26, 26, 1),
                           extendBodyBehindAppBar: true,
                           extendBody: true,
-                          bottomNavigationBar: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
+                          bottomNavigationBar: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            color: isQueueOpen ? Theme.of(context).scaffoldBackgroundColor : Colors.transparent,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
                               const MusicProgressBar(),
                               Container(
                                 alignment: Alignment.center,
@@ -495,7 +498,7 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                             ? Colors.white24
                                             : (SongsManager().isShuffle
                                                   ? Colors.red
-                                                  : null),
+                                                  : (isQueueOpen ? Theme.of(context).iconTheme.color : null)),
                                         width: 20,
                                         height: 20,
                                       ),
@@ -510,7 +513,7 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                         "assets/MusicIcons/previous_button.svg",
                                         color: currentSong == null
                                             ? Colors.white24
-                                            : null,
+                                            : (isQueueOpen ? Theme.of(context).iconTheme.color : null),
                                         width: 20,
                                         height: 20,
                                       ),
@@ -580,7 +583,7 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                         "assets/MusicIcons/next_button.svg",
                                         color: currentSong == null
                                             ? Colors.white24
-                                            : null,
+                                            : (isQueueOpen ? Theme.of(context).iconTheme.color : null),
                                         width: 20,
                                         height: 20,
                                       ),
@@ -598,7 +601,7 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                             : (SongsManager().repeatMode.name !=
                                                       'off'
                                                   ? Colors.red
-                                                  : null),
+                                                  : (isQueueOpen ? Theme.of(context).iconTheme.color : null)),
                                         width: 20,
                                         height: 20,
                                       ),
@@ -625,8 +628,8 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                             : Icons.queue_music,
                                         size: 15,
                                       ),
-                                      style: FilledButton.styleFrom(
-                                        disabledBackgroundColor: Colors.white24,
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: isQueueOpen ? Theme.of(context).iconTheme.color : Colors.white,
                                         disabledForegroundColor: Colors.white60,
                                       ),
                                       onPressed: currentSong == null
@@ -674,7 +677,10 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                             },
                                       label: Text(
                                         isQueueOpen ? "Close" : "Queue",
-                                        style: const TextStyle(fontSize: 12),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: isQueueOpen ? Theme.of(context).textTheme.bodyMedium?.color : Colors.white,
+                                        ),
                                       ),
                                     );
                                   },
@@ -682,6 +688,7 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                               ),
                             ],
                           ),
+                        ),
                           appBar: AppBar(
                             surfaceTintColor: Colors.transparent,
                             backgroundColor: Colors.transparent,
@@ -892,6 +899,11 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                                   children: [
                                                     const Text(
                                                       "Song:",
+                                                      textHeightBehavior:
+                                                          TextHeightBehavior(
+                                                            applyHeightToLastDescent:
+                                                                false,
+                                                          ),
                                                       style: TextStyle(
                                                         color: Color.fromRGBO(
                                                           255,
@@ -901,6 +913,7 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                                         ),
                                                         fontSize: 14,
                                                         fontFamily: "Borel",
+                                                        height: 0.9,
                                                       ),
                                                     ),
                                                     Padding(
@@ -915,6 +928,11 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                                             : currentSong.title,
                                                         textAlign:
                                                             TextAlign.center,
+                                                        textHeightBehavior:
+                                                            const TextHeightBehavior(
+                                                              applyHeightToLastDescent:
+                                                                  false,
+                                                            ),
                                                         style: const TextStyle(
                                                           color: Color.fromRGBO(
                                                             255,
@@ -924,6 +942,7 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                                           ),
                                                           fontSize: 16,
                                                           fontFamily: "Borel",
+                                                          height: 0.9,
                                                         ),
                                                       ),
                                                     ),
@@ -932,42 +951,65 @@ class _FullSizeMusicControllerState extends State<FullSizeMusicController> {
                                               ),
                                             ],
                                           ),
-                                          AnimatedBuilder(
-                                            animation: VideoManager(),
-                                            builder: (context, child) {
-                                              final isAvailable = VideoManager()
-                                                  .isVideoAvailable;
-                                              final controller =
-                                                  VideoManager().controller;
+                                          ValueListenableBuilder<String>(
+                                            valueListenable:
+                                                SettingsManager.videoPreference,
+                                            builder: (context, videoPref, _) {
+                                              return AnimatedBuilder(
+                                                animation: VideoManager(),
+                                                builder: (context, child) {
+                                                  final isAvailable =
+                                                      VideoManager()
+                                                          .isVideoAvailable;
+                                                  final controller =
+                                                      VideoManager().controller;
 
-                                              if (!isAvailable ||
-                                                  controller == null ||
-                                                  !controller
-                                                      .value
-                                                      .isInitialized) {
-                                                return Container(
-                                                  color: Colors.black,
-                                                  alignment: Alignment.center,
-                                                  child: const Text(
-                                                    "No Video Available\nFor The Playing Media",
-                                                    textAlign: TextAlign.center,
-                                                    style: TextStyle(
-                                                      color: Colors.grey,
-                                                      fontSize: 14,
+                                                  if (!isAvailable ||
+                                                      controller == null ||
+                                                      !controller
+                                                          .value
+                                                          .isInitialized) {
+                                                    return Container(
+                                                      color: Colors.black,
+                                                      alignment:
+                                                          Alignment.center,
+                                                      child: const Text(
+                                                        "No Video Available\nFor The Playing Media",
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          color: Colors.grey,
+                                                          fontSize: 14,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+
+                                                  BoxFit fit = BoxFit.contain;
+                                                  if (videoPref.contains(
+                                                    "Cover",
+                                                  ))
+                                                    fit = BoxFit.cover;
+
+                                                  return SizedBox.expand(
+                                                    child: FittedBox(
+                                                      fit: fit,
+                                                      child: SizedBox(
+                                                        width: controller
+                                                            .value
+                                                            .size
+                                                            .width,
+                                                        height: controller
+                                                            .value
+                                                            .size
+                                                            .height,
+                                                        child: VideoPlayer(
+                                                          controller,
+                                                        ),
+                                                      ),
                                                     ),
-                                                  ),
-                                                );
-                                              }
-
-                                              return Center(
-                                                child: AspectRatio(
-                                                  aspectRatio: controller
-                                                      .value
-                                                      .aspectRatio,
-                                                  child: VideoPlayer(
-                                                    controller,
-                                                  ),
-                                                ),
+                                                  );
+                                                },
                                               );
                                             },
                                           ),
@@ -1429,7 +1471,7 @@ class SideMusicControllerState extends State<SideMusicController> {
                           ),
                         ),
                         StreamBuilder<PlayerState>(
-                          stream: AudioManager().instance.playerStateStream,
+                          stream: AudioManager().playerStateStream,
                           builder: (context, snapshot) {
                             final playing = snapshot.data?.playing ?? false;
                             return IconButton(

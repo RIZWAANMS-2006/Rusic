@@ -11,7 +11,7 @@ class VideoManager extends ChangeNotifier {
 
   VideoManager._internal() {
     // Sync play/pause state from AudioManager
-    AudioManager().instance.playerStateStream.listen((state) {
+    AudioManager().playerStateStream.listen((state) {
       if (_controller != null && _controller!.value.isInitialized) {
         if (state.playing) {
           _controller!.play();
@@ -22,7 +22,7 @@ class VideoManager extends ChangeNotifier {
     });
 
     // Check for significant drift, and resync
-    AudioManager().instance.positionStream.listen((pos) {
+    AudioManager().positionStream.listen((pos) {
       if (_controller != null && _controller!.value.isInitialized) {
         final diff = (_controller!.value.position - pos).inMilliseconds.abs();
         if (diff > 800) {

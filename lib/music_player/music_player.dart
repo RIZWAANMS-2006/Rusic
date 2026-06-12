@@ -6,6 +6,7 @@ import 'package:Rusic/managers/database_manager.dart';
 import 'package:Rusic/managers/settings_manager.dart';
 import 'package:Rusic/ui/media_ui.dart';
 import 'package:Rusic/managers/ui_manager.dart';
+import 'package:Rusic/music_player/playlists_tab.dart';
 import 'dart:io';
 
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
@@ -126,26 +127,15 @@ class LibraryState extends State<Library>
                 AnimatedBuilder(
                   animation: DatabaseManager.instance,
                   builder: (context, _) {
-                    return MediaUI(
+                    return OnlineMediaUI(
                       title: "Favorites",
-                      showNavigationBar: false,
+                      showMusicController: true,
                       emptyMessage: "No Favorite Yet...",
-                      mediaFilesFuture: DatabaseManager.instance
-                          .getAllFavorites()
-                          .then((paths) {
-                            final files = paths
-                                .map((path) => File(path))
-                                .where((file) => file.existsSync())
-                                .toList();
-                            return {"Favorites": files};
-                          }),
+                      songsFuture: DatabaseManager.instance.getAllFavoriteSongs(),
                     );
                   },
                 ),
-                const Scaffold(
-                  backgroundColor: Colors.transparent,
-                  body: Center(child: Text("No Playlist Yet...")),
-                ),
+                const PlaylistsTab(),
                 const LocationsTab(),
               ],
             ),

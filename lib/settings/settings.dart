@@ -8,12 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const Map<String, Widget> _systemThemeOptions = {
-  "System": Text("System"),
-  "Light": Text("Light"),
-  "Dark": Text("Dark"),
-};
-
 class Settings extends StatefulWidget {
   const Settings({super.key});
 
@@ -105,10 +99,17 @@ class UnifiedSettingsScreen extends StatefulWidget {
 
 class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
   static const List<String> _fontOptions = [
-    'Asimovian',
+    SettingsManager.defaultFontFamily,
     'Borel',
-    'Comic Relief',
-    'System Font',
+    'ComicRelief',
+    SettingsManager.systemFontOption,
+  ];
+
+  static const List<DropdownMenuEntry<String>> _fontDropdownEntries = [
+    DropdownMenuEntry(value: 'Asimovian', label: 'Asimovian'),
+    DropdownMenuEntry(value: 'Borel', label: 'Borel'),
+    DropdownMenuEntry(value: 'ComicRelief', label: 'ComicRelief'),
+    DropdownMenuEntry(value: 'System Font', label: 'System Font'),
   ];
 
   final CredentialsManager _credentialsManager = CredentialsManager();
@@ -195,7 +196,7 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
     if (_fontOptions.contains(font)) {
       return font;
     }
-    return 'System Font';
+    return SettingsManager.defaultFontFamily;
   }
 
   void _onSystemThemeChanged(String? value) {
@@ -243,6 +244,35 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
     });
     SettingsManager.setPlayHighlights(value);
   }
+
+  bool get _isBorelSelected => _selectedFont == 'Borel';
+
+  Widget _controlLabel(String text) {
+    final label = Text(
+      text,
+      textHeightBehavior: _isBorelSelected
+          ? const TextHeightBehavior(applyHeightToLastDescent: false)
+          : null,
+      style: _isBorelSelected
+          ? const TextStyle(
+              height: 1.0,
+              leadingDistribution: TextLeadingDistribution.even,
+            )
+          : null,
+    );
+
+    if (!_isBorelSelected) {
+      return label;
+    }
+
+    return Transform.translate(offset: const Offset(0, 7), child: label);
+  }
+
+  Map<String, Widget> get _systemThemeOptions => {
+    "System": _controlLabel("System"),
+    "Light": _controlLabel("Light"),
+    "Dark": _controlLabel("Dark"),
+  };
 
   Future<void> _loadConfigurations() async {
     final supaConfigs = await _credentialsManager.getSupabaseConfigurations();
@@ -314,18 +344,7 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
                       borderSide: BorderSide.none,
                     ),
                   ),
-                  dropdownMenuEntries: const [
-                    DropdownMenuEntry(value: 'Asimovian', label: 'Asimovian'),
-                    DropdownMenuEntry(value: 'Borel', label: 'Borel'),
-                    DropdownMenuEntry(
-                      value: 'Comic Relief',
-                      label: 'Comic Relief',
-                    ),
-                    DropdownMenuEntry(
-                      value: 'System Font',
-                      label: 'System Font',
-                    ),
-                  ],
+                  dropdownMenuEntries: _fontDropdownEntries,
                   onSelected: _onFontChanged,
                 ),
               ),
@@ -351,17 +370,17 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
                   runSpacing: 8,
                   children: [
                     ChoiceChip(
-                      label: const Text("Minimalistic"),
+                      label: _controlLabel("Minimalistic"),
                       selected: _selectedAppUi == "Minimalistic",
                       onSelected: (_) => _onAppUiChanged("Minimalistic"),
                     ),
                     ChoiceChip(
-                      label: const Text("Graphic"),
+                      label: _controlLabel("Graphic"),
                       selected: _selectedAppUi == "Graphic",
                       onSelected: (_) => _onAppUiChanged("Graphic"),
                     ),
                     ChoiceChip(
-                      label: const Text("Weather Theme"),
+                      label: _controlLabel("Weather Theme"),
                       selected: _selectedAppUi == "Weather Theme",
                       onSelected: (_) => _onAppUiChanged("Weather Theme"),
                     ),
@@ -407,6 +426,8 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
                           suffixText: "s",
                         ),
                         keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => skipAtBeginningFocusNode.unfocus(),
                       ),
                     ),
                   ],
@@ -429,6 +450,8 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
                           suffixText: "s",
                         ),
                         keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => skipAtEndFocusNode.unfocus(),
                       ),
                     ),
                   ],
@@ -498,7 +521,7 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
               const _SectionHeader("Video Settings"),
               const Divider(),
               const SizedBox(height: 16),
-              const Text("Video Preference", style: TextStyle(fontSize: 16)),
+              const Text("Video Preference (Default)", style: TextStyle(fontSize: 16)),
               const SizedBox(height: 12),
               Center(
                 child: Wrap(
@@ -507,28 +530,16 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
                   runSpacing: 8,
                   children: [
                     ChoiceChip(
-                      label: const Text("Landscape Contain"),
-                      selected: _selectedVideoPreference == "Landscape Contain",
+                      label: _controlLabel("Contain"),
+                      selected: _selectedVideoPreference == "Contain",
                       onSelected: (_) =>
-                          _onVideoPreferenceChanged("Landscape Contain"),
+                          _onVideoPreferenceChanged("Contain"),
                     ),
                     ChoiceChip(
-                      label: const Text("Landscape Cover"),
-                      selected: _selectedVideoPreference == "Landscape Cover",
+                      label: _controlLabel("Cover"),
+                      selected: _selectedVideoPreference == "Cover",
                       onSelected: (_) =>
-                          _onVideoPreferenceChanged("Landscape Cover"),
-                    ),
-                    ChoiceChip(
-                      label: const Text("Portrait Contain"),
-                      selected: _selectedVideoPreference == "Portrait Contain",
-                      onSelected: (_) =>
-                          _onVideoPreferenceChanged("Portrait Contain"),
-                    ),
-                    ChoiceChip(
-                      label: const Text("Portrait Cover"),
-                      selected: _selectedVideoPreference == "Portrait Cover",
-                      onSelected: (_) =>
-                          _onVideoPreferenceChanged("Portrait Cover"),
+                          _onVideoPreferenceChanged("Cover"),
                     ),
                   ],
                 ),
@@ -555,6 +566,8 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
                       controller: highlightsDurationController,
                       focusNode: highlightsDurationFocusNode,
                       keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => highlightsDurationFocusNode.unfocus(),
                       decoration: const InputDecoration(
                         border: InputBorder.none,
                         suffixText: "s",
@@ -748,21 +761,7 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
                             borderSide: BorderSide.none,
                           ),
                         ),
-                        dropdownMenuEntries: const [
-                          DropdownMenuEntry(
-                            value: 'Asimovian',
-                            label: 'Asimovian',
-                          ),
-                          DropdownMenuEntry(value: 'Borel', label: 'Borel'),
-                          DropdownMenuEntry(
-                            value: 'Comic Relief',
-                            label: 'Comic Relief',
-                          ),
-                          DropdownMenuEntry(
-                            value: 'System Font',
-                            label: 'System Font',
-                          ),
-                        ],
+                        dropdownMenuEntries: _fontDropdownEntries,
                         onSelected: _onFontChanged,
                       ),
                     ),
@@ -802,18 +801,18 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
                             runSpacing: 8,
                             children: [
                               ChoiceChip(
-                                label: const Text("Minimalistic"),
+                                label: _controlLabel("Minimalistic"),
                                 selected: _selectedAppUi == "Minimalistic",
                                 onSelected: (_) =>
                                     _onAppUiChanged("Minimalistic"),
                               ),
                               ChoiceChip(
-                                label: const Text("Graphic"),
+                                label: _controlLabel("Graphic"),
                                 selected: _selectedAppUi == "Graphic",
                                 onSelected: (_) => _onAppUiChanged("Graphic"),
                               ),
                               ChoiceChip(
-                                label: const Text("Weather Theme"),
+                                label: _controlLabel("Weather Theme"),
                                 selected: _selectedAppUi == "Weather Theme",
                                 onSelected: (_) =>
                                     _onAppUiChanged("Weather Theme"),
@@ -872,6 +871,8 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
                               suffixText: "s",
                             ),
                             keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => skipAtBeginningFocusNode.unfocus(),
                           ),
                         ),
                       ],
@@ -895,6 +896,8 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
                               suffixText: "s",
                             ),
                             keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => skipAtEndFocusNode.unfocus(),
                           ),
                         ),
                       ],
@@ -998,7 +1001,7 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text(
-                          "Video Preference",
+                          "Video Preference (Default)",
                           style: TextStyle(fontSize: 16),
                         ),
                         const SizedBox(height: 12),
@@ -1008,39 +1011,20 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
                             runSpacing: 8,
                             children: [
                               ChoiceChip(
-                                label: const Text("Landscape Contain"),
+                                label: _controlLabel("Contain"),
                                 selected:
-                                    _selectedVideoPreference ==
-                                    "Landscape Contain",
+                                    _selectedVideoPreference == "Contain",
                                 onSelected: (_) => _onVideoPreferenceChanged(
-                                  "Landscape Contain",
+                                  "Contain",
                                 ),
                               ),
                               ChoiceChip(
-                                label: const Text("Landscape Cover"),
+                                label: _controlLabel("Cover"),
                                 selected:
-                                    _selectedVideoPreference ==
-                                    "Landscape Cover",
+                                    _selectedVideoPreference == "Cover",
                                 onSelected: (_) => _onVideoPreferenceChanged(
-                                  "Landscape Cover",
+                                  "Cover",
                                 ),
-                              ),
-                              ChoiceChip(
-                                label: const Text("Portrait Contain"),
-                                selected:
-                                    _selectedVideoPreference ==
-                                    "Portrait Contain",
-                                onSelected: (_) => _onVideoPreferenceChanged(
-                                  "Portrait Contain",
-                                ),
-                              ),
-                              ChoiceChip(
-                                label: const Text("Portrait Cover"),
-                                selected:
-                                    _selectedVideoPreference ==
-                                    "Portrait Cover",
-                                onSelected: (_) =>
-                                    _onVideoPreferenceChanged("Portrait Cover"),
                               ),
                             ],
                           ),
@@ -1071,6 +1055,8 @@ class _UnifiedSettingsScreenState extends State<UnifiedSettingsScreen> {
                             controller: highlightsDurationController,
                             focusNode: highlightsDurationFocusNode,
                             keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => highlightsDurationFocusNode.unfocus(),
                             decoration: const InputDecoration(
                               border: InputBorder.none,
                               suffixText: "s",

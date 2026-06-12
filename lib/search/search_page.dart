@@ -3,31 +3,6 @@ import "package:Rusic/managers/path_manager.dart";
 import "dart:io";
 import 'package:Rusic/ui/media_ui.dart';
 
-class MusicSearchBar extends StatelessWidget {
-  const MusicSearchBar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SearchAnchor(
-      builder: (context, controller) {
-        return SearchBar(
-          controller: controller,
-          onTap: () {
-            controller.openView();
-          },
-          onChanged: (value) {
-            controller.openView();
-          },
-          leading: const Icon(Icons.search),
-        );
-      },
-      suggestionsBuilder: (context, controller) {
-        return [const ListTile(title: Text("Search is not available yet"))];
-      },
-    );
-  }
-}
-
 class Search extends StatefulWidget {
   const Search({super.key});
 
